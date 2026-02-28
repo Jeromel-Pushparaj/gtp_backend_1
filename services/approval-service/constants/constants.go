@@ -1,0 +1,76 @@
+package constants
+
+const (
+	RouteHealth                = "/health"
+	RouteAPIV1Prefix           = "/api/v1"
+	RouteSlackChannelCreate    = "/slack/channel/create"
+	RouteSlackAddMember        = "/slack/member/add"
+	RouteSlackGetAllUsers      = "/slack/users/all"
+	RouteSlackGetAllChannels   = "/slack/channels/all"
+	RouteSlackGetUserByName    = "/slack/user/by-name"
+	RouteSlackGetUserByID      = "/slack/user/by-id"
+	RouteSlackGetChannelByName = "/slack/channel/by-name"
+	RouteSlackGetChannelByID   = "/slack/channel/by-id"
+
+	ErrorInvalidRequestBody    = "Invalid request body"
+	ErrorChannelNameRequired   = "channel_name is required"
+	ErrorChannelIDRequired     = "channel_id is required"
+	ErrorUserNameRequired      = "user_name is required"
+	ErrorUserIDRequired        = "user_id is required"
+	ErrorChannelCreationFailed = "failed to create channel"
+	ErrorTopicSetFailed        = "Failed to set channel description"
+	ErrorAddMemberFailed       = "failed to add member to channel"
+	ErrorGetUsersFailed        = "failed to get users"
+	ErrorGetChannelsFailed     = "failed to get channels"
+	ErrorUserNotFound          = "user not found"
+	ErrorChannelNotFound       = "channel not found"
+
+	SuccessChannelCreated  = "Channel created successfully"
+	SuccessMemberAdded     = "Member added successfully"
+	SuccessUsersFetched    = "Users fetched successfully"
+	SuccessChannelsFetched = "Channels fetched successfully"
+	SuccessUserFetched     = "User fetched successfully"
+	SuccessChannelFetched  = "Channel fetched successfully"
+
+	EnvServiceName   = "SERVICE_NAME"
+	EnvServicePort   = "SERVICE_PORT"
+	EnvServiceHost   = "SERVICE_HOST"
+	EnvSlackBotToken = "SLACK_BOT_TOKEN"
+	EnvSlackBotID    = "SLACK_BOT_ID"
+	EnvSlackBotName  = "SLACK_BOT_NAME"
+	EnvLogLevel      = "LOG_LEVEL"
+	EnvEnvironment   = "ENVIRONMENT"
+
+	ErrorSlackTokenRequired = "SLACK_BOT_TOKEN is required"
+
+	DefaultServiceName = "approval-service"
+	DefaultServicePort = "8083"
+	DefaultServiceHost = "0.0.0.0"
+	DefaultBotName     = "TestSuiteNotifier"
+	DefaultLogLevel    = "debug"
+	DefaultEnvironment = "development"
+
+	HealthStatusKey    = "status"
+	HealthStatusValue  = "healthy"
+	HealthServiceKey   = "service"
+	HealthServiceValue = "approval-service"
+
+	LogLevelDebug   = "debug"
+	LogLevelRelease = "release"
+
+	RouteSlackSendMessage = "/slack/message/send"
+
+	SuccessMessageSent       = "Message sent successfully"
+	ErrorMessageSendFailed   = "failed to send message"
+	ErrorMessageTextRequired = "message text is required"
+	ErrorInvalidMentionType  = "invalid mention type"
+
+	MentionTypeUser          = "user"
+	MentionTypeUserByName    = "user_by_name"
+	MentionTypeChannelLink   = "channel_link"
+	MentionTypeChannelByName = "channel_by_name"
+	MentionTypeHere          = "here"
+	MentionTypeChannelNotify = "channel"
+	MentionTypeEveryone      = "everyone"
+	MentionTypeUserGroup     = "usergroup"
+)

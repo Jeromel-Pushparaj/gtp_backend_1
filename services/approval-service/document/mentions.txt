@@ -1,0 +1,31 @@
+NEW SCOPES NEEDED FOR MESSAGING & MENTIONS:
+
+
+chat:write.public - Send messages to public channels without joining
+chat:write.customize - Send messages with custom username and avatar
+channels:history - View messages in public channels
+groups:history - View messages in private channels
+mpim:write - Send messages to group DMs
+usergroups:read - Read user groups (for @usergroup mentions)
+
+
+SLACK MENTION FORMATS - ALL TYPES
+
+
+
+| Mention Type     | Format                         | Example                          | Description                            |
+|------------------|--------------------------------|----------------------------------|----------------------------------------|
+| User by ID       | `<@USER_ID>`                   | `<@U0AH3EX5VV2>`                 | Mention specific user                  |
+| User by Name     | `<@USER_ID>`                   | `<@U0AH3EX5VV2>`                 | (Need to lookup ID first)              |
+| Channel          | `<#CHANNEL_ID>`                | `<#C0AJGKD48BA>`                 | Mention/link to channel                |
+| Channel by Name  | `<#CHANNEL_ID\|channel-name>`  | `<#C0AJGKD48BA\|approval>`       | Channel with display name              |
+| @here            | `<!here>`                      | `<!here>`                        | Notify active members                  |
+| @channel         | `<!channel>`                   | `<!channel>`                     | Notify all channel members             |
+| @everyone        | `<!everyone>`                  | `<!everyone>`                    | Notify everyone in workspace           |
+| User Group       | `<!subteam^GROUP_ID>`          | `<!subteam^S1234>`               | Mention user group                     |
+| URL              | `<https://example.com>`        | `<https://google.com>`           | Clickable link                         |
+| URL with text    | `<https://example.com\|text>`  | `<https://google.com\|Google>`   | Link with custom text                  |
+
+
+STEP 1
+
