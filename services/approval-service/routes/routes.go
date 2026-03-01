@@ -28,6 +28,7 @@ func SetupRoutes(slackController *controllerv1.SlackController, approvalControll
 		v1.POST(constants.RouteSlackGetChannelByName, slackController.GetChannelByName)
 		v1.POST(constants.RouteSlackGetChannelByID, slackController.GetChannelByID)
 		v1.POST(constants.RouteSlackSendMessage, slackController.SendMessage)
+		v1.POST(constants.RouteSlackSendApprovalButton, slackController.SendApprovalFormButton)
 
 		v1.GET(constants.RouteApprovalGetAll, approvalController.GetAllApprovals)
 		v1.GET(constants.RouteApprovalGetPending, approvalController.GetPendingApprovals)

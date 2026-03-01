@@ -19,4 +19,5 @@ type SlackServiceInterface interface {
 	SendMessageInThread(channelID, text, threadTS string) (string, error)
 	SendBlockMessage(channelID string, blocks []slack.Block, fallbackText string) (string, error)
 	UpdateMessage(channelID, timestamp string, blocks []slack.Block) error
+	SendApprovalFormButton(channelID string) (string, error)
 }

@@ -285,3 +285,35 @@ func (s *SlackService) UpdateMessage(channelID, timestamp string, blocks []slack
 	}
 	return nil
 }
+
+func (s *SlackService) SendApprovalFormButton(channelID string) (string, error) {
+	headerBlock := slack.NewSectionBlock(
+		slack.NewTextBlockObject(slack.MarkdownType, ":clipboard: *Create a New Approval Request*\nClick the button below to open the approval request form.", false, false),
+		nil,
+		nil,
+	)
+
+	buttonBlock := slack.NewActionBlock(
+		"",
+		slack.NewButtonBlockElement(
+			constants.ActionOpenApprovalForm,
+			"",
+			slack.NewTextBlockObject(slack.PlainTextType, "Open Approval Form", false, false),
+		).WithStyle(slack.StylePrimary),
+	)
+
+	blocks := []slack.Block{
+		headerBlock,
+		buttonBlock,
+	}
+
+	_, timestamp, err := s.client.PostMessage(
+		channelID,
+		slack.MsgOptionBlocks(blocks...),
+		slack.MsgOptionText("Click to create a new approval request", false),
+	)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", constants.ErrorMessageSendFailed, err)
+	}
+	return timestamp, nil
+}

@@ -12,6 +12,12 @@ type ApprovalRequestMessage struct {
 	RequestType   string                 `json:"request_type"`
 	RequestData   map[string]interface{} `json:"request_data"`
 	Message       string                 `json:"message"`
+	Title         string                 `json:"title"`
+	Description   string                 `json:"description"`
+	Priority      string                 `json:"priority"`
+	Category      string                 `json:"category"`
+	Attachments   string                 `json:"attachments"`
+	DueDate       *time.Time             `json:"due_date"`
 }
 
 type CreateApprovalRequest struct {
@@ -38,4 +44,15 @@ type ApprovalCompletedMessage struct {
 	Reason          string                 `json:"reason"`
 	ApproverComment string                 `json:"approver_comment"`
 	RequestData     map[string]interface{} `json:"request_data"`
+}
+
+type ActionMessage struct {
+	RequestID   string                 `json:"request_id"`
+	Action      string                 `json:"action"`
+	Status      string                 `json:"status"`
+	ProcessedBy string                 `json:"processed_by"`
+	ProcessedAt time.Time              `json:"processed_at"`
+	RequestData map[string]interface{} `json:"request_data"`
+	Message     string                 `json:"message"`
+	Reason      string                 `json:"reason,omitempty"`
 }

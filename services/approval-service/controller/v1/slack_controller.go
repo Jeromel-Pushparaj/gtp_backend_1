@@ -381,3 +381,59 @@ func (sc *SlackController) SendMessage(c *gin.Context) {
 		Text:      req.Text,
 	})
 }
+
+func (sc *SlackController) SendApprovalFormButton(c *gin.Context) {
+	var req resources.GetChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   constants.ErrorInvalidRequestBody,
+		})
+		return
+	}
+
+	var channelID string
+	if req.ChannelID != "" {
+		if err := validator.ValidateChannelID(req.ChannelID); err != nil {
+			c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+				Success: false,
+				Error:   err.Error(),
+			})
+			return
+		}
+		channelID = req.ChannelID
+	} else if req.ChannelName != "" {
+		channel, err := sc.slackService.GetChannelByName(req.ChannelName)
+		if err != nil {
+			c.JSON(http.StatusNotFound, resources.ErrorResponse{
+				Success: false,
+				Error:   constants.ErrorChannelNotFound,
+			})
+			return
+		}
+		channelID = channel.ID
+	} else {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   constants.ErrorChannelIDRequired,
+		})
+		return
+	}
+
+	timestamp, err := sc.slackService.SendApprovalFormButton(channelID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, resources.ErrorResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, resources.SendMessageResponse{
+		Success:   true,
+		Message:   "Approval form button sent successfully",
+		ChannelID: channelID,
+		Timestamp: timestamp,
+		Text:      "Click to create a new approval request",
+	})
+}

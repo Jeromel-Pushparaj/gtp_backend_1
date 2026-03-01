@@ -1,21 +1,22 @@
 package constants
 
 const (
-	RouteHealth                = "/health"
-	RouteAPIV1Prefix           = "/api/v1"
-	RouteSlackChannelCreate    = "/slack/channel/create"
-	RouteSlackAddMember        = "/slack/member/add"
-	RouteSlackGetAllUsers      = "/slack/users/all"
-	RouteSlackGetAllChannels   = "/slack/channels/all"
-	RouteSlackGetUserByName    = "/slack/user/by-name"
-	RouteSlackGetUserByID      = "/slack/user/by-id"
-	RouteSlackGetChannelByName = "/slack/channel/by-name"
-	RouteSlackGetChannelByID   = "/slack/channel/by-id"
-	RouteSlackSendMessage      = "/slack/message/send"
-	RouteApprovalGetAll        = "/approval/all"
-	RouteApprovalGetPending    = "/approval/pending"
-	RouteApprovalGetByID       = "/approval/by-id"
-	RouteApprovalCreate        = "/approval/request"
+	RouteHealth                  = "/health"
+	RouteAPIV1Prefix             = "/api/v1"
+	RouteSlackChannelCreate      = "/slack/channel/create"
+	RouteSlackAddMember          = "/slack/member/add"
+	RouteSlackGetAllUsers        = "/slack/users/all"
+	RouteSlackGetAllChannels     = "/slack/channels/all"
+	RouteSlackGetUserByName      = "/slack/user/by-name"
+	RouteSlackGetUserByID        = "/slack/user/by-id"
+	RouteSlackGetChannelByName   = "/slack/channel/by-name"
+	RouteSlackGetChannelByID     = "/slack/channel/by-id"
+	RouteSlackSendMessage        = "/slack/message/send"
+	RouteSlackSendApprovalButton = "/slack/approval-form-button/send"
+	RouteApprovalGetAll          = "/approval/all"
+	RouteApprovalGetPending      = "/approval/pending"
+	RouteApprovalGetByID         = "/approval/by-id"
+	RouteApprovalCreate          = "/approval/request"
 
 	ErrorInvalidRequestBody       = "Invalid request body"
 	ErrorChannelNameRequired      = "channel_name is required"
@@ -90,9 +91,12 @@ const (
 
 	KafkaTopicApprovalRequested = "approval.requested"
 	KafkaTopicApprovalCompleted = "approval.completed"
+	KafkaTopicActionExecuted    = "action.executed"
+	KafkaTopicActionRejected    = "action.rejected"
 
-	ActionApprove = "approve_request"
-	ActionReject  = "reject_request"
+	ActionApprove          = "approve_request"
+	ActionReject           = "reject_request"
+	ActionOpenApprovalForm = "open_approval_form"
 
 	ModalCallbackApprove    = "approval_modal_approve"
 	ModalCallbackReject     = "approval_modal_reject"
@@ -107,4 +111,63 @@ const (
 	ModalLabelComment       = "Reason/Comment"
 	ModalPlaceholderApprove = "Enter your approval reason (optional)"
 	ModalPlaceholderReject  = "Enter your rejection reason (required)"
+
+	RouteSlackSlashCommand = "/slack/slash-command"
+
+	SlashCommandApprovalRequest = "/approval-request"
+
+	ModalCallbackCreateApproval = "create_approval_modal"
+
+	InputBlockTitle        = "title_input_block"
+	InputActionTitle       = "title_input_action"
+	InputBlockDescription  = "description_input_block"
+	InputActionDescription = "description_input_action"
+	InputBlockApprover     = "approver_input_block"
+	InputActionApprover    = "approver_input_action"
+	InputBlockPriority     = "priority_input_block"
+	InputActionPriority    = "priority_input_action"
+	InputBlockCategory     = "category_input_block"
+	InputActionCategory    = "category_input_action"
+	InputBlockAttachments  = "attachments_input_block"
+	InputActionAttachments = "attachments_input_action"
+	InputBlockDueDate      = "due_date_input_block"
+	InputActionDueDate     = "due_date_input_action"
+
+	ModalTitleCreateApproval    = "Create Approval Request"
+	ModalSubmitCreateApproval   = "Submit Request"
+	ModalLabelTitle             = "Request Title"
+	ModalPlaceholderTitle       = "Enter a brief title for your request"
+	ModalLabelDescription       = "Description"
+	ModalPlaceholderDescription = "Provide detailed information about your request"
+	ModalLabelApprover          = "Select Approver"
+	ModalPlaceholderApprover    = "Choose who should approve this"
+	ModalLabelPriority          = "Priority Level"
+	ModalLabelCategory          = "Category"
+	ModalPlaceholderCategory    = "Select request category"
+	ModalLabelAttachments       = "Attachments/Links"
+	ModalPlaceholderAttachments = "Add URLs or file links (optional)"
+	ModalLabelDueDate           = "Due Date"
+	ModalPlaceholderDueDate     = "Select when this needs approval"
+
+	PriorityLow    = "low"
+	PriorityMedium = "medium"
+	PriorityHigh   = "high"
+	PriorityUrgent = "urgent"
+
+	CategoryCodeChange     = "code_change"
+	CategoryMergeRequest   = "merge_request"
+	CategoryDeployment     = "deployment"
+	CategoryAccess         = "access"
+	CategoryInfrastructure = "infrastructure"
+	CategoryOther          = "other"
+
+	TitleMaxLength       = 100
+	DescriptionMaxLength = 1000
+	AttachmentsMaxLength = 500
+
+	ErrorTitleRequired       = "Title is required"
+	ErrorDescriptionRequired = "Description is required"
+	ErrorApproverRequired    = "Approver is required"
+	ErrorPriorityRequired    = "Priority is required"
+	ErrorCategoryRequired    = "Category is required"
 )

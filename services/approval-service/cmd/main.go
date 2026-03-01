@@ -62,6 +62,16 @@ func main() {
 	}
 	log.Printf("Kafka consumer started")
 
+	businessConsumer, err := servicev1.NewBusinessConsumerService(cfg.KafkaBrokers, "business-consumer-group", kafkaService)
+	if err != nil {
+		log.Fatalf("Business consumer service initialization error: %v\n", err)
+	}
+	defer businessConsumer.Close()
+	if err := businessConsumer.Start(); err != nil {
+		log.Fatalf("Business consumer service start error: %v\n", err)
+	}
+	log.Printf("Business Kafka consumer started")
+
 	socketHandler := servicev1.NewSocketHandler(cfg.SlackBotToken, cfg.SlackAppToken, approvalService)
 	go socketHandler.Start()
 	log.Printf("Slack Socket Mode handler started")
@@ -92,8 +102,9 @@ func main() {
 	log.Printf("   POST /api/v1/approval/by-id               - Get approval by ID")
 	log.Printf("   POST /api/v1/approval/request             - Create approval request (publishes to Kafka)")
 	log.Printf("Slack Socket Mode: ENABLED")
-	log.Printf("Kafka Consumer: Listening on %s", constants.KafkaTopicApprovalRequested)
-	log.Printf("Kafka Producer: Publishing to %s", constants.KafkaTopicApprovalCompleted)
+	log.Printf("Kafka Consumer 1: Listening on %s", constants.KafkaTopicApprovalRequested)
+	log.Printf("Kafka Consumer 2: Listening on %s", constants.KafkaTopicApprovalCompleted)
+	log.Printf("Kafka Producer: Publishing to %s, %s, %s", constants.KafkaTopicApprovalCompleted, constants.KafkaTopicActionExecuted, constants.KafkaTopicActionRejected)
 
 	if err := router.Run(addr); err != nil {
 		log.Fatalf("Server failed to start: %v\n", err)

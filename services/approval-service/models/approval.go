@@ -17,6 +17,12 @@ type ApprovalRequest struct {
 	MessageTS       string         `json:"message_ts"`
 	RequestType     string         `json:"request_type"`
 	RequestData     string         `gorm:"type:text" json:"request_data"`
+	Title           string         `json:"title"`
+	Description     string         `gorm:"type:text" json:"description"`
+	Priority        string         `json:"priority"`
+	Category        string         `json:"category"`
+	Attachments     string         `gorm:"type:text" json:"attachments"`
+	DueDate         *time.Time     `json:"due_date"`
 	Status          string         `gorm:"default:'pending'" json:"status"`
 	Approved        *bool          `json:"approved"`
 	ProcessedBy     string         `json:"processed_by"`

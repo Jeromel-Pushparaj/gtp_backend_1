@@ -16,16 +16,18 @@ type KafkaService struct {
 
 func NewKafkaService(brokers, groupID string) (*KafkaService, error) {
 	producer, err := kafka.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": brokers,
+		"bootstrap.servers":     brokers,
+		"broker.address.family": "v4",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create producer: %w", err)
 	}
 
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": brokers,
-		"group.id":          groupID,
-		"auto.offset.reset": "earliest",
+		"bootstrap.servers":     brokers,
+		"group.id":              groupID,
+		"auto.offset.reset":     "earliest",
+		"broker.address.family": "v4",
 	})
 	if err != nil {
 		producer.Close()
