@@ -12,10 +12,11 @@ type Config struct {
 	ServicePort   string
 	ServiceHost   string
 	SlackBotToken string
-	SlackBotID    string
-	SlackBotName  string
+	SlackAppToken string
 	LogLevel      string
 	Environment   string
+	KafkaBrokers  string
+	KafkaGroupID  string
 }
 
 func LoadConfig() (*Config, error) {
@@ -24,14 +25,19 @@ func LoadConfig() (*Config, error) {
 		ServicePort:   getEnv(constants.EnvServicePort, constants.DefaultServicePort),
 		ServiceHost:   getEnv(constants.EnvServiceHost, constants.DefaultServiceHost),
 		SlackBotToken: os.Getenv(constants.EnvSlackBotToken),
-		SlackBotID:    os.Getenv(constants.EnvSlackBotID),
-		SlackBotName:  getEnv(constants.EnvSlackBotName, constants.DefaultBotName),
+		SlackAppToken: os.Getenv(constants.EnvSlackAppToken),
 		LogLevel:      getEnv(constants.EnvLogLevel, constants.DefaultLogLevel),
 		Environment:   getEnv(constants.EnvEnvironment, constants.DefaultEnvironment),
+		KafkaBrokers:  getEnv(constants.EnvKafkaBrokers, constants.DefaultKafkaBrokers),
+		KafkaGroupID:  getEnv(constants.EnvKafkaGroupID, constants.DefaultKafkaGroupID),
 	}
 
 	if config.SlackBotToken == "" {
 		return nil, fmt.Errorf(constants.ErrorSlackTokenRequired)
+	}
+
+	if config.SlackAppToken == "" {
+		return nil, fmt.Errorf(constants.ErrorAppTokenRequired)
 	}
 
 	return config, nil

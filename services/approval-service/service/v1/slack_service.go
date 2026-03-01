@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/jeromelp/gtp_backend_1/services/approval-service/constants"
@@ -33,7 +34,7 @@ func (s *SlackService) CreateChannel(channelName string, isPrivate bool, descrip
 	if description != "" {
 		_, err = s.client.SetTopicOfConversation(channel.ID, description)
 		if err != nil {
-			fmt.Printf("Warning: %s: %v\n", constants.ErrorTopicSetFailed, err)
+			log.Printf("Warning: %s: %v\n", constants.ErrorTopicSetFailed, err)
 		}
 	}
 
@@ -70,19 +71,15 @@ func (s *SlackService) GetAllUsers() ([]resources.User, error) {
 }
 
 func (s *SlackService) GetUserByName(userName string) (*resources.User, error) {
-	users, err := s.client.GetUsers()
+
+	users, err := s.GetAllUsers()
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", constants.ErrorGetUsersFailed, err)
+		return nil, err
 	}
 
 	for _, user := range users {
 		if strings.EqualFold(user.Name, userName) || strings.EqualFold(user.RealName, userName) {
-			return &resources.User{
-				ID:       user.ID,
-				Name:     user.Name,
-				RealName: user.RealName,
-				Email:    user.Profile.Email,
-			}, nil
+			return &user, nil
 		}
 	}
 
@@ -128,24 +125,14 @@ func (s *SlackService) GetAllChannels() ([]resources.Channel, error) {
 }
 
 func (s *SlackService) GetChannelByName(channelName string) (*resources.Channel, error) {
-	params := &slack.GetConversationsParameters{
-		ExcludeArchived: true,
-		Types:           []string{"public_channel", "private_channel"},
-	}
-
-	channels, _, err := s.client.GetConversations(params)
+	channels, err := s.GetAllChannels()
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", constants.ErrorGetChannelsFailed, err)
+		return nil, err
 	}
 
 	for _, channel := range channels {
 		if strings.EqualFold(channel.Name, channelName) {
-			return &resources.Channel{
-				ID:        channel.ID,
-				Name:      channel.Name,
-				IsPrivate: channel.IsPrivate,
-				IsMember:  channel.IsMember,
-			}, nil
+			return &channel, nil
 		}
 	}
 
@@ -168,7 +155,7 @@ func (s *SlackService) GetChannelByID(channelID string) (*resources.Channel, err
 	}, nil
 }
 
-func (s *SlackService) BuildMentionString(mention resources.Mention) (string, error) {
+func (s *SlackService) buildMentionString(mention resources.Mention) (string, error) {
 	if err := validator.ValidateMentionType(mention.Type); err != nil {
 		return "", err
 	}
@@ -237,7 +224,7 @@ func (s *SlackService) SendMessage(channelID, text string) (string, error) {
 func (s *SlackService) SendMessageWithMentions(channelID, text string, mentions []resources.Mention) (string, error) {
 	var mentionStrings []string
 	for _, mention := range mentions {
-		mentionString, err := s.BuildMentionString(mention)
+		mentionString, err := s.buildMentionString(mention)
 		if err != nil {
 			return "", err
 		}
@@ -260,4 +247,37 @@ func (s *SlackService) SendMessageWithMentions(channelID, text string, mentions 
 		return "", fmt.Errorf("%s: %w", constants.ErrorMessageSendFailed, err)
 	}
 	return timestamp, nil
+}
+
+func (s *SlackService) SendMessageInThread(channelID, text, threadTS string) (string, error) {
+	_, timestamp, err := s.client.PostMessage(
+		channelID,
+		slack.MsgOptionText(text, false),
+		slack.MsgOptionTS(threadTS),
+	)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", constants.ErrorMessageSendFailed, err)
+	}
+	return timestamp, nil
+}
+
+func (s *SlackService) SendBlockMessage(channelID string, blocks []slack.Block, fallbackText string) (string, error) {
+	_, timestamp, err := s.client.PostMessage(
+		channelID,
+		slack.MsgOptionBlocks(blocks...),
+		slack.MsgOptionText(fallbackText, false),
+	)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", constants.ErrorMessageSendFailed, err)
+	}
+	return timestamp, nil
+}
+
+func (s *SlackService) UpdateBlockMessage(channelID, timestamp string, blocks []slack.Block) error {
+	_, _, _, err := s.client.UpdateMessage(
+		channelID,
+		timestamp,
+		slack.MsgOptionBlocks(blocks...),
+	)
+	return err
 }

@@ -31,14 +31,6 @@ func (sc *SlackController) CreateChannel(c *gin.Context) {
 		return
 	}
 
-	if req.ChannelName == "" {
-		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
-			Success: false,
-			Error:   constants.ErrorChannelNameRequired,
-		})
-		return
-	}
-
 	if err := validator.ValidateChannelName(req.ChannelName); err != nil {
 		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
 			Success: false,
@@ -211,13 +203,6 @@ func (sc *SlackController) GetUserByID(c *gin.Context) {
 		})
 		return
 	}
-	if req.UserID == "" {
-		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
-			Success: false,
-			Error:   constants.ErrorUserIDRequired,
-		})
-		return
-	}
 
 	if err := validator.ValidateUserID(req.UserID); err != nil {
 		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
@@ -302,13 +287,6 @@ func (sc *SlackController) GetChannelByID(c *gin.Context) {
 		})
 		return
 	}
-	if req.ChannelID == "" {
-		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
-			Success: false,
-			Error:   constants.ErrorChannelIDRequired,
-		})
-		return
-	}
 
 	if err := validator.ValidateChannelID(req.ChannelID); err != nil {
 		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
@@ -380,7 +358,9 @@ func (sc *SlackController) SendMessage(c *gin.Context) {
 		return
 	}
 	var timestamp string
-	if len(req.Mentions) > 0 {
+	if req.ThreadTS != "" {
+		timestamp, err = sc.slackService.SendMessageInThread(channelID, req.Text, req.ThreadTS)
+	} else if len(req.Mentions) > 0 {
 		timestamp, err = sc.slackService.SendMessageWithMentions(channelID, req.Text, req.Mentions)
 	} else {
 		timestamp, err = sc.slackService.SendMessage(channelID, req.Text)

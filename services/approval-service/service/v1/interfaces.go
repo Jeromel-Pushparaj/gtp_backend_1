@@ -1,6 +1,9 @@
 package v1
 
-import "github.com/jeromelp/gtp_backend_1/services/approval-service/resources"
+import (
+	"github.com/jeromelp/gtp_backend_1/services/approval-service/resources"
+	"github.com/slack-go/slack"
+)
 
 type SlackServiceInterface interface {
 	CreateChannel(channelName string, isPrivate bool, description string) (string, error)
@@ -13,5 +16,7 @@ type SlackServiceInterface interface {
 	GetChannelByID(channelID string) (*resources.Channel, error)
 	SendMessage(channelID, text string) (string, error)
 	SendMessageWithMentions(channelID, text string, mentions []resources.Mention) (string, error)
-	BuildMentionString(mention resources.Mention) (string, error)
+	SendMessageInThread(channelID, text, threadTS string) (string, error)
+	SendBlockMessage(channelID string, blocks []slack.Block, fallbackText string) (string, error)
+	UpdateBlockMessage(channelID, timestamp string, blocks []slack.Block) error
 }
