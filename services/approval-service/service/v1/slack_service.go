@@ -273,11 +273,15 @@ func (s *SlackService) SendBlockMessage(channelID string, blocks []slack.Block, 
 	return timestamp, nil
 }
 
-func (s *SlackService) UpdateBlockMessage(channelID, timestamp string, blocks []slack.Block) error {
+func (s *SlackService) UpdateMessage(channelID, timestamp string, blocks []slack.Block) error {
 	_, _, _, err := s.client.UpdateMessage(
 		channelID,
 		timestamp,
 		slack.MsgOptionBlocks(blocks...),
+		slack.MsgOptionText("", false),
 	)
-	return err
+	if err != nil {
+		return fmt.Errorf("%s: %w", constants.ErrorMessageSendFailed, err)
+	}
+	return nil
 }

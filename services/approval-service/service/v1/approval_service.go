@@ -114,7 +114,7 @@ func (s *ApprovalService) sendSlackApprovalMessage(msg *resources.ApprovalReques
 	return timestamp, err
 }
 
-func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID string, userName string, reason string) error {
+func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID string, userName string, reason string, approverComment string) error {
 	approval, err := s.repo.GetByRequestID(requestID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", constants.ErrorApprovalNotFound, err)
@@ -129,13 +129,13 @@ func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID
 		status = constants.ApprovalStatusApproved
 	}
 
-	if err := s.repo.UpdateStatus(requestID, status, approved, userID, reason); err != nil {
+	if err := s.repo.UpdateStatus(requestID, status, approved, userID, reason, approverComment); err != nil {
 		return fmt.Errorf("failed to update approval status: %w", err)
 	}
 
-	log.Printf("Approval %s: status=%s, by=%s", requestID, status, userName)
+	log.Printf("Approval %s: status=%s, by=%s, comment=%s", requestID, status, userName, approverComment)
 
-	if err := s.updateSlackMessage(approval, approved, userName); err != nil {
+	if err := s.updateSlackMessage(approval, approved, userName, approverComment); err != nil {
 		log.Printf("Warning: failed to update slack message: %v", err)
 	}
 
@@ -146,13 +146,14 @@ func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID
 	}
 
 	completedMsg := &resources.ApprovalCompletedMessage{
-		RequestID:   requestID,
-		Status:      status,
-		Approved:    approved,
-		ProcessedBy: userID,
-		ProcessedAt: time.Now(),
-		Reason:      reason,
-		RequestData: requestData,
+		RequestID:       requestID,
+		Status:          status,
+		Approved:        approved,
+		ProcessedBy:     userID,
+		ProcessedAt:     time.Now(),
+		Reason:          reason,
+		ApproverComment: approverComment,
+		RequestData:     requestData,
 	}
 
 	if err := s.kafkaService.Publish(constants.KafkaTopicApprovalCompleted, requestID, completedMsg); err != nil {
@@ -163,7 +164,7 @@ func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID
 	return nil
 }
 
-func (s *ApprovalService) updateSlackMessage(approval *models.ApprovalRequest, approved bool, userName string) error {
+func (s *ApprovalService) updateSlackMessage(approval *models.ApprovalRequest, approved bool, userName string, approverComment string) error {
 	statusText := "REJECTED"
 	statusEmoji := ":x:"
 	if approved {
@@ -177,6 +178,10 @@ func (s *ApprovalService) updateSlackMessage(approval *models.ApprovalRequest, a
 	messageText := fmt.Sprintf("Request Type: %s\nStatus: %s *%s*\nProcessed by: %s",
 		approval.RequestType, statusEmoji, statusText, userName)
 
+	if approverComment != "" {
+		messageText += fmt.Sprintf("\nComment: _%s_", approverComment)
+	}
+
 	messageSection := slack.NewSectionBlock(
 		slack.NewTextBlockObject(slack.MarkdownType, messageText, false, false),
 		nil, nil,
@@ -187,11 +192,9 @@ func (s *ApprovalService) updateSlackMessage(approval *models.ApprovalRequest, a
 		messageSection,
 	}
 
-	err := s.slackService.UpdateBlockMessage(
+	return s.slackService.UpdateMessage(
 		approval.ChannelID,
 		approval.MessageTS,
 		blocks,
 	)
-
-	return err
 }

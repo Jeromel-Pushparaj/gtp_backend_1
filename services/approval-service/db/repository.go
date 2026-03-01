@@ -31,16 +31,17 @@ func (r *ApprovalRepository) GetByID(id uint) (*models.ApprovalRequest, error) {
 	return &approval, err
 }
 
-func (r *ApprovalRepository) UpdateStatus(requestID string, status string, approved bool, processedBy string, reason string) error {
+func (r *ApprovalRepository) UpdateStatus(requestID string, status string, approved bool, processedBy string, reason string, approverComment string) error {
 	now := time.Now()
 	return r.db.DB.Model(&models.ApprovalRequest{}).
 		Where("request_id = ?", requestID).
 		Updates(map[string]interface{}{
-			"status":       status,
-			"approved":     approved,
-			"processed_by": processedBy,
-			"processed_at": &now,
-			"reason":       reason,
+			"status":           status,
+			"approved":         approved,
+			"processed_by":     processedBy,
+			"processed_at":     &now,
+			"reason":           reason,
+			"approver_comment": approverComment,
 		}).Error
 }
 

@@ -14,16 +14,6 @@ type ApprovalRequestMessage struct {
 	Message       string                 `json:"message"`
 }
 
-type ApprovalCompletedMessage struct {
-	RequestID   string                 `json:"request_id"`
-	Status      string                 `json:"status"`
-	Approved    bool                   `json:"approved"`
-	ProcessedBy string                 `json:"processed_by"`
-	ProcessedAt time.Time              `json:"processed_at"`
-	Reason      string                 `json:"reason"`
-	RequestData map[string]interface{} `json:"request_data"`
-}
-
 type CreateApprovalRequest struct {
 	ChannelName   string                 `json:"channel_name" binding:"required"`
 	ApproverName  string                 `json:"approver_name" binding:"required"`
@@ -37,4 +27,15 @@ type CreateApprovalResponse struct {
 	Success   bool   `json:"success"`
 	Message   string `json:"message"`
 	RequestID string `json:"request_id"`
+}
+
+type ApprovalCompletedMessage struct {
+	RequestID       string                 `json:"request_id"`
+	Status          string                 `json:"status"`
+	Approved        bool                   `json:"approved"`
+	ProcessedBy     string                 `json:"processed_by"`
+	ProcessedAt     time.Time              `json:"processed_at"`
+	Reason          string                 `json:"reason"`
+	ApproverComment string                 `json:"approver_comment"`
+	RequestData     map[string]interface{} `json:"request_data"`
 }

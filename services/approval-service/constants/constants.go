@@ -93,4 +93,18 @@ const (
 
 	ActionApprove = "approve_request"
 	ActionReject  = "reject_request"
+
+	ModalCallbackApprove    = "approval_modal_approve"
+	ModalCallbackReject     = "approval_modal_reject"
+	InputBlockComment       = "comment_input_block"
+	InputActionComment      = "comment_input_action"
+	CommentMaxLength        = 500
+	ErrorCommentRequired    = "Comment is required for rejection"
+	ModalTitleApprove       = "Approve Request"
+	ModalTitleReject        = "Reject Request"
+	ModalSubmitApprove      = "Approve"
+	ModalSubmitReject       = "Reject"
+	ModalLabelComment       = "Reason/Comment"
+	ModalPlaceholderApprove = "Enter your approval reason (optional)"
+	ModalPlaceholderReject  = "Enter your rejection reason (required)"
 )

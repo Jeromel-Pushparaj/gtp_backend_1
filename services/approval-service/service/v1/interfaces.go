@@ -18,5 +18,5 @@ type SlackServiceInterface interface {
 	SendMessageWithMentions(channelID, text string, mentions []resources.Mention) (string, error)
 	SendMessageInThread(channelID, text, threadTS string) (string, error)
 	SendBlockMessage(channelID string, blocks []slack.Block, fallbackText string) (string, error)
-	UpdateBlockMessage(channelID, timestamp string, blocks []slack.Block) error
+	UpdateMessage(channelID, timestamp string, blocks []slack.Block) error
 }

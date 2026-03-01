@@ -1,0 +1,91 @@
+commentInput := slack.NewPlainTextInputBlockElement(
+		slack.NewTextBlockObject(slack.PlainTextType, placeholder, false, false),
+		constants.InputActionComment,
+	)  
+    
+
+1. Click Approve or Reject buttons-> A modal dialog should open
+
+request 
+
+curl -X POST http://localhost:8083/api/v1/approval/request \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service",
+    "approver_name": "Sarumathi S",
+    "requester_name": "Jeromel Pushparaj",
+    "request_type": "deployment_approval",
+    "message": "Please approve the production deployment"
+  }' | jq .
+
+response
+
+{
+  "success": true,
+  "message": "Approval request created and published to Kafka",
+  "request_id": "30ec361a-81cf-43ff-ab1c-8eac397e004b"
+} 
+
+in slack
+
+Approval Request from Jeromel PushparajRequest Type: domain_support_request
+Status: :x: REJECTED
+Processed by: sarumathis11
+Comment: there is the lint warning in the code
+
+Approval Request from Jeromel PushparajRequest Type: deployment_approval
+Status: :white_check_mark: APPROVED
+Processed by: sarumathis11
+Comment: the code is structured good
+
+
+User clicks "Approve" button
+    ↓
+handleBlockAction() triggered
+    ↓
+buildApprovalModal() creates modal
+    ↓
+Modal opens with comment field
+    ↓
+User enters comment & submits
+    ↓
+handleModalSubmission() triggered
+    ↓
+Validates comment (required for reject)
+    ↓
+Calls HandleApproval() with comment
+    ↓
+Updates Slack message & publishes to Kafka
+
+
+TO VIEW IN DB
+
+cd gtp_backend_1/services/approval-service
+
+# Open the database
+sqlite3 approval_service.db
+
+# View all approvals
+SELECT * FROM approval_requests;
+
+# View with better formatting
+.mode column
+.headers on
+SELECT id, request_id, channel_name, requester_name, approver_name, status, comment, created_at, processed_at FROM approval_requests;
+
+# View only pending
+SELECT * FROM approval_requests WHERE status = 'pending';
+
+# View only approved/rejected
+SELECT * FROM approval_requests WHERE status = 'approved';
+SELECT * FROM approval_requests WHERE status = 'rejected';
+
+# Exit
+.quit
+
+
+# Install if you don't have it
+brew install --cask db-browser-for-sqlite
+
+# Open the database
+open -a "DB Browser for SQLite" approval_service.db
