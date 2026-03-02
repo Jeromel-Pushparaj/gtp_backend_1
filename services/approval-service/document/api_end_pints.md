@@ -16,7 +16,8 @@ Endpoints List
 8 POST `/api/v1/slack/user/by-id` Get user by ID
 9 POST `/api/v1/slack/member/add` Add member to channel
 10 POST `/api/v1/slack/message/send` Send message to channel
-11 GET `/api/v1/approval/all` Get all approval requests
-12 GET `/api/v1/approval/pending` Get pending approval requests
-13 POST `/api/v1/approval/by-id` Get approval request by ID
-14 POST `/api/v1/approval/request` Create approval request
+11 POST `/api/v1/slack/approval-form-button/send` Send approval form button to channel
+12 GET `/api/v1/approval/all` Get all approval requests
+13 GET `/api/v1/approval/pending` Get pending approval requests
+14 POST `/api/v1/approval/by-id` Get approval request by ID
+15 POST `/api/v1/approval/request` Create approval request
