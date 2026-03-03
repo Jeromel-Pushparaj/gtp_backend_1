@@ -59,10 +59,12 @@ func (j *JiraAPIClient) Do(method, path string, body any) ([]byte, error) {
 // CreateIssueRequest represents the incoming request body
 type CreateIssueRequest struct {
 	// Required fields
-	Summary string `json:"summary"` // Issue title (REQUIRED)
+	Summary    string `json:"summary"`    // Issue title (REQUIRED)
+	ProjectKey string `json:"projectKey"` // Project key (REQUIRED, e.g., "SCRUM", "KANBAN1")
 
 	// Optional fields
-	ProjectKey   string   `json:"projectKey"`   // Project key (optional, uses config default if empty)
+	ProjectName  string   `json:"projectName"`  // Project name (optional, used when creating new project)
+	ProjectType  string   `json:"projectType"`  // Project type: "scrum" or "kanban" (optional, default: "scrum")
 	IssueType    string   `json:"issueType"`    // Type: Task, Story, Bug (optional, default: Task)
 	SprintName   string   `json:"sprintName"`   // Name of the sprint (optional - if empty, creates new sprint)
 	Description  string   `json:"description"`  // Issue description (optional, default: "Created via API")

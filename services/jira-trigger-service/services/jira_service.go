@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/keerthanau/go/models"
@@ -12,6 +13,43 @@ import (
 
 // ProcessCreateIssue handles the main logic for creating issue and adding to sprint
 func ProcessCreateIssue(jira *models.JiraAPIClient, projectKey string, req *models.CreateIssueRequest) models.CreateIssueResponse {
+	// Step 0: Check if project exists, create if not
+	if !ProjectExists(jira, projectKey) {
+		log.Printf("Project %s does not exist, creating it...", projectKey)
+
+		// Set defaults
+		projectName := req.ProjectName
+		if projectName == "" {
+			projectName = projectKey + " Project"
+		}
+
+		projectType := req.ProjectType
+		if projectType == "" {
+			projectType = "scrum" // Default to scrum
+		}
+
+		// Create the project
+		err := CreateProject(jira, projectKey, projectName, projectType)
+		if err != nil {
+			return models.CreateIssueResponse{
+				Success: false,
+				Error:   "Failed to create project: " + err.Error(),
+			}
+		}
+
+		// Create a board for the project
+		boardName := projectName + " Board"
+		_, err = CreateBoard(jira, projectKey, boardName, projectType)
+		if err != nil {
+			return models.CreateIssueResponse{
+				Success: false,
+				Error:   "Failed to create board: " + err.Error(),
+			}
+		}
+	} else {
+		log.Printf("Project %s already exists", projectKey)
+	}
+
 	// Step 1: Create the issue
 	issueKey, _, err := CreateJiraIssue(jira, projectKey, req)
 	if err != nil {
@@ -44,7 +82,7 @@ func ProcessCreateIssue(jira *models.JiraAPIClient, projectKey string, req *mode
 			}
 		}
 		sprintName = req.SprintName
-		log.Printf("✅ Found existing sprint: %s (ID: %d)", sprintName, sprintID)
+		log.Printf("Found existing sprint: %s (ID: %d)", sprintName, sprintID)
 	} else {
 		// No sprint name - create new sprint with auto-generated name
 		sprintName = fmt.Sprintf("Auto Sprint %s", time.Now().Format("2006-01-02 15:04"))
@@ -114,10 +152,10 @@ func CreateJiraIssue(jira *models.JiraAPIClient, projectKey string, req *models.
 		// Find user by display name
 		accountID, err := FindUserByName(jira, req.AssigneeName)
 		if err != nil {
-			log.Printf("⚠️  Warning: Could not find user '%s': %v", req.AssigneeName, err)
+			log.Printf("Warning: Could not find user '%s': %v", req.AssigneeName, err)
 		} else {
 			fields["assignee"] = map[string]any{"accountId": accountID}
-			log.Printf("✅ Found user '%s' with ID: %s", req.AssigneeName, accountID)
+			log.Printf("Found user '%s' with ID: %s", req.AssigneeName, accountID)
 		}
 	}
 
@@ -135,23 +173,23 @@ func CreateJiraIssue(jira *models.JiraAPIClient, projectKey string, req *models.
 
 	// Debug: Log the full request body
 	debugJSON, _ := json.MarshalIndent(createBody, "", "  ")
-	log.Printf("📤 Sending to Jira API:\n%s", string(debugJSON))
+	log.Printf("Sending to Jira API:\n%s", string(debugJSON))
 
 	respBytes, err := jira.Do("POST", "/rest/api/3/issue", createBody)
 	if err != nil {
-		log.Printf("❌ Error creating issue: %v", err)
+		log.Printf("Error creating issue: %v", err)
 		return "", "", err
 	}
 
 	// Debug: Log the response from Jira
-	log.Printf("📥 Response from Jira: %s", string(respBytes))
+	log.Printf("Response from Jira: %s", string(respBytes))
 
 	var created struct {
 		Key string `json:"key"`
 		ID  string `json:"id"`
 	}
 	json.Unmarshal(respBytes, &created)
-	log.Printf("✅ Created issue: %s (Type: %s, Priority: %s)", created.Key, req.IssueType, req.Priority)
+	log.Printf("Created issue: %s (Type: %s, Priority: %s)", created.Key, req.IssueType, req.Priority)
 	return created.Key, created.ID, nil
 }
 
@@ -172,7 +210,7 @@ func GetBoardID(jira *models.JiraAPIClient, projectKey string) (int, error) {
 	if len(boards.Values) == 0 {
 		return 0, fmt.Errorf("no boards found for project")
 	}
-	log.Printf("✅ Found board ID: %d", boards.Values[0].ID)
+	log.Printf("Found board ID: %d", boards.Values[0].ID)
 	return boards.Values[0].ID, nil
 }
 
@@ -197,7 +235,7 @@ func CreateSprint(jira *models.JiraAPIClient, boardID int, sprintName string) (i
 		ID int `json:"id"`
 	}
 	json.Unmarshal(respBytes, &sprint)
-	log.Printf("✅ Created sprint: %s (ID: %d)", sprintName, sprint.ID)
+	log.Printf("Created sprint: %s (ID: %d)", sprintName, sprint.ID)
 	return sprint.ID, nil
 }
 
@@ -207,7 +245,7 @@ func StartSprint(jira *models.JiraAPIClient, sprintID int) error {
 	body := map[string]any{"state": "active"}
 	_, err := jira.Do("POST", path, body)
 	if err == nil {
-		log.Printf("✅ Started sprint ID: %d", sprintID)
+		log.Printf("Started sprint ID: %d", sprintID)
 	}
 	return err
 }
@@ -218,7 +256,7 @@ func AddIssueToSprint(jira *models.JiraAPIClient, sprintID int, issueKey string)
 	body := map[string]any{"issues": []string{issueKey}}
 	_, err := jira.Do("POST", path, body)
 	if err == nil {
-		log.Printf("✅ Added issue %s to sprint %d", issueKey, sprintID)
+		log.Printf("Added issue %s to sprint %d", issueKey, sprintID)
 	}
 	return err
 }
@@ -282,4 +320,106 @@ func FindUserByName(jira *models.JiraAPIClient, displayName string) (string, err
 	}
 
 	return "", fmt.Errorf("user '%s' not found", displayName)
+}
+
+// ProjectExists checks if a project exists
+func ProjectExists(jira *models.JiraAPIClient, projectKey string) bool {
+	path := fmt.Sprintf("/rest/api/3/project/%s", projectKey)
+	_, err := jira.Do("GET", path, nil)
+	return err == nil
+}
+
+// CreateProject creates a new Jira project with Scrum or Kanban template
+func CreateProject(jira *models.JiraAPIClient, projectKey, projectName, projectType string) error {
+	// Get current user to set as project lead
+	respBytes, err := jira.Do("GET", "/rest/api/3/myself", nil)
+	if err != nil {
+		return fmt.Errorf("failed to get current user: %v", err)
+	}
+
+	var user struct {
+		AccountID string `json:"accountId"`
+	}
+	json.Unmarshal(respBytes, &user)
+
+	if user.AccountID == "" {
+		return fmt.Errorf("could not determine current user account ID")
+	}
+
+	// Determine template based on project type
+	var templateKey string
+	projectType = strings.ToLower(projectType)
+
+	if projectType == "kanban" {
+		templateKey = "com.pyxis.greenhopper.jira:gh-kanban-template"
+	} else {
+		// Default to scrum
+		templateKey = "com.pyxis.greenhopper.jira:gh-scrum-template"
+	}
+
+	// Create project
+	body := map[string]any{
+		"key":                projectKey,
+		"name":               projectName,
+		"projectTypeKey":     "software",
+		"projectTemplateKey": templateKey,
+		"leadAccountId":      user.AccountID,
+		"assigneeType":       "PROJECT_LEAD",
+	}
+
+	log.Printf("🔧 Creating %s project: %s (%s)", strings.ToUpper(projectType), projectName, projectKey)
+	_, err = jira.Do("POST", "/rest/api/3/project", body)
+	if err != nil {
+		return fmt.Errorf("failed to create project: %v", err)
+	}
+
+	log.Printf("Project created: %s (%s)", projectName, projectKey)
+
+	// Wait a bit for project to be fully initialized
+	time.Sleep(2 * time.Second)
+
+	return nil
+}
+
+// CreateBoard creates a Scrum or Kanban board for a project
+func CreateBoard(jira *models.JiraAPIClient, projectKey, boardName, boardType string) (int, error) {
+	// First, create a filter for the board
+	filterBody := map[string]any{
+		"name":        fmt.Sprintf("%s Filter", boardName),
+		"jql":         fmt.Sprintf("project = %s ORDER BY Rank ASC", projectKey),
+		"description": fmt.Sprintf("Filter for %s board", boardName),
+	}
+
+	log.Printf("🔧 Creating filter for board...")
+	filterResp, err := jira.Do("POST", "/rest/api/3/filter", filterBody)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create filter: %v", err)
+	}
+
+	var filter struct {
+		ID string `json:"id"`
+	}
+	json.Unmarshal(filterResp, &filter)
+	log.Printf("Filter created: ID %s", filter.ID)
+
+	// Create the board
+	boardBody := map[string]any{
+		"name":     boardName,
+		"type":     strings.ToLower(boardType),
+		"filterId": filter.ID,
+	}
+
+	log.Printf("🔧 Creating %s board: %s", strings.ToUpper(boardType), boardName)
+	boardResp, err := jira.Do("POST", "/rest/agile/1.0/board", boardBody)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create board: %v", err)
+	}
+
+	var board struct {
+		ID int `json:"id"`
+	}
+	json.Unmarshal(boardResp, &board)
+	log.Printf("Board created: %s (ID: %d)", boardName, board.ID)
+
+	return board.ID, nil
 }
