@@ -33,8 +33,8 @@ func (s *HTTPServer) Start() error {
 	// CORS middleware
 	handler := s.enableCORS(mux)
 
-	addr := ":" + s.port
-	log.Printf("🚀 Chat Agent Service starting on port %s", s.port)
+	addr := "0.0.0.0:" + s.port
+	log.Printf("🚀 Chat Agent Service starting on 0.0.0.0:%s", s.port)
 	log.Printf("📡 Endpoints:")
 	log.Printf("   GET  /health           - Health check")
 	log.Printf("   POST /api/v1/chat      - Chat with AI agent")

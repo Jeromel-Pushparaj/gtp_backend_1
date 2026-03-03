@@ -24,11 +24,11 @@ func main() {
 
 	// Start server
 	port := "8086"
-	log.Printf("Server starting on port %s...", port)
+	log.Printf("Server starting on 0.0.0.0:%s...", port)
 	log.Printf("POST endpoint: http://localhost:%s/api/create-issue", port)
 	log.Printf("Health check: http://localhost:%s/health", port)
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
