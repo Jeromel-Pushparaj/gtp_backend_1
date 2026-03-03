@@ -80,6 +80,13 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config) {
 		// Auto-fetch evaluation routes - GET (frontend-friendly, uses query parameters)
 		v2.GET("/scorecards/auto-evaluate", v2Handler.AutoEvaluateServiceGET)
 		v2.GET("/scorecards/auto-evaluate/:name", v2Handler.AutoEvaluateServiceByScorecardNameGET)
+
+		// Individual scorecard endpoints (dedicated routes for each scorecard)
+		v2.GET("/scorecards/code-quality", v2Handler.GetCodeQualityScorecard)
+		v2.GET("/scorecards/service-health", v2Handler.GetServiceHealthScorecard)
+		v2.GET("/scorecards/security-maturity", v2Handler.GetSecurityMaturityScorecard)
+		v2.GET("/scorecards/production-readiness", v2Handler.GetProductionReadinessScorecard)
+		v2.GET("/scorecards/pr-metrics", v2Handler.GetPRMetricsScorecard)
 	}
 
 	log.Println("✅ API v1 routes registered")

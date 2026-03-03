@@ -261,13 +261,20 @@ getServiceScorecard("delivery-management-frontend", "myorg", "DM")
 
 ## 📊 The 5 Scorecards
 
-### 1. Code Quality (🥉 Bronze → 🥈 Silver → 🥇 Gold)
+### 1. Code Quality (⚪ Starter → 🥉 Bronze → 🥈 Silver → 🥇 Gold)
 
 Evaluates code quality based on test coverage, vulnerabilities, code smells, and duplications.
 
+**Levels:**
+
+- **⚪ Starter**: Has README, Coverage ≥30%
+- **🥉 Bronze**: Coverage ≥60%, Vulnerabilities ≤10, Duplications ≤5%, Has README
+- **🥈 Silver**: Coverage ≥80%, Code Smells ≤50, Vulnerabilities ≤5
+- **🥇 Gold**: Coverage ≥90%, Code Smells ≤10, Vulnerabilities =0, Duplications ≤3%
+
 **Key Metrics:** `coverage`, `vulnerabilities`, `code_smells`, `duplicated_lines_density`, `has_readme`
 
-### 2. Security Maturity (⚪ Basic → ✅ Good → ⭐ Great)
+### 2. Security Maturity (⚪ Starter → ⚪ Basic → ✅ Good → ⭐ Great)
 
 Evaluates security posture based on vulnerabilities and security hotspots.
 
@@ -279,15 +286,29 @@ Evaluates production readiness based on freshness, documentation, and team colla
 
 **Key Metrics:** `has_readme`, `days_since_last_commit`, `contributors`, `quality_gate_status`, `coverage`
 
-### 4. Service Health (🥉 Bronze → 🥈 Silver → 🥇 Gold)
+### 4. Service Health (⚪ Starter → 🥉 Bronze → 🥈 Silver → 🥇 Gold)
 
 Evaluates service health based on bugs and mean time to resolve.
 
+**Levels:**
+
+- **⚪ Starter**: Bugs ≤100, Open Bugs ≤50
+- **🥉 Bronze**: Bugs ≤50, Open Bugs ≤20, MTTR <48 hours
+- **🥈 Silver**: Bugs ≤20, Open Bugs ≤10, MTTR <24 hours
+- **🥇 Gold**: Bugs ≤5, Open Bugs ≤3, MTTR <12 hours
+
 **Key Metrics:** `bugs`, `open_bugs`, `mttr` (mean time to resolve)
 
-### 5. PR Metrics (🥉 Bronze → 🥈 Silver → 🥇 Gold)
+### 5. PR Metrics (⚪ Starter → 🥉 Bronze → 🥈 Silver → 🥇 Gold)
 
 Evaluates PR quality and velocity based on merged PRs, conflicts, and collaboration.
+
+**Levels:**
+
+- **⚪ Starter**: Merged PRs ≥1, Open PRs ≤20
+- **🥉 Bronze**: Merged PRs ≥5, PRs with conflicts ≤30%, Open PRs ≤10
+- **🥈 Silver**: Merged PRs ≥20, PRs with conflicts ≤10%, Open PRs ≤5, Contributors ≥3
+- **🥇 Gold**: Merged PRs ≥50, PRs with conflicts ≤5%, Open PRs ≤3, Contributors ≥5
 
 **Key Metrics:** `merged_prs`, `prs_with_conflicts`, `open_prs`, `contributors`
 

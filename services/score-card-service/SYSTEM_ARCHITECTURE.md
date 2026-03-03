@@ -182,29 +182,31 @@ Final Result: 🥉 Bronze (4/7 rules = 57%)
 
 ## 🎯 The 5 Scorecards
 
-### 1. Code Quality (🥉🥈🥇)
+### 1. Code Quality (⚪🥉🥈🥇)
 
-**Pattern:** Bronze → Silver → Gold
+**Pattern:** Starter → Bronze → Silver → Gold
 
-| Level     | Rules                                                                |
-| --------- | -------------------------------------------------------------------- |
-| 🥉 Bronze | Coverage ≥60%, Vulnerabilities ≤10, Duplications ≤5%, Has README     |
-| 🥈 Silver | Coverage ≥80%, Code Smells ≤50, Vulnerabilities ≤5                   |
-| 🥇 Gold   | Coverage ≥90%, Code Smells ≤10, Vulnerabilities =0, Duplications ≤3% |
+| Level      | Rules                                                                |
+| ---------- | -------------------------------------------------------------------- |
+| ⚪ Starter | Has README, Coverage ≥30%                                            |
+| 🥉 Bronze  | Coverage ≥60%, Vulnerabilities ≤10, Duplications ≤5%, Has README     |
+| 🥈 Silver  | Coverage ≥80%, Code Smells ≤50, Vulnerabilities ≤5                   |
+| 🥇 Gold    | Coverage ≥90%, Code Smells ≤10, Vulnerabilities =0, Duplications ≤3% |
 
-**Total Rules:** 11
+**Total Rules:** 13
 
 ---
 
-### 2. Security Maturity (⚪✅⭐)
+### 2. Security Maturity (⚪⚪✅⭐)
 
-**Pattern:** Basic → Good → Great
+**Pattern:** Starter → Basic → Good → Great
 
-| Level    | Rules                                      |
-| -------- | ------------------------------------------ |
-| ⚪ Basic | Vulnerabilities ≤20, Security Hotspots ≤10 |
-| ✅ Good  | Vulnerabilities ≤5, Security Hotspots ≤3   |
-| ⭐ Great | Vulnerabilities =0, Security Hotspots =0   |
+| Level      | Rules                                      |
+| ---------- | ------------------------------------------ |
+| ⚪ Starter | (Minimal requirements - always passes)     |
+| ⚪ Basic   | Vulnerabilities ≤20, Security Hotspots ≤10 |
+| ✅ Good    | Vulnerabilities ≤5, Security Hotspots ≤3   |
+| ⭐ Great   | Vulnerabilities =0, Security Hotspots =0   |
 
 **Total Rules:** 6
 
@@ -225,31 +227,33 @@ Final Result: 🥉 Bronze (4/7 rules = 57%)
 
 ---
 
-### 4. Service Health (🥉🥈🥇)
+### 4. Service Health (⚪🥉🥈🥇)
 
-**Pattern:** Bronze → Silver → Gold
+**Pattern:** Starter → Bronze → Silver → Gold
 
-| Level     | Rules                              |
-| --------- | ---------------------------------- |
-| 🥉 Bronze | Bugs ≤50, Open Bugs ≤20, MTTR <48h |
-| 🥈 Silver | Bugs ≤20, Open Bugs ≤10, MTTR <24h |
-| 🥇 Gold   | Bugs ≤5, Open Bugs ≤3, MTTR <12h   |
+| Level      | Rules                              |
+| ---------- | ---------------------------------- |
+| ⚪ Starter | Bugs ≤100, Open Bugs ≤50           |
+| 🥉 Bronze  | Bugs ≤50, Open Bugs ≤20, MTTR <48h |
+| 🥈 Silver  | Bugs ≤20, Open Bugs ≤10, MTTR <24h |
+| 🥇 Gold    | Bugs ≤5, Open Bugs ≤3, MTTR <12h   |
 
-**Total Rules:** 9
+**Total Rules:** 11
 
 ---
 
-### 5. PR Metrics (🥉🥈🥇)
+### 5. PR Metrics (⚪🥉🥈🥇)
 
-**Pattern:** Bronze → Silver → Gold
+**Pattern:** Starter → Bronze → Silver → Gold
 
-| Level     | Rules                                                        |
-| --------- | ------------------------------------------------------------ |
-| 🥉 Bronze | Merged PRs ≥5, Conflicts ≤30%, Open PRs ≤10                  |
-| 🥈 Silver | Merged PRs ≥20, Conflicts ≤10%, Open PRs ≤5, ≥3 contributors |
-| 🥇 Gold   | Merged PRs ≥50, Conflicts ≤5%, Open PRs ≤3, ≥5 contributors  |
+| Level      | Rules                                                        |
+| ---------- | ------------------------------------------------------------ |
+| ⚪ Starter | Merged PRs ≥1, Open PRs ≤20                                  |
+| 🥉 Bronze  | Merged PRs ≥5, Conflicts ≤30%, Open PRs ≤10                  |
+| 🥈 Silver  | Merged PRs ≥20, Conflicts ≤10%, Open PRs ≤5, ≥3 contributors |
+| 🥇 Gold    | Merged PRs ≥50, Conflicts ≤5%, Open PRs ≤3, ≥5 contributors  |
 
-**Total Rules:** 11
+**Total Rules:** 13
 
 ---
 

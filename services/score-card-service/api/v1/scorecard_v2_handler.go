@@ -550,3 +550,308 @@ func (h *ScorecardV2Handler) AutoEvaluateServiceByScorecardNameGET(c *gin.Contex
 		"fetched_metrics": combinedMetrics,
 	})
 }
+
+// GetCodeQualityScorecard handles GET /api/v2/scorecards/code-quality
+// Dedicated endpoint for Code Quality scorecard evaluation
+func (h *ScorecardV2Handler) GetCodeQualityScorecard(c *gin.Context) {
+	serviceName := c.Query("service_name")
+	owner := c.Query("owner")
+	jiraProjectKey := c.Query("jira_project_key")
+
+	if serviceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "service_name query parameter is required",
+		})
+		return
+	}
+
+	if h.metricsFetcher == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Metrics fetcher not configured",
+		})
+		return
+	}
+
+	// Fetch metrics
+	combinedMetrics, err := h.metricsFetcher.FetchAllMetrics(serviceName, jiraProjectKey)
+	if owner != "" {
+		combinedMetrics.ServiceName = owner + "/" + serviceName
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch metrics",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Get Code Quality scorecard
+	scorecard := scorecards.GetCodeQualityScorecard()
+
+	// Convert metrics to map
+	metricsMap := combinedMetrics.ToMap()
+	serviceData := make(map[string]interface{})
+	for k, v := range metricsMap {
+		serviceData[k] = v
+	}
+
+	// Evaluate
+	evaluation, err := h.evaluator.EvaluateService(serviceName, scorecard, serviceData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to evaluate service",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"scorecard":       "Code Quality",
+		"evaluation":      evaluation,
+		"fetched_metrics": combinedMetrics,
+	})
+}
+
+// GetServiceHealthScorecard handles GET /api/v2/scorecards/service-health
+// Dedicated endpoint for Service Health scorecard evaluation
+func (h *ScorecardV2Handler) GetServiceHealthScorecard(c *gin.Context) {
+	serviceName := c.Query("service_name")
+	owner := c.Query("owner")
+	jiraProjectKey := c.Query("jira_project_key")
+
+	if serviceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "service_name query parameter is required",
+		})
+		return
+	}
+
+	if h.metricsFetcher == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Metrics fetcher not configured",
+		})
+		return
+	}
+
+	// Fetch metrics
+	combinedMetrics, err := h.metricsFetcher.FetchAllMetrics(serviceName, jiraProjectKey)
+	if owner != "" {
+		combinedMetrics.ServiceName = owner + "/" + serviceName
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch metrics",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Get Service Health scorecard
+	scorecard := scorecards.GetServiceHealthScorecard()
+
+	// Convert metrics to map
+	metricsMap := combinedMetrics.ToMap()
+	serviceData := make(map[string]interface{})
+	for k, v := range metricsMap {
+		serviceData[k] = v
+	}
+
+	// Evaluate
+	evaluation, err := h.evaluator.EvaluateService(serviceName, scorecard, serviceData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to evaluate service",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"scorecard":       "Service Health",
+		"evaluation":      evaluation,
+		"fetched_metrics": combinedMetrics,
+	})
+}
+
+// GetSecurityMaturityScorecard handles GET /api/v2/scorecards/security-maturity
+// Dedicated endpoint for Security Maturity scorecard evaluation
+func (h *ScorecardV2Handler) GetSecurityMaturityScorecard(c *gin.Context) {
+	serviceName := c.Query("service_name")
+	owner := c.Query("owner")
+	jiraProjectKey := c.Query("jira_project_key")
+
+	if serviceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "service_name query parameter is required",
+		})
+		return
+	}
+
+	if h.metricsFetcher == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Metrics fetcher not configured",
+		})
+		return
+	}
+
+	// Fetch metrics
+	combinedMetrics, err := h.metricsFetcher.FetchAllMetrics(serviceName, jiraProjectKey)
+	if owner != "" {
+		combinedMetrics.ServiceName = owner + "/" + serviceName
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch metrics",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Get Security Maturity scorecard
+	scorecard := scorecards.GetSecurityMaturityScorecard()
+
+	// Convert metrics to map
+	metricsMap := combinedMetrics.ToMap()
+	serviceData := make(map[string]interface{})
+	for k, v := range metricsMap {
+		serviceData[k] = v
+	}
+
+	// Evaluate
+	evaluation, err := h.evaluator.EvaluateService(serviceName, scorecard, serviceData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to evaluate service",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"scorecard":       "Security Maturity",
+		"evaluation":      evaluation,
+		"fetched_metrics": combinedMetrics,
+	})
+}
+
+// GetProductionReadinessScorecard handles GET /api/v2/scorecards/production-readiness
+// Dedicated endpoint for Production Readiness scorecard evaluation
+func (h *ScorecardV2Handler) GetProductionReadinessScorecard(c *gin.Context) {
+	serviceName := c.Query("service_name")
+	owner := c.Query("owner")
+	jiraProjectKey := c.Query("jira_project_key")
+
+	if serviceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "service_name query parameter is required",
+		})
+		return
+	}
+
+	if h.metricsFetcher == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Metrics fetcher not configured",
+		})
+		return
+	}
+
+	// Fetch metrics
+	combinedMetrics, err := h.metricsFetcher.FetchAllMetrics(serviceName, jiraProjectKey)
+	if owner != "" {
+		combinedMetrics.ServiceName = owner + "/" + serviceName
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch metrics",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Get Production Readiness scorecard
+	scorecard := scorecards.GetProductionReadinessScorecard()
+
+	// Convert metrics to map
+	metricsMap := combinedMetrics.ToMap()
+	serviceData := make(map[string]interface{})
+	for k, v := range metricsMap {
+		serviceData[k] = v
+	}
+
+	// Evaluate
+	evaluation, err := h.evaluator.EvaluateService(serviceName, scorecard, serviceData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to evaluate service",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"scorecard":       "Production Readiness",
+		"evaluation":      evaluation,
+		"fetched_metrics": combinedMetrics,
+	})
+}
+
+// GetPRMetricsScorecard handles GET /api/v2/scorecards/pr-metrics
+// Dedicated endpoint for PR Metrics scorecard evaluation
+func (h *ScorecardV2Handler) GetPRMetricsScorecard(c *gin.Context) {
+	serviceName := c.Query("service_name")
+	owner := c.Query("owner")
+	jiraProjectKey := c.Query("jira_project_key")
+
+	if serviceName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "service_name query parameter is required",
+		})
+		return
+	}
+
+	if h.metricsFetcher == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Metrics fetcher not configured",
+		})
+		return
+	}
+
+	// Fetch metrics
+	combinedMetrics, err := h.metricsFetcher.FetchAllMetrics(serviceName, jiraProjectKey)
+	if owner != "" {
+		combinedMetrics.ServiceName = owner + "/" + serviceName
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to fetch metrics",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	// Get PR Metrics scorecard
+	scorecard := scorecards.GetPRMetricsScorecard()
+
+	// Convert metrics to map
+	metricsMap := combinedMetrics.ToMap()
+	serviceData := make(map[string]interface{})
+	for k, v := range metricsMap {
+		serviceData[k] = v
+	}
+
+	// Evaluate
+	evaluation, err := h.evaluator.EvaluateService(serviceName, scorecard, serviceData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Failed to evaluate service",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"scorecard":       "PR Metrics",
+		"evaluation":      evaluation,
+		"fetched_metrics": combinedMetrics,
+	})
+}
