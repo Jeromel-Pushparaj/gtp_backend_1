@@ -8,7 +8,6 @@ import (
 func GetAllScorecardDefinitions() []models.ScorecardDefinition {
 	return []models.ScorecardDefinition{
 		GetCodeQualityScorecard(),
-		GetDORAMetricsScorecard(),
 		GetSecurityMaturityScorecard(),
 		GetProductionReadinessScorecard(),
 		GetServiceHealthScorecard(),
@@ -49,45 +48,6 @@ func GetCodeQualityScorecard() models.ScorecardDefinition {
 		Category:     models.CategoryCodeQuality,
 		Description:  "Evaluates code quality based on test coverage, vulnerabilities, code smells, and duplications",
 		LevelPattern: models.PatternMetal,
-		Levels:       levels,
-		IsActive:     true,
-	}
-}
-
-// GetDORAMetricsScorecard returns the DORA Metrics scorecard definition
-func GetDORAMetricsScorecard() models.ScorecardDefinition {
-	levels := models.GetLevelsByPattern(models.PatternPerformance)
-
-	// Low Level
-	levels[0].Rules = []models.Rule{
-		{Name: "Deployment Frequency >= 1/week", Description: "At least 1 deployment per week", Property: "deployment_frequency", Operator: models.OperatorGreaterThanOrEqual, Threshold: 1, RuleType: models.RuleTypeProperty},
-		{Name: "MTTR < 24 hours", Description: "Mean time to resolve under 24 hours", Property: "mttr", Operator: models.OperatorLessThan, Threshold: 24, RuleType: models.RuleTypeProperty},
-	}
-
-	// Medium Level
-	levels[1].Rules = []models.Rule{
-		{Name: "Deployment Frequency >= 3/week", Description: "At least 3 deployments per week", Property: "deployment_frequency", Operator: models.OperatorGreaterThanOrEqual, Threshold: 3, RuleType: models.RuleTypeProperty},
-		{Name: "MTTR < 12 hours", Description: "Mean time to resolve under 12 hours", Property: "mttr", Operator: models.OperatorLessThan, Threshold: 12, RuleType: models.RuleTypeProperty},
-	}
-
-	// High Level
-	levels[2].Rules = []models.Rule{
-		{Name: "Deployment Frequency >= 7/week", Description: "At least 7 deployments per week (daily)", Property: "deployment_frequency", Operator: models.OperatorGreaterThanOrEqual, Threshold: 7, RuleType: models.RuleTypeProperty},
-		{Name: "MTTR < 4 hours", Description: "Mean time to resolve under 4 hours", Property: "mttr", Operator: models.OperatorLessThan, Threshold: 4, RuleType: models.RuleTypeProperty},
-	}
-
-	// Elite Level
-	levels[3].Rules = []models.Rule{
-		{Name: "Deployment Frequency >= 15/week", Description: "Multiple deployments per day", Property: "deployment_frequency", Operator: models.OperatorGreaterThanOrEqual, Threshold: 15, RuleType: models.RuleTypeProperty},
-		{Name: "MTTR < 1 hour", Description: "Mean time to resolve under 1 hour", Property: "mttr", Operator: models.OperatorLessThan, Threshold: 1, RuleType: models.RuleTypeProperty},
-	}
-
-	return models.ScorecardDefinition{
-		Name:         "DORA_Metrics",
-		DisplayName:  "DORA Metrics",
-		Category:     models.CategoryDevelopmentVelocity,
-		Description:  "Evaluates DevOps performance based on DORA metrics (Deployment Frequency, MTTR)",
-		LevelPattern: models.PatternPerformance,
 		Levels:       levels,
 		IsActive:     true,
 	}
