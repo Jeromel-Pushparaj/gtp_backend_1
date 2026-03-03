@@ -1,0 +1,90 @@
+create channel  => "approval_service_channel"
+
+STEP 1:-   create proj dir struct
+                  
+cd gtp_backend_1/services/approval-service
+
+mkdir -p cmd
+mkdir -p config
+mkdir -p constants
+mkdir -p models
+mkdir -p resources
+mkdir -p db
+mkdir -p service/v1
+mkdir -p controller/v1
+mkdir -p routes
+mkdir -p utils
+
+cd gtp_backend_1/services/approval-service
+
+go get github.com/joho/godotenv@v1.5.1
+go get github.com/slack-go/slack@v0.12.3
+go get github.com/gorilla/mux@v1.8.1
+
+go mod tidy
+
+kill ==>  lsof -ti:8083
+go run cmd/main.go
+
+
+STEP 2:- setup env (.env file) and mod file
+
+cp .env.example .env
+
+
+
+STEP 3:- download dependency
+go mod tidy
+go clean -modcache
+go mod tidy
+
+STEP 4:- create config
+
+STEP 5:- create constants
+
+STEP 5:- create models -> File: resources/slack_channel.go
+
+STEP 6:- create services -> File: service/v1/slack_service.go
+
+
+STEP 7:- create controller -> File: controller/v1/slack_controller.go
+
+
+STEP 8 :- create routes -> File: routes/routes.go
+
+STEP 9: -
+go run cmd/main.go
+
+
+
+STEP 10:- test
+curl http://localhost:8083/health
+
+op
+{"status":"healthy","service":"approval-service"}%  
+
+
+
+
+STEP 11:- create channel 
+curl -X POST http://localhost:8083/api/v1/slack/channel/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service",
+    "is_private": false,
+    "description": "Test channel for approval service"
+  }'
+
+op
+{"success":true,"message":"Channel created successfully","channel_id":"C0AJGKD48BA","channel_name":"channel_approval_service"}
+
+
+SetTopicOfConversation = sets channel description
+
+summary
+main.go: Starts the application
+config.go: Loads environment variables
+slack_service.go: Talks to Slack API
+slack_controller.go: Handles HTTP requests
+routes.go: Maps URLs to handlers
+resources: Defines request/response structures

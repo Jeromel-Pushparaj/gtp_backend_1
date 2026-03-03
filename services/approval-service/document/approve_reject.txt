@@ -1,0 +1,17 @@
+curl -X POST http://localhost:8083/api/v1/approval/request \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service",
+    "approver_name": "Sarumathi S",
+    "requester_name": "Jeromel Pushparaj",
+    "request_type": "deployment_approval",
+    "message": "Please approve the production deployment",
+    "request_data": {
+      "department": "DevOps",
+      "service": "payment-api",
+      "version": "v2.1.0"
+    }
+  }'
+
+897e9b31-ffb1-472a-9615-4312a49a41e0|rejected|0
+d5195b6f-3e7a-4f84-ab12-435c909f2b66|approved|1

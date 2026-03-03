@@ -1,0 +1,44 @@
+# 🐳 Docker ignore file for API Gateway
+
+# Environment files
+.env
+.env.local
+
+# Build artifacts
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+api-gateway
+
+# Test files
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Misc
+.DS_Store
+Thumbs.db
+

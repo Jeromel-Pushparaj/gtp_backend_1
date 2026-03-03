@@ -1,0 +1,122 @@
+SLACK ADMIN SETUP REQUIREMENTS
+Slack admin needs to enable these OAuth scopes for the bot:
+
+Required Bot Token Scopes:
+channels:read - List public channels
+groups:read - List private channels
+users:read - Get user information
+users:read.email - Get user email addresses
+channels:manage - Manage public channels
+groups:write - Manage private channels
+chat:write - Send messages
+im:write - Send direct messages
+
+STEPS:
+1. Go to https://api.slack.com/apps
+2. Select your app (TestSuiteNotifier)
+3. Click "OAuth & Permissions" in left sidebar
+4. Scroll to "Scopes" section
+5. Under "Bot Token Scopes", click "Add an OAuth Scope"
+6. Add all scopes listed above
+7. Click "Reinstall to Workspace" at top of page
+8. Copy the new Bot Token and update your .env file
+
+
+STEP 1
+get all users
+curl http://localhost:8083/api/v1/slack/users/all
+
+
+STEP 2
+get user by name
+
+curl -X POST http://localhost:8083/api/v1/slack/user/by-name \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_name": "Sarumathi S"
+  }'
+
+
+STEP 3
+get user by id
+
+curl -X POST http://localhost:8083/api/v1/slack/user/by-id \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "U0AH3EX5VV2"
+  }'
+
+
+
+STEP 4
+get all channels
+
+curl http://localhost:8083/api/v1/slack/channels/all
+
+STEP 5
+get channel by name
+
+curl -X POST http://localhost:8083/api/v1/slack/channel/by-name \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service"
+  }'
+
+
+
+STEP 6
+get channel by id
+
+curl -X POST http://localhost:8083/api/v1/slack/channel/by-id \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA"
+  }'
+
+STEP 7
+
+add member to channel
+
+curl -X POST http://localhost:8083/api/v1/slack/member/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA",
+    "user_id": "U0AH3EX5VV2"
+  }'
+
+STEP 8
+
+add member to channel by name
+
+curl -X POST http://localhost:8083/api/v1/slack/member/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service",
+    "user_name": "Jeromel Pushparaj"
+  }'
+
+
+STEP 9
+
+ADD member by user id and channel name
+
+curl -X POST http://localhost:8083/api/v1/slack/member/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "approval_service_channel",
+    "user_id": "U0AGQHFQ0MC"
+  }' | jq .   
+
+
+
+STEP 10
+
+ADD member by user name and channel id
+
+curl -X POST http://localhost:8083/api/v1/slack/member/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AHMR837FC",
+    "user_name": "Jeromel Pushparaj"
+  }'
+
