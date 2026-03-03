@@ -23,7 +23,7 @@ func main() {
 	http.HandleFunc("/health", handlers.HealthHandler)
 
 	// Start server
-	port := "8080"
+	port := "8086"
 	log.Printf("Server starting on port %s...", port)
 	log.Printf("POST endpoint: http://localhost:%s/api/create-issue", port)
 	log.Printf("Health check: http://localhost:%s/health", port)
