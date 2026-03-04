@@ -1,0 +1,121 @@
+1. Frontend sends request to API Service
+2. API Service publishes to Kafka topic approval.requested
+3. Approval Service consumes from Kafka and sends Slack notification with interactive buttons
+4. Manager clicks Approve/Reject in Slack
+5. Slack sends response to Approval Service
+6. Approval Service updates DB and publishes to Kafka topic approval.completed
+7. Business Service consumes and executes action
+8. Result published to action.executed/rejected topic
+9. Frontend gets updated
+
+
+Frontend
+   ↓
+API Service
+   ↓
+Kafka Topic → approval.requested
+   ↓
+Approval Service
+   ↓
+Slack Notifier
+   ↓
+Human Approves
+   ↓
+Slack sends response
+   ↓
+Approval Service
+   ↓
+Kafka Topic → approval.completed
+   ↓
+Business Service
+   ↓
+Kafka Topic → action.executed / rejected
+   ↓
+Frontend updated
+
+
+Detailed Implementation Steps
+
+Phase 1: Database Setup
+
+1. Create SQLite database schema for approval requests
+2. Create models for approval entities
+3. Create database connection and migration logic
+
+Phase 2: Kafka Integration
+
+1. Add Kafka producer to publish messages
+2. Add Kafka consumer to consume approval requests
+3. Create message schemas for topics
+
+Phase 3: Slack Interactive Components
+
+1. Configure Slack app for interactivity (need Request URL endpoint)
+2. Create interactive message with Approve/Reject buttons
+3. Handle Slack interactive callbacks
+4. Verify Slack signatures for security
+
+Phase 4: Approval Flow
+
+1. Consumer receives approval request from Kafka
+2. Create approval record in DB with status "pending"
+3. Send Slack message with buttons to manager
+4. Manager clicks button
+5. Update DB with approval/rejection
+6. Publish result to Kafka approval.completed topic
+
+
+
+Step 1: Update go.mod dependencies
+
+go get github.com/confluentinc/confluent-kafka-go/v2/kafka
+go get github.com/mattn/go-sqlite3
+go get gorm.io/gorm
+go get gorm.io/driver/sqlite
+
+GORM = Go Object-Relational Mapping library
+
+
+2. Steps to Enable Socket Mode and Get App Level Token
+
+    1. Go to https://api.slack.com/apps
+
+    2. Click on your app (or create one)
+
+    3. Enable Socket Mode:
+
+        In left sidebar, click "Socket Mode"
+        Toggle "Enable Socket Mode" to ON
+        It will prompt you to create an App-Level Token
+        Click "Generate Token and Scopes"
+        Give it a name like "socket-token"
+        Add scope: connections:write
+        Click "Generate"
+        COPY THE TOKEN (starts with xapp-...) - this is your App Level Token
+        Put it in your .env as SLACK_APP_TOKEN
+    
+    4. Enable Interactivity:
+
+        In left sidebar, click "Interactivity & Shortcuts"
+        Toggle "Interactivity" to ON
+        You DON'T need to add Request URL (Socket Mode handles it)
+        Click "Save Changes"
+    
+    5. Verify Bot Token Scopes:
+
+        In left sidebar, click "OAuth & Permissions"
+        Under "Bot Token Scopes", make sure you have:
+        chat:write
+        channels:read
+        users:read
+        im:write
+        If missing, add them and reinstall the app to your workspace
+
+
+    6. Get Bot User ID (for SLACK_BOT_ID):
+
+        After installing the app, go to your Slack workspace
+        Click on your bot's name
+        Click "View full profile"
+        Click the three dots (...) → "Copy member ID"
+        That's your SLACK_BOT_ID (should start with U, not D)

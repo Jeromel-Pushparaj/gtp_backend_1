@@ -1,0 +1,49 @@
+1. open interactive shell
+
+sqlite3 /Users/sarumathis/Desktop/slack/gtp_backend_1/services/approval-service/approval_service.db
+
+
+2. First, format the output nicely:
+.mode column
+.headers on
+
+3. View all your approval requests:
+SELECT * FROM approval_requests;
+
+
+4. Or view just the key fields (cleaner):
+SELECT 
+  id,
+  request_id,
+  requester_name,
+  approver_name,
+  request_type,
+  status,
+  approved,
+  processed_by,
+  processed_at
+FROM approval_requests;
+
+
+5. View only approved requests:
+SELECT request_id, requester_name, status, approved FROM approval_requests WHERE approved = 1;
+
+
+6. View only rejected requests:
+SELECT request_id, requester_name, status, approved FROM approval_requests WHERE approved = 0;
+
+
+7. View the request_data (JSON):
+SELECT request_id, request_type, request_data FROM approval_requests;
+
+8. Count total requests:
+SELECT COUNT(*) as total_requests FROM approval_requests;
+
+9. Count by status:
+SELECT status, COUNT(*) as count FROM approval_requests GROUP BY status;
+
+10. View latest request:
+SELECT * FROM approval_requests ORDER BY created_at DESC LIMIT 1;
+
+11. Exit when done:
+.quit

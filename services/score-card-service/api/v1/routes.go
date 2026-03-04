@@ -53,47 +53,20 @@ func RegisterRoutes(router *gin.Engine, cfg *config.Config) {
 	}
 
 	// API v2 group - Advanced scorecards with levels (Gold/Silver/Bronze, Traffic Lights, etc.)
-	// Create v2 handler with metrics fetcher if configured
-	var v2Handler *ScorecardV2Handler
-	if cfg.MetricsAPIBaseURL != "" {
-		v2Handler = NewScorecardV2HandlerWithFetcher(cfg.MetricsAPIBaseURL)
-		log.Printf("✅ V2 Handler initialized with metrics fetcher (base URL: %s)", cfg.MetricsAPIBaseURL)
-	} else {
-		v2Handler = NewScorecardV2Handler()
-		log.Println("⚠️  V2 Handler initialized without metrics fetcher (auto-evaluate endpoints will not work)")
-	}
-
+	v2Handler := NewScorecardV2Handler()
 	v2 := router.Group("/api/v2")
 	{
 		// Scorecard definition routes
 		v2.GET("/scorecards/definitions", v2Handler.GetAllScorecardDefinitions)
 		v2.GET("/scorecards/definitions/:name", v2Handler.GetScorecardDefinition)
 
-		// Manual evaluation routes (requires service_data in request body)
+		// Evaluation routes
 		v2.POST("/scorecards/evaluate", v2Handler.EvaluateService)
 		v2.POST("/scorecards/evaluate/:name", v2Handler.EvaluateServiceByScorecardName)
-
-		// Auto-fetch evaluation routes - POST (fetches metrics from external APIs)
-		v2.POST("/scorecards/auto-evaluate", v2Handler.AutoEvaluateService)
-		v2.POST("/scorecards/auto-evaluate/:name", v2Handler.AutoEvaluateServiceByScorecardName)
-
-		// Auto-fetch evaluation routes - GET (frontend-friendly, uses query parameters)
-		v2.GET("/scorecards/auto-evaluate", v2Handler.AutoEvaluateServiceGET)
-		v2.GET("/scorecards/auto-evaluate/:name", v2Handler.AutoEvaluateServiceByScorecardNameGET)
-
-		// Individual scorecard endpoints (dedicated routes for each scorecard)
-		v2.GET("/scorecards/code-quality", v2Handler.GetCodeQualityScorecard)
-		v2.GET("/scorecards/service-health", v2Handler.GetServiceHealthScorecard)
-		v2.GET("/scorecards/security-maturity", v2Handler.GetSecurityMaturityScorecard)
-		v2.GET("/scorecards/production-readiness", v2Handler.GetProductionReadinessScorecard)
-		v2.GET("/scorecards/pr-metrics", v2Handler.GetPRMetricsScorecard)
 	}
 
 	log.Println("✅ API v1 routes registered")
 	log.Println("✅ API v2 routes registered (Advanced Scorecards)")
-	log.Println("   - Manual evaluation: POST /api/v2/scorecards/evaluate")
-	log.Println("   - Auto evaluation (POST): POST /api/v2/scorecards/auto-evaluate")
-	log.Println("   - Auto evaluation (GET): GET /api/v2/scorecards/auto-evaluate?service_name=xxx&jira_project_key=yyy")
 }
 
 // initDB initializes the database connection
