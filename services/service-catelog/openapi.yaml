@@ -1,0 +1,636 @@
+openapi: 3.0.3
+info:
+  title: Service Catalog API
+  description: |
+    Service Catalog API provides comprehensive service management and metadata aggregation.
+    It aggregates data from multiple sources including GitHub, Jira, SonarCloud, Jenkins, Wiz, and PagerDuty
+    to provide a unified view of all services in the organization.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8085
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Service
+    description: Service management operations
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the service is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: service-catalog
+
+  /api/v1/service:
+    post:
+      tags:
+        - Service
+      summary: Register a new service
+      description: |
+        Register a new service in the catalog. The service will be created in sonar-shell-test
+        and additional metrics will be fetched from various APIs (GitHub, Jira, etc.).
+      operationId: createService
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+            examples:
+              basic:
+                summary: Basic service registration
+                value:
+                  org_id: 1
+                  title: my-new-service
+                  repositoryUrl: https://github.com/myorg/my-new-service
+                  language: golang
+                  disposition: active
+                  region: us
+                  cloudMigrationStatus: cloud-native
+              complete:
+                summary: Complete service registration with all fields
+                value:
+                  org_id: 1
+                  title: payment-service
+                  repositoryUrl: https://github.com/myorg/payment-service
+                  language: java
+                  disposition: active
+                  region: us
+                  cloudMigrationStatus: cloud-native
+                  product:
+                    id: prod_001
+                    name: Tekion
+                  module:
+                    id: mod_003
+                    name: Tekion / Payment
+                  ownership:
+                    manager:
+                      id: user_101
+                      name: Arjun J
+                    director:
+                      id: user_201
+                      name: Director Name
+                    vp:
+                      id: user_301
+                      name: VP Name
+                  jiraProjectKey: PAY
+      responses:
+        '201':
+          description: Service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Service
+      summary: Get all services
+      description: |
+        Retrieve all services from the catalog. Uses cache-first strategy with 5-minute TTL.
+        If cache is empty or stale, fetches from sonar-shell-test API.
+      operationId: getAllServices
+      responses:
+        '200':
+          description: Successfully retrieved services
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServicesResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/service/{id}:
+    get:
+      tags:
+        - Service
+      summary: Get service by ID
+      description: |
+        Retrieve a specific service by its ID (format: svc_12345).
+        Uses cache-first strategy with 5-minute TTL.
+      operationId: getServiceById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Service ID in format svc_12345
+          schema:
+            type: string
+            pattern: '^svc_\d+$'
+            example: svc_1
+      responses:
+        '200':
+          description: Successfully retrieved service
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServiceResponse'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    APIResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          example: success
+        message:
+          type: string
+          example: Operation completed successfully
+        data:
+          type: object
+          description: Response data (varies by endpoint)
+        error:
+          type: string
+          description: Error message (only present when status is error)
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        message:
+          type: string
+          example: An error occurred
+        error:
+          type: string
+          example: Detailed error message
+
+    CreateServiceRequest:
+      type: object
+      required:
+        - org_id
+        - title
+        - repositoryUrl
+      properties:
+        org_id:
+          type: integer
+          format: int64
+          description: Organization ID from sonar-shell-test
+          example: 1
+        title:
+          type: string
+          description: Service/Repository name
+          example: my-new-service
+        repositoryUrl:
+          type: string
+          format: uri
+          description: GitHub repository URL
+          example: https://github.com/myorg/my-new-service
+        language:
+          type: string
+          description: Primary programming language
+          example: golang
+        disposition:
+          type: string
+          description: Service status
+          enum: [active, deprecated, archived]
+          default: active
+        region:
+          type: string
+          description: Deployment region
+          example: us
+        cloudMigrationStatus:
+          type: string
+          description: Cloud migration status
+          enum: [cloud-native, migrating, on-prem, hybrid]
+          default: cloud-native
+        product:
+          $ref: '#/components/schemas/ProductInfo'
+        module:
+          $ref: '#/components/schemas/ModuleInfo'
+        ownership:
+          $ref: '#/components/schemas/OwnershipInfo'
+        jiraProjectKey:
+          type: string
+          description: Jira project key for fetching Jira metrics
+          example: MYPROJ
+
+    ServicesResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of services
+          example: 4
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceResponse'
+
+    ServiceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Service ID in format svc_12345
+          example: svc_1
+        title:
+          type: string
+          description: Service name
+          example: delivery-management-frontend
+        repositorySystem:
+          type: string
+          description: Source control system
+          example: github
+        repositoryUrl:
+          type: string
+          format: uri
+          description: Repository URL
+          example: https://github.com/teknex-poc/delivery-management-frontend
+        language:
+          type: string
+          description: Primary programming language
+          example: react
+        disposition:
+          type: string
+          description: Service status
+          example: active
+        region:
+          type: string
+          description: Deployment region
+          example: us
+        cloudMigrationStatus:
+          type: string
+          description: Cloud migration status
+          example: cloud-native
+        product:
+          $ref: '#/components/schemas/ProductInfo'
+        module:
+          $ref: '#/components/schemas/ModuleInfo'
+        ownership:
+          $ref: '#/components/schemas/OwnershipInfo'
+        metrics:
+          $ref: '#/components/schemas/MetricsInfo'
+        openPullRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/PullRequestInfo'
+        jenkinsJobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/JenkinsJobInfo'
+        jiraIssues:
+          type: array
+          items:
+            $ref: '#/components/schemas/JiraIssueInfo'
+        wizIssues:
+          type: array
+          items:
+            $ref: '#/components/schemas/WizIssueInfo'
+        pdIncidents:
+          type: array
+          items:
+            $ref: '#/components/schemas/PdIncidentInfo'
+
+    ProductInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: prod_001
+        name:
+          type: string
+          example: Tekion
+
+    ModuleInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: mod_001
+        name:
+          type: string
+          example: Tekion / Task & Program
+
+    OwnershipInfo:
+      type: object
+      properties:
+        manager:
+          $ref: '#/components/schemas/PersonInfo'
+        director:
+          $ref: '#/components/schemas/PersonInfo'
+        vp:
+          $ref: '#/components/schemas/PersonInfo'
+
+    PersonInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: user_101
+        name:
+          type: string
+          example: Arjun J
+
+    MetricsInfo:
+      type: object
+      properties:
+        jiraIssuesCount:
+          type: integer
+          description: Total number of Jira issues
+          example: 0
+        pullRequestsCount:
+          type: integer
+          description: Number of open pull requests
+          example: 0
+        mergeRequestsCount:
+          type: integer
+          description: Number of merged pull requests
+          example: 0
+        rcaReportsCount:
+          type: integer
+          description: Number of RCA reports
+          example: 0
+        jenkinsJobsCount:
+          type: integer
+          description: Total number of Jenkins jobs
+          example: 2
+        passingJenkinsJobsCount:
+          type: integer
+          description: Number of passing Jenkins jobs
+          example: 2
+        wizIssuesCount:
+          type: integer
+          description: Number of Wiz security issues
+          example: 1
+        pdIncidentsCount:
+          type: integer
+          description: Number of PagerDuty incidents
+          example: 1
+
+    PullRequestInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: pr_001
+        title:
+          type: string
+          example: Add new feature
+        author:
+          type: string
+          example: john.doe
+        status:
+          type: string
+          enum: [open, closed, merged]
+          example: open
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-03-01T10:00:00Z
+        url:
+          type: string
+          format: uri
+          example: https://github.com/myorg/myrepo/pull/123
+
+    JenkinsJobInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: jenkins_001
+        title:
+          type: string
+          example: delivery-management-frontend
+        status:
+          type: string
+          enum: [success, failure, unstable, aborted]
+          example: success
+        lastUpdate:
+          type: string
+          format: date-time
+          example: 2026-02-21T23:12:29.63187+05:30
+        entityCreationDate:
+          type: string
+          format: date-time
+          example: 2026-02-01T23:12:29.63187+05:30
+        url:
+          type: string
+          format: uri
+          example: https://jenkins.company.com/job/1
+
+    JiraIssueInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: jira_001
+        key:
+          type: string
+          example: PROJ-123
+        title:
+          type: string
+          example: Fix login bug
+        type:
+          type: string
+          enum: [Bug, Task, Story, Epic]
+          example: Bug
+        status:
+          type: string
+          example: In Progress
+        priority:
+          type: string
+          enum: [Highest, High, Medium, Low, Lowest]
+          example: High
+        assignee:
+          type: string
+          example: john.doe
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-03-01T10:00:00Z
+        url:
+          type: string
+          format: uri
+          example: https://jira.company.com/browse/PROJ-123
+
+    WizIssueInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: wiz_001
+        title:
+          type: string
+          example: delivery-management-frontend | COMPUTE_INSTANCE
+        severity:
+          type: string
+          enum: [Critical, High, Medium, Low, Informational]
+          example: High
+        status:
+          type: string
+          enum: [Open, In Progress, Resolved, Rejected]
+          example: Open
+        detectedAt:
+          type: string
+          format: date-time
+          example: 2026-02-26T23:12:29.63187+05:30
+        url:
+          type: string
+          format: uri
+          example: https://wiz.company.com/issues/123
+
+    PdIncidentInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          example: pd_001
+        incidentNumber:
+          type: string
+          example: INC-9001
+        title:
+          type: string
+          example: Service latency spike
+        status:
+          type: string
+          enum: [Triggered, Acknowledged, Resolved]
+          example: Resolved
+        severity:
+          type: string
+          enum: [SEV-1, SEV-2, SEV-3, SEV-4, SEV-5]
+          example: SEV-2
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-02-24T23:12:29.63187+05:30
+        resolvedAt:
+          type: string
+          format: date-time
+          example: 2026-02-25T00:42:29.63187+05:30
+        url:
+          type: string
+          format: uri
+          example: https://pagerduty.company.com/incidents/INC-9001
+
+  examples:
+    ServiceResponseExample:
+      value:
+        status: success
+        message: Service retrieved successfully
+        data:
+          id: svc_1
+          title: delivery-management-frontend
+          repositorySystem: github
+          repositoryUrl: https://github.com/teknex-poc/delivery-management-frontend
+          language: react
+          disposition: active
+          region: us
+          cloudMigrationStatus: cloud-native
+          product:
+            id: prod_001
+            name: Tekion
+          module:
+            id: mod_001
+            name: Tekion / Task & Program
+          ownership:
+            manager:
+              id: user_101
+              name: Arjun J
+            director:
+              id: user_201
+              name: Director Name
+            vp:
+              id: user_301
+              name: VP Name
+          metrics:
+            jiraIssuesCount: 0
+            pullRequestsCount: 0
+            mergeRequestsCount: 0
+            rcaReportsCount: 0
+            jenkinsJobsCount: 2
+            passingJenkinsJobsCount: 2
+            wizIssuesCount: 1
+            pdIncidentsCount: 1
+          openPullRequests: []
+          jenkinsJobs:
+            - id: jenkins_001
+              title: delivery-management-frontend
+              status: success
+              lastUpdate: 2026-02-21T23:12:29.63187+05:30
+              entityCreationDate: 2026-02-01T23:12:29.63187+05:30
+              url: https://jenkins.company.com/job/1
+          jiraIssues: []
+          wizIssues:
+            - id: wiz_001
+              title: delivery-management-frontend | COMPUTE_INSTANCE
+              severity: High
+              status: Open
+              detectedAt: 2026-02-26T23:12:29.63187+05:30
+              url: https://wiz.company.com/issues/123
+          pdIncidents:
+            - id: pd_001
+              incidentNumber: INC-9001
+              title: Service latency spike
+              status: Resolved
+              severity: SEV-2
+              createdAt: 2026-02-24T23:12:29.63187+05:30
+              resolvedAt: 2026-02-25T00:42:29.63187+05:30
+              url: https://pagerduty.company.com/incidents/INC-9001
+
