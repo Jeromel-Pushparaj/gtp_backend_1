@@ -236,27 +236,102 @@ func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *
 	// Generate service ID
 	serviceID := s.generateServiceID(repo.ID)
 
-	// Fetch GitHub metrics
+	// Use channels for parallel API calls
+	type githubResult struct {
+		metrics *models.GitHubMetrics
+		err     error
+	}
+	type prResult struct {
+		prs []models.PullRequest
+		err error
+	}
+	type jiraMetricsResult struct {
+		metrics *models.JiraMetrics
+		err     error
+	}
+	type jiraBugsResult struct {
+		bugs []models.JiraIssue
+		err  error
+	}
+	type jiraTasksResult struct {
+		tasks []models.JiraIssue
+		err   error
+	}
+	type sonarResult struct {
+		metrics *models.SonarMetrics
+		err     error
+	}
+
+	githubChan := make(chan githubResult, 1)
+	prChan := make(chan prResult, 1)
+	jiraMetricsChan := make(chan jiraMetricsResult, 1)
+	jiraBugsChan := make(chan jiraBugsResult, 1)
+	jiraTasksChan := make(chan jiraTasksResult, 1)
+	sonarChan := make(chan sonarResult, 1)
+
+	// Fetch GitHub metrics in parallel
+	go func() {
+		metrics, err := s.sonarClient.GetGitHubMetrics(repo.ID)
+		githubChan <- githubResult{metrics, err}
+	}()
+
+	// Fetch pull requests in parallel
+	go func() {
+		prs, err := s.sonarClient.GetPullRequests(repo.Name, "open")
+		prChan <- prResult{prs, err}
+	}()
+
+	// Fetch Jira metrics in parallel
+	go func() {
+		metrics, err := s.sonarClient.GetJiraMetrics(repo.ID)
+		jiraMetricsChan <- jiraMetricsResult{metrics, err}
+	}()
+
+	// Fetch Sonar metrics in parallel
+	go func() {
+		metrics, err := s.sonarClient.GetSonarMetrics(repo.ID)
+		sonarChan <- sonarResult{metrics, err}
+	}()
+
+	// Fetch Jira bugs in parallel (only if Jira project key exists)
+	if repo.JiraProjectKey != "" {
+		go func() {
+			bugs, err := s.sonarClient.GetJiraOpenBugs(repo.JiraProjectKey)
+			jiraBugsChan <- jiraBugsResult{bugs, err}
+		}()
+
+		go func() {
+			tasks, err := s.sonarClient.GetJiraOpenTasks(repo.JiraProjectKey)
+			jiraTasksChan <- jiraTasksResult{tasks, err}
+		}()
+	} else {
+		// Send empty results if no Jira project key
+		jiraBugsChan <- jiraBugsResult{nil, nil}
+		jiraTasksChan <- jiraTasksResult{nil, nil}
+	}
+
+	// Collect results from all goroutines
 	var openPRsCount int
 	var commitsLast90Days int
 	var contributors int
+	var githubMetrics *models.GitHubMetrics
 
-	githubMetrics, err := s.sonarClient.GetGitHubMetrics(repo.ID)
-	if err != nil {
-		log.Printf("Warning: failed to fetch GitHub metrics for repo %s: %v", repo.Name, err)
+	githubRes := <-githubChan
+	if githubRes.err != nil {
+		log.Printf("Warning: failed to fetch GitHub metrics for repo %s: %v", repo.Name, githubRes.err)
 	} else {
+		githubMetrics = githubRes.metrics
 		openPRsCount = int(githubMetrics.OpenPRs)
 		commitsLast90Days = int(githubMetrics.CommitsLast90Days)
 		contributors = int(githubMetrics.Contributors)
 	}
 
-	// Fetch pull requests
 	pullRequests := []resources.PullRequestInfo{}
-	prs, err := s.sonarClient.GetPullRequests(repo.Name, "open")
-	if err != nil {
-		log.Printf("Warning: failed to fetch pull requests for repo %s: %v", repo.Name, err)
+	prRes := <-prChan
+	if prRes.err != nil {
+		log.Printf("Warning: failed to fetch pull requests for repo %s: %v", repo.Name, prRes.err)
 	} else {
-		for _, pr := range prs {
+		for _, pr := range prRes.prs {
 			pullRequests = append(pullRequests, resources.PullRequestInfo{
 				Number:    pr.Number,
 				Title:     pr.Title,
@@ -269,30 +344,36 @@ func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *
 		openPRsCount = len(pullRequests)
 	}
 
-	// Fetch Jira metrics from database
 	var jiraOpenBugs int
 	var jiraOpenTasks int
 	var jiraActiveSprints int
+	var jiraMetrics *models.JiraMetrics
 	jiraIssues := []resources.JiraIssueInfo{}
 
-	if repo.JiraProjectKey != "" {
-		// Fetch Jira metrics from database (includes bugs, tasks, and sprints)
-		jiraMetrics, err := s.sonarClient.GetJiraMetrics(repo.ID)
-		if err != nil {
-			log.Printf("Warning: failed to fetch Jira metrics for repo %s: %v", repo.Name, err)
-		} else {
-			jiraOpenBugs = int(jiraMetrics.OpenBugs)
-			jiraOpenTasks = int(jiraMetrics.OpenTasks)
-			jiraActiveSprints = int(jiraMetrics.ActiveSprints)
-		}
+	jiraMetricsRes := <-jiraMetricsChan
+	if jiraMetricsRes.err != nil {
+		log.Printf("Warning: failed to fetch Jira metrics for repo %s: %v", repo.Name, jiraMetricsRes.err)
+	} else {
+		jiraMetrics = jiraMetricsRes.metrics
+		jiraOpenBugs = int(jiraMetrics.OpenBugs)
+		jiraOpenTasks = int(jiraMetrics.OpenTasks)
+		jiraActiveSprints = int(jiraMetrics.ActiveSprints)
+	}
 
-		// Try to fetch detailed Jira issues (LIVE) - if credentials are configured
-		bugs, err := s.sonarClient.GetJiraOpenBugs(repo.JiraProjectKey)
-		if err != nil {
-			log.Printf("Warning: failed to fetch Jira open bugs for project %s: %v", repo.JiraProjectKey, err)
+	var sonarMetrics *models.SonarMetrics
+	sonarRes := <-sonarChan
+	if sonarRes.err != nil {
+		log.Printf("Warning: failed to fetch Sonar metrics for repo %s: %v", repo.Name, sonarRes.err)
+	} else {
+		sonarMetrics = sonarRes.metrics
+	}
+
+	if repo.JiraProjectKey != "" {
+		jiraBugsRes := <-jiraBugsChan
+		if jiraBugsRes.err != nil {
+			log.Printf("Warning: failed to fetch Jira open bugs for project %s: %v", repo.JiraProjectKey, jiraBugsRes.err)
 		} else {
-			// Add bugs to jiraIssues list
-			for _, bug := range bugs {
+			for _, bug := range jiraBugsRes.bugs {
 				jiraIssues = append(jiraIssues, resources.JiraIssueInfo{
 					Key:       bug.Key,
 					Summary:   bug.Summary,
@@ -304,13 +385,11 @@ func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *
 			}
 		}
 
-		// Try to fetch detailed Jira tasks (LIVE) - if credentials are configured
-		tasks, err := s.sonarClient.GetJiraOpenTasks(repo.JiraProjectKey)
-		if err != nil {
-			log.Printf("Warning: failed to fetch Jira open tasks for project %s: %v", repo.JiraProjectKey, err)
+		jiraTasksRes := <-jiraTasksChan
+		if jiraTasksRes.err != nil {
+			log.Printf("Warning: failed to fetch Jira open tasks for project %s: %v", repo.JiraProjectKey, jiraTasksRes.err)
 		} else {
-			// Add tasks to jiraIssues list
-			for _, task := range tasks {
+			for _, task := range jiraTasksRes.tasks {
 				jiraIssues = append(jiraIssues, resources.JiraIssueInfo{
 					Key:       task.Key,
 					Summary:   task.Summary,
@@ -321,6 +400,10 @@ func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *
 				})
 			}
 		}
+	} else {
+		// Drain channels even if not used
+		<-jiraBugsChan
+		<-jiraTasksChan
 	}
 
 	// Build metrics
@@ -340,24 +423,47 @@ func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *
 		language = "JavaScript" // Default for now
 	}
 
-	// Fetch evaluation metrics from multiple sonar-shell-test endpoints
+	// Build evaluation metrics from already-fetched data (REUSE - no duplicate API calls!)
 	var evaluationMetrics *resources.EvaluationMetricsInfo
-	evalMetrics, err := s.sonarClient.GetEvaluationMetrics(repo.ID, repo.Name)
-	if err != nil {
-		log.Printf("Warning: failed to fetch evaluation metrics for %s (repo_id=%d): %v", repo.Name, repo.ID, err)
-		// Don't fail the whole request, just log and continue with nil
-	} else {
-		evaluationMetrics = &resources.EvaluationMetricsInfo{
-			ServiceName:            evalMetrics.ServiceName,
-			Coverage:               evalMetrics.Coverage,
-			CodeSmells:             evalMetrics.CodeSmells,
-			Vulnerabilities:        evalMetrics.Vulnerabilities,
-			DuplicatedLinesDensity: evalMetrics.DuplicatedLinesDensity,
-			HasReadme:              evalMetrics.HasReadme,
-			DeploymentFrequency:    evalMetrics.DeploymentFrequency,
-			MTTR:                   evalMetrics.MTTR,
+
+	// We already have sonarMetrics, githubMetrics, and jiraMetrics from parallel calls above
+	// No need to call GetEvaluationMetrics which would duplicate the API calls
+	evaluationMetrics = &resources.EvaluationMetricsInfo{
+		ServiceName:            repo.Name,
+		Coverage:               0,
+		CodeSmells:             0,
+		Vulnerabilities:        0,
+		DuplicatedLinesDensity: 0,
+		HasReadme:              0,
+		DeploymentFrequency:    0,
+		MTTR:                   0,
+	}
+
+	// Populate from SonarCloud metrics
+	if sonarMetrics != nil {
+		evaluationMetrics.Coverage = sonarMetrics.Coverage
+		evaluationMetrics.CodeSmells = int(sonarMetrics.CodeSmells)
+		evaluationMetrics.Vulnerabilities = int(sonarMetrics.Vulnerabilities)
+		evaluationMetrics.DuplicatedLinesDensity = sonarMetrics.DuplicatedLinesDensity
+	}
+
+	// Populate from GitHub metrics
+	if githubMetrics != nil {
+		if githubMetrics.HasReadme {
+			evaluationMetrics.HasReadme = 1
+		} else {
+			evaluationMetrics.HasReadme = 0
 		}
 	}
+
+	// Populate from Jira metrics
+	if jiraMetrics != nil {
+		// Convert avg_time_to_resolve (in hours) to days
+		evaluationMetrics.MTTR = int(jiraMetrics.AvgTimeToResolve / 24)
+	}
+
+	// Deployment frequency not available
+	evaluationMetrics.DeploymentFrequency = 0
 
 	return resources.ServiceResponse{
 		ID:                serviceID,
