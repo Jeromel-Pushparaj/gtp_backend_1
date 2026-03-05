@@ -50,93 +50,19 @@ type GitHubMetrics struct {
 	CollectedAt       time.Time  `json:"collected_at"`
 }
 
-// JiraMetrics represents Jira metrics from sonar-shell-test
-type JiraMetrics struct {
-	ID               int64     `json:"id"`
-	RepoID           int64     `json:"repo_id"`
-	ProjectKey       string    `json:"project_key"`
-	OpenBugs         int64     `json:"open_bugs"`
-	ClosedBugs       int64     `json:"closed_bugs"`
-	OpenTasks        int64     `json:"open_tasks"`
-	ClosedTasks      int64     `json:"closed_tasks"`
-	OpenIssues       int64     `json:"open_issues"`
-	ClosedIssues     int64     `json:"closed_issues"`
-	AvgTimeToResolve float64   `json:"avg_time_to_resolve"`
-	AvgSprintTime    float64   `json:"avg_sprint_time"`
-	ActiveSprints    int64     `json:"active_sprints"`
-	CompletedSprints int64     `json:"completed_sprints"`
-	CollectedAt      time.Time `json:"collected_at"`
+// CachedRepository represents a cached repository in local database
+type CachedRepository struct {
+	ID              int64      `db:"id"`
+	RepositoryID    int64      `db:"repository_id"`
+	Name            string     `db:"name"`
+	GitHubURL       string     `db:"github_url"`
+	Owner           string     `db:"owner"`
+	LastCommitTime  *time.Time `db:"last_commit_time"`
+	LastCommitBy    string     `db:"last_commit_by"`
+	DefaultBranch   string     `db:"default_branch"`
+	EnvironmentName string     `db:"environment_name"`
+	JiraProjectKey  string     `db:"jira_project_key"`
+	CachedAt        time.Time  `db:"cached_at"`
+	UpdatedAt       time.Time  `db:"updated_at"`
 }
 
-// PullRequest represents a pull request from GitHub API
-type PullRequest struct {
-	Number    int        `json:"number"`
-	Title     string     `json:"title"`
-	State     string     `json:"state"`
-	User      string     `json:"user"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	ClosedAt  *time.Time `json:"closed_at,omitempty"`
-	MergedAt  *time.Time `json:"merged_at,omitempty"`
-	URL       string     `json:"url"`
-	Mergeable bool       `json:"mergeable"`
-}
-
-// Issue represents a GitHub issue
-type Issue struct {
-	Number    int        `json:"number"`
-	Title     string     `json:"title"`
-	State     string     `json:"state"`
-	User      string     `json:"user"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	ClosedAt  *time.Time `json:"closed_at,omitempty"`
-	URL       string     `json:"url"`
-	Labels    []string   `json:"labels"`
-}
-
-// JiraIssue represents a Jira issue
-type JiraIssue struct {
-	Key       string     `json:"key"`
-	ID        string     `json:"id"`
-	Summary   string     `json:"summary"`
-	IssueType string     `json:"issue_type"`
-	Status    string     `json:"status"`
-	Priority  string     `json:"priority"`
-	Assignee  string     `json:"assignee"`
-	Reporter  string     `json:"reporter"`
-	Created   time.Time  `json:"created"`
-	Updated   time.Time  `json:"updated"`
-	Resolved  *time.Time `json:"resolved,omitempty"`
-}
-
-// EvaluationMetrics represents scorecard evaluation metrics from sonar-shell-test
-type EvaluationMetrics struct {
-	ServiceName            string  `json:"service_name"`
-	Coverage               float64 `json:"coverage"`
-	CodeSmells             int     `json:"code_smells"`
-	Vulnerabilities        int     `json:"vulnerabilities"`
-	DuplicatedLinesDensity float64 `json:"duplicated_lines_density"`
-	HasReadme              int     `json:"has_readme"`
-	DeploymentFrequency    int     `json:"deployment_frequency"`
-	MTTR                   int     `json:"mttr"`
-}
-
-// SonarMetrics represents SonarCloud metrics from sonar-shell-test database
-type SonarMetrics struct {
-	ID                     int64   `json:"id"`
-	RepoID                 int64   `json:"repo_id"`
-	ProjectKey             string  `json:"project_key"`
-	QualityGateStatus      string  `json:"quality_gate_status"`
-	Bugs                   int64   `json:"bugs"`
-	Vulnerabilities        int64   `json:"vulnerabilities"`
-	CodeSmells             int64   `json:"code_smells"`
-	Coverage               float64 `json:"coverage"`
-	DuplicatedLinesDensity float64 `json:"duplicated_lines_density"`
-	LinesOfCode            int64   `json:"lines_of_code"`
-	SecurityRating         string  `json:"security_rating"`
-	ReliabilityRating      string  `json:"reliability_rating"`
-	MaintainabilityRating  string  `json:"maintainability_rating"`
-	TechnicalDebt          string  `json:"technical_debt"`
-	CollectedAt            string  `json:"collected_at"`
-}

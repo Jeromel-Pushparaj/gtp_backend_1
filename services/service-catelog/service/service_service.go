@@ -3,8 +3,10 @@ package service
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jeromelp/gtp_backend_1/services/service-catalogue/client"
+	"github.com/jeromelp/gtp_backend_1/services/service-catalogue/db"
 	"github.com/jeromelp/gtp_backend_1/services/service-catalogue/models"
 	"github.com/jeromelp/gtp_backend_1/services/service-catalogue/resources"
 )
@@ -12,119 +14,45 @@ import (
 // ServiceService handles business logic for service operations
 type ServiceService struct {
 	sonarClient *client.SonarClient
+	dbService   *db.DatabaseService
+	cacheMaxAge time.Duration
 }
 
 // NewServiceService creates a new service service
-func NewServiceService(sonarClient *client.SonarClient) *ServiceService {
+func NewServiceService(sonarClient *client.SonarClient, dbService *db.DatabaseService) *ServiceService {
 	return &ServiceService{
 		sonarClient: sonarClient,
+		dbService:   dbService,
+		cacheMaxAge: 5 * time.Minute, // Cache for 5 minutes
 	}
 }
 
-// FetchServices fetches services for an organization directly from API
+// FetchServices fetches services for an organization
 func (s *ServiceService) FetchServices(orgID int64) ([]resources.ServiceResponse, error) {
 	log.Printf("Fetching services for org_id=%d from sonar-shell-test API", orgID)
 
-	// Fetch all organizations to get org info
-	orgs, err := s.sonarClient.GetOrganizations()
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch organizations: %w", err)
-	}
-
-	// Find the requested organization
-	var org *models.Organization
-	for i := range orgs {
-		if orgs[i].ID == orgID {
-			org = &orgs[i]
-			break
-		}
-	}
-
-	if org == nil {
-		return nil, fmt.Errorf("organization with ID %d not found", orgID)
-	}
-
-	// Fetch repositories
+	// Call sonar-shell-test API
 	repos, err := s.sonarClient.FetchRepositoriesByOrg(orgID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch repositories from API: %w", err)
 	}
 
-	// Convert to service response DTOs
+	// Cache the repositories
+	for i := range repos {
+		if err := s.dbService.CacheRepository(&repos[i]); err != nil {
+			log.Printf("Warning: failed to cache repository %s: %v", repos[i].Name, err)
+		}
+	}
+
+	// Convert to comprehensive service response DTOs
 	var responses []resources.ServiceResponse
 	for i := range repos {
-		response, err := s.convertToServiceResponse(&repos[i], org)
-		if err != nil {
-			log.Printf("Warning: failed to convert repository %s: %v", repos[i].Name, err)
-			continue
-		}
-		responses = append(responses, response)
+		responses = append(responses, s.convertToServiceResponse(&repos[i]))
 	}
 	return responses, nil
 }
 
-// GetServiceByOrgAndID gets a specific service by organization ID and service ID
-func (s *ServiceService) GetServiceByOrgAndID(orgID int64, serviceID string) (*resources.ServiceResponse, error) {
-	// 1. Parse service ID to extract repository ID
-	// Format: svc_12345 -> extract 12345
-	var repoID int64
-	_, err := fmt.Sscanf(serviceID, "svc_%d", &repoID)
-	if err != nil {
-		return nil, fmt.Errorf("invalid service ID format (expected svc_<number>): %w", err)
-	}
-
-	log.Printf("Looking up service %s (repository ID: %d) for org_id=%d", serviceID, repoID, orgID)
-
-	// 2. Get organization info
-	orgs, err := s.sonarClient.GetOrganizations()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get organizations: %w", err)
-	}
-
-	// Find the requested organization
-	var org *models.Organization
-	for i := range orgs {
-		if orgs[i].ID == orgID {
-			org = &orgs[i]
-			break
-		}
-	}
-
-	if org == nil {
-		return nil, fmt.Errorf("organization with ID %d not found", orgID)
-	}
-
-	// 3. Fetch all repositories for the organization
-	repos, err := s.sonarClient.FetchRepositoriesByOrg(orgID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch repositories from API: %w", err)
-	}
-
-	// 4. Find the requested repository by ID
-	var foundRepo *models.Repository
-	for i := range repos {
-		if repos[i].ID == repoID {
-			foundRepo = &repos[i]
-			break
-		}
-	}
-
-	// 5. Return the specific repository
-	if foundRepo == nil {
-		return nil, fmt.Errorf("service %s not found in organization %d", serviceID, orgID)
-	}
-
-	log.Printf("Successfully fetched service %s for org_id=%d", serviceID, orgID)
-
-	// Convert to service response
-	response, err := s.convertToServiceResponse(foundRepo, org)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert repository: %w", err)
-	}
-	return &response, nil
-}
-
-// GetService gets a specific service by ID (format: svc_12345) directly from API (legacy method)
+// GetService gets a specific service by ID (format: svc_12345), fetches from API if cache miss
 func (s *ServiceService) GetService(serviceID string) (*resources.ServiceResponse, error) {
 	// 1. Parse service ID to extract repository ID
 	// Format: svc_12345 -> extract 12345
@@ -136,7 +64,31 @@ func (s *ServiceService) GetService(serviceID string) (*resources.ServiceRespons
 
 	log.Printf("Looking up service %s (repository ID: %d)", serviceID, repoID)
 
-	// 2. Get first available organization
+	// 2. Check cache first by repository ID
+	cachedRepo, err := s.dbService.GetCachedRepositoryByID(repoID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check cache: %w", err)
+	}
+
+	// 3. If found in cache and not stale, return it
+	if cachedRepo != nil {
+		isStale, err := s.dbService.IsCacheStale(cachedRepo.Name, s.cacheMaxAge)
+		if err != nil {
+			log.Printf("Warning: failed to check cache staleness: %v", err)
+		}
+
+		if !isStale {
+			log.Printf("Returning service %s from cache", serviceID)
+			response := s.convertCachedToServiceResponse(cachedRepo)
+			return &response, nil
+		}
+		log.Printf("Service %s cache is stale, fetching from API", serviceID)
+	} else {
+		log.Printf("Service %s not found in cache, fetching from API", serviceID)
+	}
+
+	// 4. Cache is stale or not found, fetch from API
+	// Get first available organization
 	orgs, err := s.sonarClient.GetOrganizations()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get organizations: %w", err)
@@ -146,9 +98,8 @@ func (s *ServiceService) GetService(serviceID string) (*resources.ServiceRespons
 		return nil, fmt.Errorf("no organizations available to fetch repository")
 	}
 
-	// 3. Fetch all repositories using first org_id
+	// 5. Fetch all repositories using first org_id
 	orgID := orgs[0].ID
-	org := &orgs[0]
 	log.Printf("Fetching repositories for org_id=%d to find service %s", orgID, serviceID)
 
 	repos, err := s.sonarClient.FetchRepositoriesByOrg(orgID)
@@ -156,35 +107,55 @@ func (s *ServiceService) GetService(serviceID string) (*resources.ServiceRespons
 		return nil, fmt.Errorf("failed to fetch repositories from API: %w", err)
 	}
 
-	// 4. Find the requested repository by ID
+	// 6. Cache all repositories and find the requested one by ID
 	var foundRepo *models.Repository
 	for i := range repos {
+		if err := s.dbService.CacheRepository(&repos[i]); err != nil {
+			log.Printf("Warning: failed to cache repository %s: %v", repos[i].Name, err)
+		}
 		if repos[i].ID == repoID {
 			foundRepo = &repos[i]
-			break
 		}
 	}
 
-	// 5. Return the specific repository
+	// 7. Return the specific repository
 	if foundRepo == nil {
 		return nil, fmt.Errorf("service %s not found", serviceID)
 	}
 
-	log.Printf("Successfully fetched service %s", serviceID)
+	log.Printf("Successfully fetched and cached service %s", serviceID)
 
-	// Convert to service response
-	response, err := s.convertToServiceResponse(foundRepo, org)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert repository: %w", err)
-	}
+	// Convert to comprehensive service response
+	response := s.convertToServiceResponse(foundRepo)
 	return &response, nil
 }
 
-// GetAllServices gets all services directly from API
+// GetAllServices gets all cached services, fetches from API if cache is empty
 func (s *ServiceService) GetAllServices() (*resources.ServicesResponse, error) {
-	log.Printf("Fetching all services from sonar-shell-test API")
+	// 1. Check cache first
+	cachedRepos, err := s.dbService.GetAllCachedRepositories()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cached services: %w", err)
+	}
 
-	// 1. Get first available organization
+	// 2. If cache has data, return it
+	if len(cachedRepos) > 0 {
+		log.Printf("Returning %d services from cache", len(cachedRepos))
+		var responses []resources.ServiceResponse
+		for _, repo := range cachedRepos {
+			responses = append(responses, s.convertCachedToServiceResponse(repo))
+		}
+
+		return &resources.ServicesResponse{
+			Total:    len(responses),
+			Services: responses,
+		}, nil
+	}
+
+	// 3. Cache is empty, fetch from API
+	log.Printf("Cache is empty, fetching from sonar-shell-test API")
+
+	// Get first available organization
 	orgs, err := s.sonarClient.GetOrganizations()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get organizations: %w", err)
@@ -198,9 +169,8 @@ func (s *ServiceService) GetAllServices() (*resources.ServicesResponse, error) {
 		}, nil
 	}
 
-	// 2. Fetch repositories using first org_id
+	// 4. Fetch repositories using first org_id
 	orgID := orgs[0].ID
-	org := &orgs[0]
 	log.Printf("Fetching repositories for org_id=%d (%s)", orgID, orgs[0].Name)
 
 	repos, err := s.sonarClient.FetchRepositoriesByOrg(orgID)
@@ -208,17 +178,19 @@ func (s *ServiceService) GetAllServices() (*resources.ServicesResponse, error) {
 		return nil, fmt.Errorf("failed to fetch repositories from API: %w", err)
 	}
 
-	// 3. Convert to service responses
+	// 5. Cache the repositories
+	for i := range repos {
+		if err := s.dbService.CacheRepository(&repos[i]); err != nil {
+			log.Printf("Warning: failed to cache repository %s: %v", repos[i].Name, err)
+		}
+	}
+
+	// 6. Convert to comprehensive service responses
 	var responses []resources.ServiceResponse
 	for i := range repos {
-		response, err := s.convertToServiceResponse(&repos[i], org)
-		if err != nil {
-			log.Printf("Warning: failed to convert repository %s: %v", repos[i].Name, err)
-			continue
-		}
-		responses = append(responses, response)
+		responses = append(responses, s.convertToServiceResponse(&repos[i]))
 	}
-	log.Printf("Successfully fetched %d repositories", len(responses))
+	log.Printf("Successfully fetched and cached %d repositories", len(responses))
 
 	return &resources.ServicesResponse{
 		Total:    len(responses),
@@ -231,147 +203,204 @@ func (s *ServiceService) generateServiceID(repoID int64) string {
 	return fmt.Sprintf("svc_%d", repoID)
 }
 
-// convertToServiceResponse converts a repository model to ServiceResponse with real data from API
-func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *models.Organization) (resources.ServiceResponse, error) {
+// getDummyProductInfo returns hardcoded product information
+func (s *ServiceService) getDummyProductInfo() resources.ProductInfo {
+	return resources.ProductInfo{
+		ID:   "prod_001",
+		Name: "Tekion",
+	}
+}
+
+// getDummyModuleInfo returns hardcoded module information
+func (s *ServiceService) getDummyModuleInfo() resources.ModuleInfo {
+	return resources.ModuleInfo{
+		ID:   "mod_001",
+		Name: "Tekion / Task & Program",
+	}
+}
+
+// getDummyOwnershipInfo returns hardcoded ownership information
+func (s *ServiceService) getDummyOwnershipInfo() resources.OwnershipInfo {
+	return resources.OwnershipInfo{
+		Manager: resources.PersonInfo{
+			ID:   "user_101",
+			Name: "Arjun J",
+		},
+		Director: resources.PersonInfo{
+			ID:   "user_201",
+			Name: "Director Name",
+		},
+		VP: resources.PersonInfo{
+			ID:   "user_301",
+			Name: "VP Name",
+		},
+	}
+}
+
+// getDummyJenkinsJobs returns hardcoded Jenkins jobs
+func (s *ServiceService) getDummyJenkinsJobs(repoName string) []resources.JenkinsJobInfo {
+	now := time.Now()
+	creationDate := now.AddDate(0, 0, -30)
+	lastUpdate1 := now.AddDate(0, 0, -10)
+	lastUpdate2 := now.AddDate(0, 0, -3)
+
+	return []resources.JenkinsJobInfo{
+		{
+			ID:                 "jenkins_001",
+			Title:              repoName,
+			Status:             "success",
+			LastUpdate:         &lastUpdate1,
+			EntityCreationDate: &creationDate,
+			URL:                "https://jenkins.company.com/job/1",
+		},
+		{
+			ID:                 "jenkins_002",
+			Title:              repoName,
+			Status:             "success",
+			LastUpdate:         &lastUpdate2,
+			EntityCreationDate: &creationDate,
+			URL:                "https://jenkins.company.com/job/2",
+		},
+	}
+}
+
+// getDummyWizIssues returns hardcoded Wiz security issues
+func (s *ServiceService) getDummyWizIssues(repoName string) []resources.WizIssueInfo {
+	detectedAt := time.Now().AddDate(0, 0, -5)
+
+	return []resources.WizIssueInfo{
+		{
+			ID:         "wiz_001",
+			Title:      fmt.Sprintf("%s | COMPUTE_INSTANCE", repoName),
+			Severity:   "High",
+			Status:     "Open",
+			DetectedAt: &detectedAt,
+			URL:        "https://wiz.company.com/issues/123",
+		},
+	}
+}
+
+// getDummyPdIncidents returns hardcoded PagerDuty incidents
+func (s *ServiceService) getDummyPdIncidents() []resources.PdIncidentInfo {
+	createdAt := time.Now().AddDate(0, 0, -7)
+	resolvedAt := createdAt.Add(90 * time.Minute)
+
+	return []resources.PdIncidentInfo{
+		{
+			ID:             "pd_001",
+			IncidentNumber: "INC-9001",
+			Title:          "Service latency spike",
+			Status:         "Resolved",
+			Severity:       "SEV-2",
+			CreatedAt:      &createdAt,
+			ResolvedAt:     &resolvedAt,
+			URL:            "https://pagerduty.company.com/incidents/INC-9001",
+		},
+	}
+}
+
+// convertToServiceResponse converts a repository model to comprehensive ServiceResponse
+func (s *ServiceService) convertToServiceResponse(repo *models.Repository) resources.ServiceResponse {
 	// Generate service ID
 	serviceID := s.generateServiceID(repo.ID)
 
-	// Fetch GitHub metrics
-	var openPRsCount int
-	var commitsLast90Days int
-	var contributors int
+	// Get dummy data
+	product := s.getDummyProductInfo()
+	module := s.getDummyModuleInfo()
+	ownership := s.getDummyOwnershipInfo()
+	jenkinsJobs := s.getDummyJenkinsJobs(repo.Name)
+	wizIssues := s.getDummyWizIssues(repo.Name)
+	pdIncidents := s.getDummyPdIncidents()
 
-	githubMetrics, err := s.sonarClient.GetGitHubMetrics(repo.ID)
-	if err != nil {
-		log.Printf("Warning: failed to fetch GitHub metrics for repo %s: %v", repo.Name, err)
-	} else {
-		openPRsCount = int(githubMetrics.OpenPRs)
-		commitsLast90Days = int(githubMetrics.CommitsLast90Days)
-		contributors = int(githubMetrics.Contributors)
+	// Initialize metrics (will be populated with real data later)
+	metrics := resources.MetricsInfo{
+		JiraIssuesCount:         0,
+		PullRequestsCount:       0,
+		MergeRequestsCount:      0,
+		RcaReportsCount:         0,
+		JenkinsJobsCount:        len(jenkinsJobs),
+		PassingJenkinsJobsCount: 2, // Both dummy jobs are passing
+		WizIssuesCount:          len(wizIssues),
+		PdIncidentsCount:        len(pdIncidents),
 	}
 
-	// Fetch pull requests
-	pullRequests := []resources.PullRequestInfo{}
-	prs, err := s.sonarClient.GetPullRequests(repo.Name, "open")
-	if err != nil {
-		log.Printf("Warning: failed to fetch pull requests for repo %s: %v", repo.Name, err)
-	} else {
-		for _, pr := range prs {
-			pullRequests = append(pullRequests, resources.PullRequestInfo{
-				Number:    pr.Number,
-				Title:     pr.Title,
-				State:     pr.State,
-				Author:    pr.User,
-				CreatedAt: pr.CreatedAt,
-				URL:       pr.URL,
-			})
-		}
-		openPRsCount = len(pullRequests)
-	}
-
-	// Fetch Jira metrics from database
-	var jiraOpenBugs int
-	var jiraOpenTasks int
-	var jiraActiveSprints int
+	// Initialize empty arrays for real data (will be populated later)
+	openPullRequests := []resources.PullRequestInfo{}
 	jiraIssues := []resources.JiraIssueInfo{}
 
-	if repo.JiraProjectKey != "" {
-		// Fetch Jira metrics from database (includes bugs, tasks, and sprints)
-		jiraMetrics, err := s.sonarClient.GetJiraMetrics(repo.ID)
-		if err != nil {
-			log.Printf("Warning: failed to fetch Jira metrics for repo %s: %v", repo.Name, err)
-		} else {
-			jiraOpenBugs = int(jiraMetrics.OpenBugs)
-			jiraOpenTasks = int(jiraMetrics.OpenTasks)
-			jiraActiveSprints = int(jiraMetrics.ActiveSprints)
-		}
-
-		// Try to fetch detailed Jira issues (LIVE) - if credentials are configured
-		bugs, err := s.sonarClient.GetJiraOpenBugs(repo.JiraProjectKey)
-		if err != nil {
-			log.Printf("Warning: failed to fetch Jira open bugs for project %s: %v", repo.JiraProjectKey, err)
-		} else {
-			// Add bugs to jiraIssues list
-			for _, bug := range bugs {
-				jiraIssues = append(jiraIssues, resources.JiraIssueInfo{
-					Key:       bug.Key,
-					Summary:   bug.Summary,
-					IssueType: bug.IssueType,
-					Status:    bug.Status,
-					Priority:  bug.Priority,
-					Assignee:  bug.Assignee,
-				})
-			}
-		}
-
-		// Try to fetch detailed Jira tasks (LIVE) - if credentials are configured
-		tasks, err := s.sonarClient.GetJiraOpenTasks(repo.JiraProjectKey)
-		if err != nil {
-			log.Printf("Warning: failed to fetch Jira open tasks for project %s: %v", repo.JiraProjectKey, err)
-		} else {
-			// Add tasks to jiraIssues list
-			for _, task := range tasks {
-				jiraIssues = append(jiraIssues, resources.JiraIssueInfo{
-					Key:       task.Key,
-					Summary:   task.Summary,
-					IssueType: task.IssueType,
-					Status:    task.Status,
-					Priority:  task.Priority,
-					Assignee:  task.Assignee,
-				})
-			}
-		}
-	}
-
-	// Build metrics
-	metrics := resources.MetricsInfo{
-		OpenPullRequests:  openPRsCount,
-		CommitsLast90Days: commitsLast90Days,
-		Contributors:      contributors,
-		JiraOpenBugs:      jiraOpenBugs,
-		JiraOpenTasks:     jiraOpenTasks,
-		JiraActiveSprints: jiraActiveSprints,
-	}
-
-	// Determine language from GitHub metrics
-	language := ""
-	if githubMetrics != nil {
-		// You can add language detection logic here if available in metrics
-		language = "JavaScript" // Default for now
-	}
-
-	// Fetch evaluation metrics from multiple sonar-shell-test endpoints
-	var evaluationMetrics *resources.EvaluationMetricsInfo
-	evalMetrics, err := s.sonarClient.GetEvaluationMetrics(repo.ID, repo.Name)
-	if err != nil {
-		log.Printf("Warning: failed to fetch evaluation metrics for %s (repo_id=%d): %v", repo.Name, repo.ID, err)
-		// Don't fail the whole request, just log and continue with nil
-	} else {
-		evaluationMetrics = &resources.EvaluationMetricsInfo{
-			ServiceName:            evalMetrics.ServiceName,
-			Coverage:               evalMetrics.Coverage,
-			CodeSmells:             evalMetrics.CodeSmells,
-			Vulnerabilities:        evalMetrics.Vulnerabilities,
-			DuplicatedLinesDensity: evalMetrics.DuplicatedLinesDensity,
-			HasReadme:              evalMetrics.HasReadme,
-			DeploymentFrequency:    evalMetrics.DeploymentFrequency,
-			MTTR:                   evalMetrics.MTTR,
-		}
-	}
+	// Determine language (hardcoded for now, can be enhanced later)
+	language := "react" // Default language
 
 	return resources.ServiceResponse{
-		ID:                serviceID,
-		Title:             repo.Name,
-		RepositoryURL:     repo.GitHubURL,
-		Owner:             repo.Owner,
-		DefaultBranch:     repo.DefaultBranch,
-		Language:          language,
-		Organization:      resources.OrganizationInfo{ID: org.ID, Name: org.Name},
-		JiraProjectKey:    repo.JiraProjectKey,
-		OnCall:            repo.Owner, // Use repository owner as on-call for now
-		Metrics:           metrics,
-		EvaluationMetrics: evaluationMetrics,
-		PullRequests:      pullRequests,
-		JiraIssues:        jiraIssues,
-	}, nil
+		ID:                   serviceID,
+		Title:                repo.Name,
+		RepositorySystem:     "github",
+		RepositoryURL:        repo.GitHubURL,
+		Language:             language,
+		Disposition:          "active",
+		Region:               "us",
+		CloudMigrationStatus: "cloud-native",
+		Product:              product,
+		Module:               module,
+		Ownership:            ownership,
+		Metrics:              metrics,
+		OpenPullRequests:     openPullRequests,
+		JenkinsJobs:          jenkinsJobs,
+		JiraIssues:           jiraIssues,
+		WizIssues:            wizIssues,
+		PdIncidents:          pdIncidents,
+	}
+}
+
+// convertCachedToServiceResponse converts a cached repository to comprehensive ServiceResponse
+func (s *ServiceService) convertCachedToServiceResponse(repo *models.CachedRepository) resources.ServiceResponse {
+	// Generate service ID
+	serviceID := s.generateServiceID(repo.RepositoryID)
+
+	// Get dummy data
+	product := s.getDummyProductInfo()
+	module := s.getDummyModuleInfo()
+	ownership := s.getDummyOwnershipInfo()
+	jenkinsJobs := s.getDummyJenkinsJobs(repo.Name)
+	wizIssues := s.getDummyWizIssues(repo.Name)
+	pdIncidents := s.getDummyPdIncidents()
+
+	// Initialize metrics
+	metrics := resources.MetricsInfo{
+		JiraIssuesCount:         0,
+		PullRequestsCount:       0,
+		MergeRequestsCount:      0,
+		RcaReportsCount:         0,
+		JenkinsJobsCount:        len(jenkinsJobs),
+		PassingJenkinsJobsCount: 2,
+		WizIssuesCount:          len(wizIssues),
+		PdIncidentsCount:        len(pdIncidents),
+	}
+
+	// Initialize empty arrays
+	openPullRequests := []resources.PullRequestInfo{}
+	jiraIssues := []resources.JiraIssueInfo{}
+
+	// Determine language
+	language := "react"
+
+	return resources.ServiceResponse{
+		ID:                   serviceID,
+		Title:                repo.Name,
+		RepositorySystem:     "github",
+		RepositoryURL:        repo.GitHubURL,
+		Language:             language,
+		Disposition:          "active",
+		Region:               "us",
+		CloudMigrationStatus: "cloud-native",
+		Product:              product,
+		Module:               module,
+		Ownership:            ownership,
+		Metrics:              metrics,
+		OpenPullRequests:     openPullRequests,
+		JenkinsJobs:          jenkinsJobs,
+		JiraIssues:           jiraIssues,
+		WizIssues:            wizIssues,
+		PdIncidents:          pdIncidents,
+	}
 }

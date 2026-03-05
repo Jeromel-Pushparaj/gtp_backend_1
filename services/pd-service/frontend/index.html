@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PagerDuty Service Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h1>🚨 PD Dashboard</h1>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-panel="home">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                </li>
+                <li class="nav-item" data-panel="scorecard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Scorecard</span>
+                </li>
+                <li class="nav-item" data-panel="trigger">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-text">Trigger Incident</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h2 id="panel-title">Home</h2>
+                    <div class="org-selector">
+                        <label for="org-select">Organization:</label>
+                        <select id="org-select">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Home Panel -->
+            <div id="home-panel" class="panel active">
+                <div class="panel-header">
+                    <h3>Services</h3>
+                    <button id="add-service-btn" class="btn btn-primary">+ Add Service</button>
+                </div>
+                
+                <div id="services-list" class="services-grid">
+                    <div class="loading">Loading services...</div>
+                </div>
+            </div>
+
+            <!-- Scorecard Panel -->
+            <div id="scorecard-panel" class="panel">
+                <div class="panel-header">
+                    <h3>Service Metrics & Analytics</h3>
+                    <button id="refresh-metrics-btn" class="btn btn-secondary">🔄 Refresh</button>
+                </div>
+                
+                <div id="metrics-overview" class="metrics-overview">
+                    <div class="loading">Loading metrics...</div>
+                </div>
+                
+                <div id="metrics-details" class="metrics-details">
+                </div>
+            </div>
+
+            <!-- Trigger Panel -->
+            <div id="trigger-panel" class="panel">
+                <div class="panel-header">
+                    <h3>Trigger Test Incident</h3>
+                </div>
+                
+                <div class="trigger-form-container">
+                    <form id="trigger-form">
+                        <div class="form-group">
+                            <label for="trigger-service">Service *</label>
+                            <select id="trigger-service" required>
+                                <option value="">Select a service...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="trigger-title">Incident Title *</label>
+                            <input type="text" id="trigger-title" placeholder="e.g., Test Database Connection Issue" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="trigger-description">Description</label>
+                            <textarea id="trigger-description" rows="4" placeholder="Describe the test incident..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="trigger-priority">Priority</label>
+                            <select id="trigger-priority">
+                                <option value="">Default</option>
+                                <option value="P1">P1 - Critical</option>
+                                <option value="P2">P2 - High</option>
+                                <option value="P3">P3 - Medium</option>
+                                <option value="P4">P4 - Low</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-danger">🚨 Trigger Incident</button>
+                    </form>
+                    
+                    <div id="trigger-result" class="trigger-result"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div id="add-service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Service</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="add-service-form">
+                <div class="form-group">
+                    <label for="service-name">Service Name *</label>
+                    <input type="text" id="service-name" placeholder="e.g., Payment Service" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="github-repo">GitHub Repository *</label>
+                    <select id="github-repo" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="slack-assignee">On-Call Assignee (Slack) *</label>
+                    <select id="slack-assignee" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancel-add-service">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submit-add-service">Add Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

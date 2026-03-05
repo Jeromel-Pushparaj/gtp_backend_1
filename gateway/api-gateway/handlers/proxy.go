@@ -133,6 +133,10 @@ func (h *ProxyHandler) SonarShellService() gin.HandlerFunc {
 	return h.ProxyRequest(h.config.SonarShellServiceURL, "/sonar")
 }
 
+func (h *ProxyHandler) PagerDutyService() gin.HandlerFunc {
+	return h.ProxyRequest(h.config.PagerDutyServiceURL, "/pd")
+}
+
 // HealthCheck returns the gateway health status
 func (h *ProxyHandler) HealthCheck() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -144,4 +148,3 @@ func (h *ProxyHandler) HealthCheck() gin.HandlerFunc {
 		})
 	}
 }
-

@@ -10,10 +10,9 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	BaseURL    string
-	Email      string
-	APIToken   string
-	ProjectKey string
+	BaseURL  string
+	Email    string
+	APIToken string
 }
 
 // Load loads configuration from environment variables
@@ -33,18 +32,15 @@ func Load() (*Config, error) {
 	// Get other required variables
 	baseURL := os.Getenv("JIRA_BASE_URL")
 	email := os.Getenv("JIRA_EMAIL")
-	projectKey := os.Getenv("JIRA_PROJECT_KEY")
 
 	// Validate required fields
-	if baseURL == "" || email == "" || projectKey == "" {
-		return nil, fmt.Errorf("missing required environment variables: JIRA_BASE_URL, JIRA_EMAIL, JIRA_PROJECT_KEY")
+	if baseURL == "" || email == "" {
+		return nil, fmt.Errorf("missing required environment variables: JIRA_BASE_URL, JIRA_EMAIL")
 	}
 
 	return &Config{
-		BaseURL:    baseURL,
-		Email:      email,
-		APIToken:   apiToken,
-		ProjectKey: projectKey,
+		BaseURL:  baseURL,
+		Email:    email,
+		APIToken: apiToken,
 	}, nil
 }
-

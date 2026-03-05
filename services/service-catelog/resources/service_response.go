@@ -12,67 +12,114 @@ type APIResponse struct {
 
 // ServiceResponse represents a comprehensive service object for frontend
 type ServiceResponse struct {
-	ID                string                 `json:"id"`
-	Title             string                 `json:"title"`
-	RepositoryURL     string                 `json:"repositoryUrl"`
-	Owner             string                 `json:"owner"`
-	DefaultBranch     string                 `json:"defaultBranch"`
-	Language          string                 `json:"language,omitempty"`
-	Organization      OrganizationInfo       `json:"organization"`
-	JiraProjectKey    string                 `json:"jiraProjectKey,omitempty"`
-	OnCall            string                 `json:"onCall"`
-	Metrics           MetricsInfo            `json:"metrics"`
-	EvaluationMetrics *EvaluationMetricsInfo `json:"evaluationMetrics,omitempty"`
-	PullRequests      []PullRequestInfo      `json:"pullRequests"`
-	JiraIssues        []JiraIssueInfo        `json:"jiraIssues"`
+	ID                   string            `json:"id"`
+	Title                string            `json:"title"`
+	RepositorySystem     string            `json:"repositorySystem"`
+	RepositoryURL        string            `json:"repositoryUrl"`
+	Language             string            `json:"language"`
+	Disposition          string            `json:"disposition"`
+	Region               string            `json:"region"`
+	CloudMigrationStatus string            `json:"cloudMigrationStatus"`
+	Product              ProductInfo       `json:"product"`
+	Module               ModuleInfo        `json:"module"`
+	Ownership            OwnershipInfo     `json:"ownership"`
+	Metrics              MetricsInfo       `json:"metrics"`
+	OpenPullRequests     []PullRequestInfo `json:"openPullRequests"`
+	JenkinsJobs          []JenkinsJobInfo  `json:"jenkinsJobs"`
+	JiraIssues           []JiraIssueInfo   `json:"jiraIssues"`
+	WizIssues            []WizIssueInfo    `json:"wizIssues"`
+	PdIncidents          []PdIncidentInfo  `json:"pdIncidents"`
 }
 
-// OrganizationInfo represents organization information
-type OrganizationInfo struct {
-	ID   int64  `json:"id"`
+// ProductInfo represents product information
+type ProductInfo struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-// MetricsInfo represents aggregated metrics from GitHub and Jira
-type MetricsInfo struct {
-	OpenPullRequests  int `json:"openPullRequests"`
-	CommitsLast90Days int `json:"commitsLast90Days"`
-	Contributors      int `json:"contributors"`
-	JiraOpenBugs      int `json:"jiraOpenBugs"`
-	JiraOpenTasks     int `json:"jiraOpenTasks"`
-	JiraActiveSprints int `json:"jiraActiveSprints"`
+// ModuleInfo represents module information
+type ModuleInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
-// EvaluationMetricsInfo represents scorecard evaluation metrics
-type EvaluationMetricsInfo struct {
-	ServiceName            string  `json:"serviceName"`
-	Coverage               float64 `json:"coverage"`
-	CodeSmells             int     `json:"codeSmells"`
-	Vulnerabilities        int     `json:"vulnerabilities"`
-	DuplicatedLinesDensity float64 `json:"duplicatedLinesDensity"`
-	HasReadme              int     `json:"hasReadme"`
-	DeploymentFrequency    int     `json:"deploymentFrequency"`
-	MTTR                   int     `json:"mttr"`
+// OwnershipInfo represents ownership hierarchy
+type OwnershipInfo struct {
+	Manager  PersonInfo `json:"manager"`
+	Director PersonInfo `json:"director"`
+	VP       PersonInfo `json:"vp"`
+}
+
+// PersonInfo represents a person in the organization
+type PersonInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+// MetricsInfo represents aggregated metrics
+type MetricsInfo struct {
+	JiraIssuesCount         int `json:"jiraIssuesCount"`
+	PullRequestsCount       int `json:"pullRequestsCount"`
+	MergeRequestsCount      int `json:"mergeRequestsCount"`
+	RcaReportsCount         int `json:"rcaReportsCount"`
+	JenkinsJobsCount        int `json:"jenkinsJobsCount"`
+	PassingJenkinsJobsCount int `json:"passingJenkinsJobsCount"`
+	WizIssuesCount          int `json:"wizIssuesCount"`
+	PdIncidentsCount        int `json:"pdIncidentsCount"`
 }
 
 // PullRequestInfo represents a pull request
 type PullRequestInfo struct {
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	State     string    `json:"state"`
-	Author    string    `json:"author"`
-	CreatedAt time.Time `json:"createdAt"`
-	URL       string    `json:"url"`
+	ID         string     `json:"id"`
+	ExternalID string     `json:"externalId"`
+	Title      string     `json:"title"`
+	Status     string     `json:"status"`
+	URL        string     `json:"url"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+	UpdatedAt  *time.Time `json:"updatedAt,omitempty"`
+}
+
+// JenkinsJobInfo represents a Jenkins job
+type JenkinsJobInfo struct {
+	ID                 string     `json:"id"`
+	Title              string     `json:"title"`
+	Status             string     `json:"status"`
+	LastUpdate         *time.Time `json:"lastUpdate,omitempty"`
+	EntityCreationDate *time.Time `json:"entityCreationDate,omitempty"`
+	URL                string     `json:"url"`
 }
 
 // JiraIssueInfo represents a Jira issue
 type JiraIssueInfo struct {
-	Key       string `json:"key"`
-	Summary   string `json:"summary"`
-	IssueType string `json:"issueType"`
-	Status    string `json:"status"`
-	Priority  string `json:"priority"`
-	Assignee  string `json:"assignee"`
+	ID         string     `json:"id"`
+	Key        string     `json:"key"`
+	Title      string     `json:"title"`
+	Status     string     `json:"status"`
+	Priority   string     `json:"priority"`
+	LastUpdate *time.Time `json:"lastUpdate,omitempty"`
+	URL        string     `json:"url"`
+}
+
+// WizIssueInfo represents a Wiz security issue
+type WizIssueInfo struct {
+	ID         string     `json:"id"`
+	Title      string     `json:"title"`
+	Severity   string     `json:"severity"`
+	Status     string     `json:"status"`
+	DetectedAt *time.Time `json:"detectedAt,omitempty"`
+	URL        string     `json:"url"`
+}
+
+// PdIncidentInfo represents a PagerDuty incident
+type PdIncidentInfo struct {
+	ID             string     `json:"id"`
+	IncidentNumber string     `json:"incidentNumber"`
+	Title          string     `json:"title"`
+	Status         string     `json:"status"`
+	Severity       string     `json:"severity"`
+	CreatedAt      *time.Time `json:"createdAt,omitempty"`
+	ResolvedAt     *time.Time `json:"resolvedAt,omitempty"`
+	URL            string     `json:"url"`
 }
 
 // ServicesResponse represents a list of services for frontend
