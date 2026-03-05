@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/keerthanau/go/client"
 	"github.com/keerthanau/go/config"
 	"github.com/keerthanau/go/models"
 	"github.com/keerthanau/go/services"
@@ -87,7 +88,7 @@ func CreateIssueHandler(cfg *config.Config) http.HandlerFunc {
 		}
 
 		// Create Jira client
-		jiraClient := &models.JiraAPIClient{
+		jiraClient := &client.JiraAPIClient{
 			BaseURL: cfg.BaseURL,
 			Email:   cfg.Email,
 			Token:   cfg.APIToken,
