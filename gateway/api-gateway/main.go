@@ -82,6 +82,11 @@ func main() {
 		sonarGroup.Any("/*path", proxyHandler.SonarShellService())
 	}
 
+	pagerDutyGroup := router.Group("/pd")
+	{
+		pagerDutyGroup.Any("/*path", proxyHandler.PagerDutyService())
+	}
+
 	// Print route information
 	printRoutes(cfg)
 
@@ -122,7 +127,7 @@ func printRoutes(cfg *config.Config) {
 	log.Printf("  ANY    /onboarding/*              -> %s", cfg.OnboardingServiceURL)
 	log.Printf("  ANY    /scorecard/*               -> %s", cfg.ScoreCardServiceURL)
 	log.Printf("  ANY    /sonar/*                   -> %s", cfg.SonarShellServiceURL)
+	log.Printf("  ANY    /pd/*                      -> %s", cfg.PagerDutyServiceURL)
 	log.Println("================================================================")
 	log.Println()
 }
-
