@@ -317,3 +317,45 @@ func (s *SlackService) SendApprovalFormButton(channelID string) (string, error) 
 	}
 	return timestamp, nil
 }
+
+func (s *SlackService) OpenDMChannel(userID string) (string, error) {
+	log.Printf("OpenDMChannel: Attempting to open DM with user: %s", userID)
+	channel, _, _, err := s.client.OpenConversation(&slack.OpenConversationParameters{
+		Users: []string{userID},
+	})
+	if err != nil {
+		log.Printf("OpenDMChannel ERROR: Failed for user %s: %v", userID, err)
+		return "", fmt.Errorf("failed to open DM channel: %w", err)
+	}
+	log.Printf("OpenDMChannel: Successfully opened channel %s for user %s", channel.ID, userID)
+	return channel.ID, nil
+}
+
+func (s *SlackService) GetBotUserID() (string, error) {
+	authTest, err := s.client.AuthTest()
+	if err != nil {
+		return "", fmt.Errorf("failed to get bot user ID: %w", err)
+	}
+	return authTest.UserID, nil
+}
+
+func (s *SlackService) GetAllApps() ([]resources.AppInfo, error) {
+	users, err := s.client.GetUsers()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get apps: %w", err)
+	}
+
+	var appList []resources.AppInfo
+	for _, user := range users {
+		if user.IsBot && !user.Deleted {
+			appList = append(appList, resources.AppInfo{
+				ID:       user.ID,
+				Name:     user.Name,
+				IsBot:    user.IsBot,
+				RealName: user.RealName,
+			})
+		}
+	}
+
+	return appList, nil
+}

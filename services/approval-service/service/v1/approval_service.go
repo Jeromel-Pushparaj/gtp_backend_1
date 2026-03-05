@@ -35,6 +35,9 @@ func (s *ApprovalService) ProcessApprovalRequest(msg *resources.ApprovalRequestM
 		requestID = uuid.New().String()
 	}
 
+	log.Printf("=== KAFKA CONSUMER: Processing approval request ===")
+	log.Printf("RequestID=%s, RequesterID=%s, ApproverID=%s", requestID, msg.RequesterID, msg.ApproverID)
+
 	requestDataJSON, err := json.Marshal(msg.RequestData)
 	if err != nil {
 		return fmt.Errorf("failed to marshal request data: %w", err)
@@ -50,23 +53,48 @@ func (s *ApprovalService) ProcessApprovalRequest(msg *resources.ApprovalRequestM
 		RequestType:   msg.RequestType,
 		RequestData:   string(requestDataJSON),
 		Status:        constants.ApprovalStatusPending,
+		Title:         msg.Title,
+		Description:   msg.Description,
+		Priority:      msg.Priority,
+		Category:      msg.Category,
+		Attachments:   msg.Attachments,
+		DueDate:       msg.DueDate,
 	}
 
 	if err := s.repo.Create(approval); err != nil {
+		log.Printf("ERROR: Failed to create approval record in DB: %v", err)
 		return fmt.Errorf("failed to create approval record: %w", err)
 	}
 
-	log.Printf("Created approval request: %s", requestID)
+	log.Printf("✓ SUCCESS: Created approval request in database: RequestID=%s", requestID)
 
-	timestamp, err := s.sendSlackApprovalMessage(msg)
+	var timestamp string
+
+	isAppDM := false
+	if msg.RequestData != nil {
+		if useAppDM, ok := msg.RequestData["use_app_dm"].(bool); ok {
+			isAppDM = useAppDM
+		}
+	}
+
+	if isAppDM {
+		timestamp, err = s.sendSlackApprovalMessageToAppDM(msg, msg.ChannelID)
+	} else {
+		timestamp, err = s.sendSlackApprovalMessage(msg)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to send slack message: %w", err)
 	}
 
+	// timestamp, err := s.sendSlackApprovalMessage(msg)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to send slack message: %w", err)
+	// }
+
 	approval.MessageTS = timestamp
 	s.repo.UpdateMessageTS(requestID, timestamp)
 
-	log.Printf("Sent Slack approval message for request: %s", requestID)
+	log.Printf("Sent Slack approval message for request: %s to channel: %s", requestID, msg.ChannelID)
 	return nil
 }
 
@@ -116,8 +144,28 @@ func (s *ApprovalService) sendSlackApprovalMessage(msg *resources.ApprovalReques
 }
 
 func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID string, userName string, reason string, approverComment string) error {
-	approval, err := s.repo.GetByRequestID(requestID)
+
+	var approval *models.ApprovalRequest
+	var err error
+	maxRetries := 10
+	retryDelay := 1 * time.Second
+
+	log.Printf("HandleApproval called for request: %s", requestID)
+
+	for i := 0; i < maxRetries; i++ {
+		approval, err = s.repo.GetByRequestID(requestID)
+		if err == nil {
+			log.Printf("Approval request %s found on attempt %d", requestID, i+1)
+			break
+		}
+		if i < maxRetries-1 {
+			log.Printf("Approval request %s not found yet (attempt %d/%d), retrying in %v...", requestID, i+1, maxRetries, retryDelay)
+			time.Sleep(retryDelay)
+		}
+	}
+
 	if err != nil {
+		log.Printf("ERROR: Approval request %s not found after %d retries: %v", requestID, maxRetries, err)
 		return fmt.Errorf("%s: %w", constants.ErrorApprovalNotFound, err)
 	}
 
@@ -138,6 +186,10 @@ func (s *ApprovalService) HandleApproval(requestID string, approved bool, userID
 
 	if err := s.updateSlackMessage(approval, approved, userName, approverComment); err != nil {
 		log.Printf("Warning: failed to update slack message: %v", err)
+	}
+
+	if err := s.notifyRequester(approval, approved, userName, approverComment); err != nil {
+		log.Printf("Warning: failed to notify requester: %v", err)
 	}
 
 	var requestData map[string]interface{}
@@ -383,4 +435,174 @@ func (s *ApprovalService) sendRichSlackApprovalMessage(approval *models.Approval
 	)
 
 	return timestamp, err
+}
+
+func (s *ApprovalService) sendSlackApprovalMessageToAppDM(msg *resources.ApprovalRequestMessage, dmChannelID string) (string, error) {
+
+	var headerText strings.Builder
+	if msg.Title != "" {
+		headerText.WriteString(fmt.Sprintf("*:memo: %s*\n\n", msg.Title))
+	} else {
+		headerText.WriteString(fmt.Sprintf("*Approval Request from <@%s>*\n\n", msg.RequesterID))
+	}
+
+	if msg.Message != "" {
+		headerText.WriteString(fmt.Sprintf("%s\n\n", msg.Message))
+	}
+
+	var detailsText strings.Builder
+	detailsText.WriteString("*Request Details:*\n")
+
+	if msg.RequestData != nil {
+		if oldDomain, ok := msg.RequestData["old_domain_name"].(string); ok {
+			detailsText.WriteString(fmt.Sprintf("• *Old Domain Name:* `%s`\n", oldDomain))
+		}
+		if newDomain, ok := msg.RequestData["new_domain_name"].(string); ok {
+			detailsText.WriteString(fmt.Sprintf("• *New Domain Name:* `%s`\n", newDomain))
+		}
+		if changeReason, ok := msg.RequestData["change_reason"].(string); ok && changeReason != "" {
+			detailsText.WriteString(fmt.Sprintf("• *Change Reason:* %s\n", changeReason))
+		}
+		if additionalInfo, ok := msg.RequestData["additional_info"].(string); ok && additionalInfo != "" {
+			detailsText.WriteString(fmt.Sprintf("• *Additional Info:* %s\n", additionalInfo))
+		}
+	}
+
+	if msg.Priority != "" {
+		priorityEmoji := ":small_blue_diamond:"
+		switch msg.Priority {
+		case constants.PriorityUrgent:
+			priorityEmoji = ":red_circle:"
+		case constants.PriorityHigh:
+			priorityEmoji = ":large_orange_diamond:"
+		case constants.PriorityMedium:
+			priorityEmoji = ":large_yellow_circle:"
+		case constants.PriorityLow:
+			priorityEmoji = ":white_circle:"
+		}
+		detailsText.WriteString(fmt.Sprintf("• *Priority:* %s %s\n", priorityEmoji, strings.Title(msg.Priority)))
+	}
+
+	if msg.Category != "" {
+		detailsText.WriteString(fmt.Sprintf("• *Category:* %s\n", strings.Title(msg.Category)))
+	}
+
+	headerText.WriteString(detailsText.String())
+
+	headerText.WriteString(fmt.Sprintf("\n<@%s> - Please review and approve/reject this change.", msg.ApproverID))
+
+	headerSection := slack.NewSectionBlock(
+		slack.NewTextBlockObject(slack.MarkdownType, headerText.String(), false, false),
+		nil,
+		nil,
+	)
+
+	divider := slack.NewDividerBlock()
+
+	approveButton := slack.NewButtonBlockElement(
+		constants.ActionApprove,
+		msg.RequestID,
+		slack.NewTextBlockObject(slack.PlainTextType, "Approve", false, false),
+	)
+	approveButton.Style = slack.StylePrimary
+
+	rejectButton := slack.NewButtonBlockElement(
+		constants.ActionReject,
+		msg.RequestID,
+		slack.NewTextBlockObject(slack.PlainTextType, "Reject", false, false),
+	)
+	rejectButton.Style = slack.StyleDanger
+
+	actionBlock := slack.NewActionBlock(
+		"approval_actions",
+		approveButton,
+		rejectButton,
+	)
+
+	blocks := []slack.Block{
+		headerSection,
+		divider,
+		actionBlock,
+	}
+
+	timestamp, err := s.slackService.SendBlockMessage(
+		dmChannelID,
+		blocks,
+		fmt.Sprintf("Approval request from %s", msg.RequesterName),
+	)
+
+	return timestamp, err
+}
+
+func (s *ApprovalService) notifyRequester(approval *models.ApprovalRequest, approved bool, approverName string, comment string) error {
+	statusText := "REJECTED"
+	statusEmoji := ":x:"
+	if approved {
+		statusText = "APPROVED"
+		statusEmoji = ":white_check_mark:"
+	}
+
+	var requestData map[string]interface{}
+	if err := json.Unmarshal([]byte(approval.RequestData), &requestData); err != nil {
+		requestData = make(map[string]interface{})
+	}
+
+	var messageText strings.Builder
+	messageText.WriteString(fmt.Sprintf("%s *Your request has been %s*\n\n", statusEmoji, statusText))
+	messageText.WriteString(fmt.Sprintf("*Request ID:* `%s`\n", approval.RequestID))
+	messageText.WriteString(fmt.Sprintf("*Approver:* <@%s>\n", approval.ApproverID))
+	messageText.WriteString(fmt.Sprintf("*Decision:* %s\n", statusText))
+
+	if oldDomain, ok := requestData["old_domain_name"].(string); ok {
+		if newDomain, ok := requestData["new_domain_name"].(string); ok {
+			messageText.WriteString(fmt.Sprintf("*Domain Change:* `%s` → `%s`\n", oldDomain, newDomain))
+		}
+	}
+
+	if comment != "" {
+		messageText.WriteString(fmt.Sprintf("\n*Comment from approver:*\n> %s\n", comment))
+	}
+
+	messageText.WriteString(fmt.Sprintf("\n_Processed at: %s_", time.Now().Format("2006-01-02 15:04:05")))
+
+	headerSection := slack.NewSectionBlock(
+		slack.NewTextBlockObject(slack.MarkdownType, messageText.String(), false, false),
+		nil,
+		nil,
+	)
+
+	contextElements := []slack.MixedElement{
+		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Status:* %s %s", statusEmoji, statusText), false, false),
+	}
+	contextBlock := slack.NewContextBlock("", contextElements...)
+
+	divider := slack.NewDividerBlock()
+
+	blocks := []slack.Block{
+		headerSection,
+		divider,
+		contextBlock,
+	}
+
+	// Try to open DM with requester
+	dmChannelID, err := s.slackService.OpenDMChannel(approval.RequesterID)
+	if err != nil {
+		log.Printf("Failed to open DM with requester %s, trying channel: %v", approval.RequesterID, err)
+		// Fallback to original channel if DM fails
+		_, err = s.slackService.SendBlockMessage(
+			approval.ChannelID,
+			blocks,
+			fmt.Sprintf("Notification for <@%s>: Your request has been %s", approval.RequesterID, statusText),
+		)
+		return err
+	}
+
+	_, err = s.slackService.SendBlockMessage(
+		dmChannelID,
+		blocks,
+		fmt.Sprintf("Your approval request has been %s", statusText),
+	)
+
+	log.Printf("Sent notification to requester %s: request %s was %s", approval.RequesterName, approval.RequestID, statusText)
+	return err
 }

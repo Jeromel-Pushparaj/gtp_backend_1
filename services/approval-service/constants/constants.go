@@ -170,4 +170,11 @@ const (
 	ErrorApproverRequired    = "Approver is required"
 	ErrorPriorityRequired    = "Priority is required"
 	ErrorCategoryRequired    = "Category is required"
+
+	RouteApprovalDomainChange = "/approval/domain-change"
+	RouteSlackGetDMChannel    = "/slack/dm-channel/get"
+	RouteSlackGetAllApps      = "/slack/apps/all"
+
+	MessageDestinationChannel = "channel"
+	MessageDestinationAppDM   = "app_dm"
 )

@@ -88,6 +88,8 @@ func (sh *SocketHandler) handleBlockAction(evt socketmode.Event, callback slack.
 	action := callback.ActionCallback.BlockActions[0]
 	requestID := action.Value
 
+	log.Printf("Block action received: ActionID=%s, RequestID=%s", action.ActionID, requestID)
+
 	var modalView slack.ModalViewRequest
 	var err error
 
@@ -183,6 +185,8 @@ func (sh *SocketHandler) handleModalSubmission(evt socketmode.Event, callback sl
 	callbackID := callback.View.CallbackID
 	userID := callback.User.ID
 	userName := callback.User.Name
+
+	log.Printf("Modal submission received: CallbackID=%s, RequestID=%s, User=%s", callbackID, requestID, userName)
 
 	commentValue := ""
 	if inputBlock, ok := callback.View.State.Values[constants.InputBlockComment]; ok {
