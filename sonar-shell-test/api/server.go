@@ -205,4 +205,3 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, `{"status":"healthy","service":"sonar-automation","organization":"%s"}`, s.config.Organization)
 }
-
