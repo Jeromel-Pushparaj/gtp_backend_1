@@ -160,6 +160,78 @@ func GetAvailableTools() []Tool {
 				},
 			},
 		},
+		// Jira Tools
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "get_jira_issue_stats",
+				Description: "Get issue statistics for a Jira project",
+				Parameters: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"project": map[string]interface{}{
+							"type":        "string",
+							"description": "Jira project key (e.g., SCRUM)",
+						},
+					},
+					"required": []string{"project"},
+				},
+			},
+		},
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "get_jira_open_bugs",
+				Description: "Get open bugs for a Jira project",
+				Parameters: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"project": map[string]interface{}{
+							"type":        "string",
+							"description": "Jira project key",
+						},
+					},
+					"required": []string{"project"},
+				},
+			},
+		},
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "get_jira_open_tasks",
+				Description: "Get open tasks for a Jira project",
+				Parameters: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"project": map[string]interface{}{
+							"type":        "string",
+							"description": "Jira project key",
+						},
+					},
+					"required": []string{"project"},
+				},
+			},
+		},
+		{
+			Type: "function",
+			Function: ToolFunction{
+				Name:        "search_jira_issues",
+				Description: "Search for Jira issues using JQL query",
+				Parameters: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"jql": map[string]interface{}{
+							"type":        "string",
+							"description": "JQL query string",
+						},
+						"max_results": map[string]interface{}{
+							"type":        "string",
+							"description": "Maximum number of results (default: 50)",
+						},
+					},
+					"required": []string{"jql"},
+				},
+			},
+		},
 	}
 }
-

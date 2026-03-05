@@ -18,10 +18,10 @@ type GroqClient struct {
 }
 
 type ChatMessage struct {
-	Role      string     `json:"role"`
-	Content   string     `json:"content,omitempty"`
-	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string    `json:"tool_call_id,omitempty"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content,omitempty"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
 type Tool struct {
@@ -59,9 +59,9 @@ type ChatResponse struct {
 	Created int64  `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index   int         `json:"index"`
-		Message ChatMessage `json:"message"`
-		FinishReason string `json:"finish_reason"`
+		Index        int         `json:"index"`
+		Message      ChatMessage `json:"message"`
+		FinishReason string      `json:"finish_reason"`
 	} `json:"choices"`
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`
@@ -83,7 +83,7 @@ func NewGroqClient(apiKey string) *GroqClient {
 func (c *GroqClient) CreateChatCompletion(req ChatRequest) (*ChatResponse, error) {
 	// Set default model if not specified
 	if req.Model == "" {
-		req.Model = "llama-3.3-70b-versatile"
+		req.Model = "meta-llama/llama-4-maverick-17b-128e-instruct"
 	}
 
 	jsonData, err := json.Marshal(req)
@@ -133,7 +133,7 @@ func (c *GroqClient) CreateChatCompletion(req ChatRequest) (*ChatResponse, error
 
 func (c *GroqClient) Chat(messages []ChatMessage, tools []Tool) (*ChatResponse, error) {
 	req := ChatRequest{
-		Model:       "llama-3.3-70b-versatile",
+		Model:       "meta-llama/llama-4-maverick-17b-128e-instruct",
 		Messages:    messages,
 		Tools:       tools,
 		Temperature: 0.7,
@@ -146,4 +146,3 @@ func (c *GroqClient) Chat(messages []ChatMessage, tools []Tool) (*ChatResponse, 
 
 	return c.CreateChatCompletion(req)
 }
-
