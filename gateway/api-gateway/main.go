@@ -63,7 +63,7 @@ func main() {
 
 	// Onboarding Service Routes - Port 8084
 	// Handles service catalog and onboarding
-	onboardingGroup := router.Group("/onboarding")
+	onboardingGroup := router.Group("/service")
 	{
 		onboardingGroup.Any("/*path", proxyHandler.OnboardingService())
 	}

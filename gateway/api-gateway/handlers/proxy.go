@@ -120,7 +120,7 @@ func (h *ProxyHandler) ApprovalService() gin.HandlerFunc {
 
 // OnboardingService - handles service catalog and onboarding
 func (h *ProxyHandler) OnboardingService() gin.HandlerFunc {
-	return h.ProxyRequest(h.config.OnboardingServiceURL, "/onboarding")
+	return h.ProxyRequest(h.config.OnboardingServiceURL, "/service")
 }
 
 // ScoreCardService - handles service scorecard evaluations
