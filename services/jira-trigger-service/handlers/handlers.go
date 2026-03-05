@@ -61,6 +61,15 @@ func CreateIssueHandler(cfg *config.Config) http.HandlerFunc {
 			return
 		}
 
+		if req.ProjectKey == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(models.CreateIssueResponse{
+				Success: false,
+				Error:   "projectKey is required",
+			})
+			return
+		}
+
 		// Set defaults for optional fields
 		if req.IssueType == "" {
 			req.IssueType = "Task"
@@ -68,11 +77,13 @@ func CreateIssueHandler(cfg *config.Config) http.HandlerFunc {
 		if req.Description == "" {
 			req.Description = "Created via API"
 		}
+		if req.ProjectType == "" {
+			req.ProjectType = "scrum" // Default to scrum
+		}
 
-		// Use projectKey from request, or fall back to config default
-		projectKey := req.ProjectKey
-		if projectKey == "" {
-			projectKey = cfg.ProjectKey
+		// Set default project name if not provided
+		if req.ProjectName == "" {
+			req.ProjectName = req.ProjectKey + " Project"
 		}
 
 		// Create Jira client
@@ -84,7 +95,7 @@ func CreateIssueHandler(cfg *config.Config) http.HandlerFunc {
 		}
 
 		// Process the request
-		response := services.ProcessCreateIssue(jiraClient, projectKey, &req)
+		response := services.ProcessCreateIssue(jiraClient, req.ProjectKey, &req)
 
 		// Send response
 		if response.Success {

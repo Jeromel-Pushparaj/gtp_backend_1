@@ -120,7 +120,7 @@ func (h *ProxyHandler) ApprovalService() gin.HandlerFunc {
 
 // OnboardingService - handles service catalog and onboarding
 func (h *ProxyHandler) OnboardingService() gin.HandlerFunc {
-	return h.ProxyRequest(h.config.OnboardingServiceURL, "/onboarding")
+	return h.ProxyRequest(h.config.OnboardingServiceURL, "/service")
 }
 
 // ScoreCardService - handles service scorecard evaluations
@@ -131,6 +131,10 @@ func (h *ProxyHandler) ScoreCardService() gin.HandlerFunc {
 // SonarShellService - handles SonarCloud automation
 func (h *ProxyHandler) SonarShellService() gin.HandlerFunc {
 	return h.ProxyRequest(h.config.SonarShellServiceURL, "/sonar")
+}
+
+func (h *ProxyHandler) PagerDutyService() gin.HandlerFunc {
+	return h.ProxyRequest(h.config.PagerDutyServiceURL, "/pd")
 }
 
 // HealthCheck returns the gateway health status
@@ -144,4 +148,3 @@ func (h *ProxyHandler) HealthCheck() gin.HandlerFunc {
 		})
 	}
 }
-

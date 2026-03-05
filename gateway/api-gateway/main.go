@@ -63,7 +63,7 @@ func main() {
 
 	// Onboarding Service Routes - Port 8084
 	// Handles service catalog and onboarding
-	onboardingGroup := router.Group("/onboarding")
+	onboardingGroup := router.Group("/service")
 	{
 		onboardingGroup.Any("/*path", proxyHandler.OnboardingService())
 	}
@@ -80,6 +80,11 @@ func main() {
 	sonarGroup := router.Group("/sonar")
 	{
 		sonarGroup.Any("/*path", proxyHandler.SonarShellService())
+	}
+
+	pagerDutyGroup := router.Group("/pd")
+	{
+		pagerDutyGroup.Any("/*path", proxyHandler.PagerDutyService())
 	}
 
 	// Print route information
@@ -122,7 +127,7 @@ func printRoutes(cfg *config.Config) {
 	log.Printf("  ANY    /onboarding/*              -> %s", cfg.OnboardingServiceURL)
 	log.Printf("  ANY    /scorecard/*               -> %s", cfg.ScoreCardServiceURL)
 	log.Printf("  ANY    /sonar/*                   -> %s", cfg.SonarShellServiceURL)
+	log.Printf("  ANY    /pd/*                      -> %s", cfg.PagerDutyServiceURL)
 	log.Println("================================================================")
 	log.Println()
 }
-
