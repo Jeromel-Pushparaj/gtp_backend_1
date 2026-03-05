@@ -18,9 +18,6 @@ type Config struct {
 	// Sonar Shell Test API Configuration
 	SonarShellTestURL    string
 	SonarShellTestAPIKey string
-
-	// Local Database Configuration
-	DBPath string
 }
 
 // LoadConfig loads configuration from environment variables
@@ -39,9 +36,6 @@ func LoadConfig() *Config {
 		// Sonar Shell Test API Configuration
 		SonarShellTestURL:    getEnv("SONAR_SHELL_TEST_URL", "http://localhost:8080"),
 		SonarShellTestAPIKey: getEnv("SONAR_SHELL_TEST_API_KEY", ""),
-
-		// Local Database Configuration
-		DBPath: getEnv("DB_PATH", "./data/cache.db"),
 	}
 }
 
