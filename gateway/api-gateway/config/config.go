@@ -33,6 +33,7 @@ type Config struct {
 	OnboardingServiceURL  string // Port 8084 - Service catalog/onboarding service
 	ScoreCardServiceURL   string // Port 8085 - Service scorecard evaluation service
 	SonarShellServiceURL  string // Port 8080 - SonarCloud automation service
+	PagerDutyServiceURL   string // Port 8091 - PagerDuty service
 
 	// Kafka Configuration (optional - for event publishing)
 	KafkaBrokers string
@@ -82,6 +83,7 @@ func LoadConfig() *Config {
 		OnboardingServiceURL:  getEnv("ONBOARDING_SERVICE_URL", "http://localhost:8084"),
 		ScoreCardServiceURL:   getEnv("SCORECARD_SERVICE_URL", "http://localhost:8085"),
 		SonarShellServiceURL:  getEnv("SONAR_SHELL_SERVICE_URL", "http://localhost:8080"),
+		PagerDutyServiceURL:   getEnv("PAGER_Duty_SERVICE_URL", "http://localhost:8091"),
 
 		// Kafka
 		KafkaBrokers: getEnv("KAFKA_BROKERS", "localhost:9092"),

@@ -1,17 +1,19 @@
-# Jira Issue Creation API 🚀
+# Jira Trigger Service 🚀
 
-A simple Go-based REST API that makes creating Jira issues super easy. No need to deal with complex Jira API authentication or sprint management - this server handles it all for you!
+A powerful Go-based REST API that simplifies Jira project and issue management. This service automatically handles project creation, board setup, sprint management, and issue creation - all through a single API call!
 
-## What Does This Do?
+## ✨ What Does This Do?
 
-This API lets you create Jira issues with a simple HTTP request. Just send a JSON with your issue details, and the server:
-- ✅ Creates the issue in Jira
-- ✅ Automatically creates and starts a sprint (if needed)
-- ✅ Assigns the issue to a team member
-- ✅ Adds labels and sets priority
-- ✅ Returns the Jira issue link
+This API provides complete Jira automation with a simple HTTP request. Just send a JSON with your requirements, and the server:
+- ✅ **Creates Jira projects** (Scrum or Kanban) if they don't exist
+- ✅ **Creates boards** automatically for new projects
+- ✅ **Creates and manages sprints** (auto-creates or uses existing)
+- ✅ **Creates issues** with full metadata (type, priority, labels, description)
+- ✅ **Assigns issues** to team members by name or account ID
+- ✅ **Adds issues to sprints** automatically
+- ✅ Returns the Jira issue link and complete details
 
-## Quick Start
+## 🚀 Quick Start
 
 ### 1. Setup Environment Variables
 
@@ -21,13 +23,14 @@ Create a `.env` file in the project root:
 JIRA_BASE_URL=https://your-domain.atlassian.net
 JIRA_EMAIL=your-email@example.com
 JIRA_API_TOKEN=your-jira-api-token
-JIRA_PROJECT_KEY=SCRUM
 ```
 
 **How to get your Jira API Token:**
 1. Go to https://id.atlassian.com/manage-profile/security/api-tokens
 2. Click "Create API token"
 3. Copy the token and paste it in your `.env` file
+
+**Note:** For project creation, your API token needs **admin permissions** in Jira.
 
 ### 2. Install Dependencies
 
@@ -41,104 +44,261 @@ go mod download
 go run main.go
 ```
 
-Server will start on `http://localhost:8080`
+Server will start on `http://localhost:8086`
 
-## How to Use
+## 📖 How to Use
 
-### Simple Example - Create an Issue
+### Example 1: Create New Scrum Project + Issue
 
 ```bash
-curl -X POST http://localhost:8080/api/create-issue \
+curl -X POST http://localhost:8086/api/create-issue \
   -H 'Content-Type: application/json' \
   -d '{
-    "summary": "Fix login bug"
+    "summary": "First task in new project",
+    "projectKey": "JIRATEST",
+    "projectName": "Jira Integration Test",
+    "projectType": "scrum"
   }'
 ```
 
-That's it! The server will:
-- Create a Task in Jira
-- Auto-create a new sprint
-- Return the issue link
+**What happens:**
+- ✅ Creates project "JIRATEST" with Scrum template
+- ✅ Creates "Jira Integration Test Board"
+- ✅ Creates auto-named sprint (e.g., "Auto Sprint 2026-03-03 11:15")
+- ✅ Creates issue and adds to sprint
 
-### Full Example - All Options
+### Example 2: Create New Kanban Project + Issue
 
 ```bash
-curl -X POST http://localhost:8080/api/create-issue \
+curl -X POST http://localhost:8086/api/create-issue \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "summary": "First kanban card",
+    "projectKey": "KANBAN1",
+    "projectName": "My Kanban Board",
+    "projectType": "kanban"
+  }'
+```
+
+### Example 3: Add Issue to Existing Project + Existing Sprint
+
+```bash
+curl -X POST http://localhost:8086/api/create-issue \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "summary": "Add feature to existing sprint",
+    "projectKey": "JIRATEST",
+    "sprintName": "Auto Sprint 2026-03-03 11:15",
+    "issueType": "Story",
+    "priority": "High"
+  }'
+```
+
+**What happens:**
+- ✅ Uses existing project "JIRATEST"
+- ✅ Finds existing sprint "Auto Sprint 2026-03-03 11:15"
+- ✅ Creates issue and adds to that sprint
+
+### Example 4: Full Request with All Fields
+
+```bash
+curl -X POST http://localhost:8086/api/create-issue \
   -H 'Content-Type: application/json' \
   -d '{
     "summary": "Implement user authentication",
-    "description": "Add JWT-based authentication system",
+    "projectKey": "BACKEND",
+    "projectName": "Backend Services",
+    "projectType": "scrum",
     "issueType": "Story",
     "sprintName": "Sprint March 2026",
+    "description": "Add JWT-based authentication system",
     "assigneeName": "John Doe",
     "priority": "High",
     "labels": ["backend", "security", "authentication"]
   }'
 ```
 
-### Response
+### Success Response
 
 ```json
 {
   "success": true,
-  "issueKey": "SCRUM-22",
-  "issueUrl": "https://your-domain.atlassian.net/browse/SCRUM-22",
-  "sprintId": 106,
-  "message": "Issue SCRUM-22 created and added to sprint successfully"
+  "issueKey": "JIRATEST-1",
+  "issueUrl": "https://your-domain.atlassian.net/browse/JIRATEST-1",
+  "sprintId": 177,
+  "message": "Issue JIRATEST-1 created and added to sprint 'Auto Sprint 2026-03-03 11:15' successfully"
 }
 ```
 
-## API Reference
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": "projectKey is required"
+}
+```
+
+## 📋 API Reference
 
 ### Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Check if server is running |
-| `/api/create-issue` | POST | Create a new Jira issue |
+| `/health` | GET | Health check - returns `{"status": "ok"}` |
+| `/api/create-issue` | POST | Create project, sprint, and issue |
 
 ### Request Fields
 
-| Field | Required? | Description | Example |
-|-------|-----------|-------------|---------|
-| `summary` | ✅ **YES** | Issue title | `"Fix login bug"` |
-| `description` | No | Issue details | `"Users cannot login..."` |
-| `issueType` | No | Task, Story, or Bug (default: Task) | `"Story"` |
-| `sprintName` | No | Sprint name (auto-creates if empty) | `"Sprint March 2026"` |
-| `assigneeName` | No | Display name of assignee | `"John Doe"` |
-| `priority` | No | Highest, High, Medium, Low, Lowest | `"High"` |
-| `labels` | No | Array of labels | `["backend", "urgent"]` |
+#### **Required Fields** (2)
 
-## Examples
+| Field | Type | Description | Example |
+|-------|------|-------------|---------|
+| `summary` | string | Issue title | `"Fix login bug"` |
+| `projectKey` | string | Project key (max 10 chars, uppercase + numbers only) | `"JIRATEST"` |
 
-### Create a Bug
+#### **Optional Fields** (9)
 
-```bash
-curl -X POST http://localhost:8080/api/create-issue \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "summary": "Login fails with special characters",
-    "description": "Users cannot login when password has @ or # symbols",
-    "issueType": "Bug",
-    "priority": "Highest",
-    "labels": ["bug", "urgent", "production"]
-  }'
+| Field | Type | Default | Description | Example |
+|-------|------|---------|-------------|---------|
+| `projectName` | string | `"{projectKey} Project"` | Project display name | `"Jira Integration Test"` |
+| `projectType` | string | `"scrum"` | Project type: `"scrum"` or `"kanban"` | `"scrum"` |
+| `issueType` | string | `"Task"` | Issue type | `"Task"`, `"Story"`, `"Bug"`, `"Epic"` |
+| `sprintName` | string | Auto-generated | Existing sprint name to use | `"Sprint March 2026"` |
+| `description` | string | `"Created via API"` | Issue description | `"Add JWT authentication"` |
+| `assigneeId` | string | Unassigned | Jira account ID (takes priority) | `"5b10a2844c20165700ede21g"` |
+| `assigneeName` | string | Unassigned | Jira display name (fallback) | `"John Doe"` |
+| `priority` | string | None | Priority level | `"Highest"`, `"High"`, `"Medium"`, `"Low"`, `"Lowest"` |
+| `labels` | array | `[]` | Array of labels | `["backend", "security"]` |
+
+### Project Key Rules
+
+⚠️ **Important:** Project keys must follow these rules:
+- ✅ Start with uppercase letter (A-Z)
+- ✅ Only uppercase letters and numbers (A-Z, 0-9)
+- ✅ Maximum 10 characters
+- ❌ No hyphens, underscores, or special characters
+
+**Valid:** `JIRATEST`, `BACKEND`, `PROJ123`, `TEST`
+**Invalid:** `jira-test`, `test_proj`, `my.project`, `TOOLONGPROJECTKEY`
+
+## 🎯 Workflow Scenarios
+
+### Scenario 1: Create New Project + Auto Sprint
+```json
+{
+  "summary": "First task",
+  "projectKey": "NEWPROJ"
+}
+```
+**Result:** Creates project, board, auto-named sprint, and issue
+
+---
+
+### Scenario 2: Use Existing Project + Create New Sprint
+```json
+{
+  "summary": "New feature",
+  "projectKey": "JIRATEST"
+}
+```
+**Result:** Uses existing project, creates new auto-named sprint, adds issue
+
+---
+
+### Scenario 3: Use Existing Project + Existing Sprint
+```json
+{
+  "summary": "Bug fix",
+  "projectKey": "JIRATEST",
+  "sprintName": "Auto Sprint 2026-03-03 11:15"
+}
+```
+**Result:** Uses existing project and sprint, adds issue
+
+---
+
+### Scenario 4: Create Kanban Project
+```json
+{
+  "summary": "Kanban card",
+  "projectKey": "KANBAN1",
+  "projectType": "kanban"
+}
+```
+**Result:** Creates Kanban project and board (no sprints)
+
+---
+
+## 🔄 Sprint Behavior
+
+### Auto-Generated Sprint Names
+When `sprintName` is **not provided**, the service creates a new sprint with format:
+```
+Auto Sprint YYYY-MM-DD HH:MM
 ```
 
-### Create a Story and Assign It
+**Examples:**
+- `Auto Sprint 2026-03-03 11:15`
+- `Auto Sprint 2026-03-03 14:30`
+- `Auto Sprint 2026-12-25 09:00`
 
-```bash
-curl -X POST http://localhost:8080/api/create-issue \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "summary": "Add dark mode to dashboard",
-    "description": "Implement dark mode theme for better UX",
-    "issueType": "Story",
-    "assigneeName": "Jane Smith",
-    "priority": "Medium",
-    "labels": ["frontend", "ui", "enhancement"]
-  }'
+**Sprint Details:**
+- Start Date: Current date/time
+- End Date: 14 days later
+- State: Active (automatically started)
+
+### Using Existing Sprints
+To add issues to an existing sprint, provide the exact sprint name:
+```json
+{
+  "summary": "Add to existing sprint",
+  "projectKey": "JIRATEST",
+  "sprintName": "Auto Sprint 2026-03-03 11:15"
+}
 ```
+
+---
+
+## 👥 Assignment Options
+
+### Option 1: By Account ID (Recommended)
+```json
+{
+  "assigneeId": "5b10a2844c20165700ede21g"
+}
+```
+
+### Option 2: By Display Name
+```json
+{
+  "assigneeName": "John Doe"
+}
+```
+
+**Note:** If both are provided, `assigneeId` takes priority.
+
+---
+
+## 🐛 Common Issues & Solutions
+
+### Error: "projectKey is required"
+**Solution:** Add `"projectKey": "YOURKEY"` to your request
+
+### Error: "Project keys must start with an uppercase letter..."
+**Solution:** Use only uppercase letters and numbers (e.g., `JIRATEST` not `jira-test`)
+
+### Error: "The project key must not exceed 10 characters"
+**Solution:** Shorten your project key (e.g., `JIRATESTPROJ` → `JIRATEST`)
+
+### Error: "Failed to find sprint"
+**Solution:** Either remove `sprintName` to auto-create, or use exact existing sprint name
+
+### Error: "user 'Name' not found"
+**Solution:** Use exact Jira display name or use `assigneeId` instead
+
+### Error: "You do not have permission to create projects"
+**Solution:** Your API token needs admin permissions in Jira
 
 ## Project Structure
 

@@ -1,0 +1,897 @@
+openapi: 3.0.3
+info:
+  title: 🚨 PagerDuty Service Dashboard API
+  description: |
+    # 🎯 Overview
+    A comprehensive API for managing PagerDuty services with GitHub integration and Slack notifications.
+    
+    ## 🌟 Key Features
+    - 🏠 **Service Management**: Create, read, and delete PagerDuty services
+    - 📊 **Metrics & Analytics**: Real-time incident metrics and performance data
+    - ⚡ **Incident Management**: Trigger test incidents with Slack notifications
+    - 🔄 **Multi-Platform Integration**: PagerDuty, GitHub, and Slack
+    - 🎨 **Organization Support**: Manage services across different organizations
+    
+    ## 🔗 Integrations
+    - **PagerDuty**: Service and incident management
+    - **GitHub**: Repository integration for services
+    - **Slack**: User assignment and notifications
+    
+    ## 📝 Notes
+    - All timestamps are in ISO 8601 format
+    - Service IDs are PagerDuty service IDs
+    - MongoDB storage is optional (falls back to in-memory)
+    
+  version: 1.0.0
+  contact:
+    name: PD Service Dashboard Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8086
+    description: 🖥️ Local development server
+  - url: http://localhost:8080/pd-service
+    description: 🌐 API Gateway (if using gateway)
+
+tags:
+  - name: 🏢 Organizations
+    description: Organization management endpoints
+  - name: 🛠️ Services
+    description: Service CRUD operations and management
+  - name: 📊 Metrics
+    description: Service metrics and analytics
+  - name: 🔔 PagerDuty
+    description: Direct PagerDuty API operations
+  - name: 🐙 GitHub
+    description: GitHub repository integration
+  - name: 💬 Slack
+    description: Slack user management
+  - name: 🚨 Incidents
+    description: Incident creation and management
+
+paths:
+  # 🏢 Organizations Endpoints
+  /api/organizations:
+    get:
+      tags:
+        - 🏢 Organizations
+      summary: 📋 List all organizations
+      description: |
+        Returns a list of available organizations.
+        
+        **Note**: Currently returns a single organization configured in the service.
+      operationId: getOrganizations
+      responses:
+        '200':
+          description: ✅ Organizations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+              example:
+                - id: "1"
+                  name: "My Organization"
+
+  # 🛠️ Services Endpoints
+  /api/services:
+    get:
+      tags:
+        - 🛠️ Services
+      summary: 📋 List all services
+      description: |
+        Fetches all services from PagerDuty and enriches them with local metadata
+        (GitHub repo, Slack assignee) if available.
+        
+        **Data Sources**:
+        - Primary: PagerDuty API
+        - Enrichment: Local MongoDB/in-memory storage
+      operationId: listServices
+      responses:
+        '200':
+          description: ✅ Services retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+        '500':
+          description: ❌ Failed to fetch services from PagerDuty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - 🛠️ Services
+      summary: ➕ Create a new service
+      description: |
+        Creates a new service with the following steps:
+        
+        1. 👤 **Create PagerDuty User** (if email provided and user doesn't exist)
+        2. 📋 **Create Escalation Policy** with the user
+        3. 🛠️ **Create PagerDuty Service** linked to escalation policy
+        4. 💾 **Store Metadata** (GitHub repo, Slack assignee) locally
+        
+        **Important**: Service names must be unique in PagerDuty.
+      operationId: createService
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateServiceRequest'
+      responses:
+        '201':
+          description: ✅ Service created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: ❌ Invalid request or service name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicate_name:
+                  summary: Duplicate service name
+                  value:
+                    error: "A service with this name already exists in PagerDuty. Please use a different name."
+                invalid_request:
+                  summary: Invalid request body
+                  value:
+                    error: "Invalid request body"
+        '500':
+          description: ❌ Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/services/{id}:
+    get:
+      tags:
+        - 🛠️ Services
+      summary: 🔍 Get service by ID
+      description: |
+        Retrieves a specific service from PagerDuty by its service ID.
+
+        **Note**: The ID is the PagerDuty service ID, not a local database ID.
+      operationId: getService
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 🆔 PagerDuty service ID
+          schema:
+            type: string
+          example: "PXXXXXX"
+      responses:
+        '200':
+          description: ✅ Service found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          description: ❌ Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: ❌ Failed to fetch service from PagerDuty
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - 🛠️ Services
+      summary: 🗑️ Delete a service
+      description: |
+        Deletes a service from local storage.
+
+        **Warning**: This only removes the local metadata. The PagerDuty service
+        itself is NOT deleted and will remain in PagerDuty.
+      operationId: deleteService
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 🆔 Service ID (local or PagerDuty ID)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ✅ Service deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Service deleted"
+        '500':
+          description: ❌ Failed to delete service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # 📊 Metrics Endpoints
+  /api/metrics:
+    get:
+      tags:
+        - 📊 Metrics
+      summary: 📈 Get all service metrics
+      description: |
+        Retrieves metrics for all services from PagerDuty.
+
+        **Metrics Include**:
+        - 🔢 Open incidents count
+        - 📊 Total incidents count
+        - ⚠️ High priority incidents
+        - ⏱️ Average time to resolve (minutes)
+        - ⏱️ Average time to respond (minutes)
+        - 🕐 Last incident timestamp
+
+        **Note**: Metrics are fetched in real-time from PagerDuty and cached in MongoDB if available.
+      operationId: getAllMetrics
+      responses:
+        '200':
+          description: ✅ Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ServiceMetrics'
+        '500':
+          description: ❌ Failed to fetch metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/metrics/by-name:
+    post:
+      tags:
+        - 📊 Metrics
+      summary: 🔍 Get metrics by service name
+      description: |
+        Retrieves metrics for a specific service by its name.
+
+        **Search Order**:
+        1. 💾 Check local MongoDB storage
+        2. 🔍 Search PagerDuty services by name
+        3. 📊 Fetch metrics from PagerDuty
+
+        **Use Case**: When you know the service name but not the PagerDuty ID.
+      operationId: getMetricsByServiceName
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - service_name
+              properties:
+                service_name:
+                  type: string
+                  description: 📝 Name of the service
+                  example: "my-api-service"
+      responses:
+        '200':
+          description: ✅ Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMetrics'
+        '400':
+          description: ❌ service_name is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: ❌ Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Service not found with name: my-api-service"
+        '500':
+          description: ❌ Failed to fetch metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/services/{id}/metrics:
+    get:
+      tags:
+        - 📊 Metrics
+      summary: 📊 Get service-specific metrics
+      description: |
+        Retrieves metrics for a specific service by its PagerDuty service ID.
+
+        **Faster than /api/metrics/by-name** if you already have the service ID.
+      operationId: getServiceMetrics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: 🆔 PagerDuty service ID
+          schema:
+            type: string
+          example: "PXXXXXX"
+      responses:
+        '200':
+          description: ✅ Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceMetrics'
+        '404':
+          description: ❌ Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: ❌ Failed to fetch metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # 🔔 PagerDuty Endpoints
+  /api/pagerduty/services:
+    get:
+      tags:
+        - 🔔 PagerDuty
+      summary: 📋 List PagerDuty services (raw)
+      description: |
+        Returns raw PagerDuty services without local enrichment.
+
+        **Difference from /api/services**:
+        - This endpoint returns pure PagerDuty data
+        - /api/services enriches data with GitHub repo and Slack assignee
+
+        **Use Case**: When you need raw PagerDuty service data.
+      operationId: listPDServices
+      responses:
+        '200':
+          description: ✅ PagerDuty services retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Raw PagerDuty service object
+        '500':
+          description: ❌ Failed to fetch PagerDuty services
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/pagerduty/escalation-policies:
+    get:
+      tags:
+        - 🔔 PagerDuty
+      summary: 📋 List escalation policies
+      description: |
+        Returns all escalation policies from PagerDuty.
+
+        **Use Case**:
+        - View available escalation policies
+        - Select policy when creating services manually
+      operationId: listEscalationPolicies
+      responses:
+        '200':
+          description: ✅ Escalation policies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Raw PagerDuty escalation policy object
+        '500':
+          description: ❌ Failed to fetch escalation policies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # 🐙 GitHub Endpoints
+  /api/github/repos:
+    get:
+      tags:
+        - 🐙 GitHub
+      summary: 📦 List GitHub repositories
+      description: |
+        Returns all repositories from the configured GitHub organization.
+
+        **Configuration Required**:
+        - GitHub Personal Access Token
+        - GitHub Organization name
+
+        **Use Case**: Select a repository when creating a new service.
+      operationId: listGitHubRepos
+      responses:
+        '200':
+          description: ✅ Repositories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GitHubRepo'
+        '500':
+          description: ❌ Failed to fetch GitHub repositories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # 💬 Slack Endpoints
+  /api/slack/users:
+    get:
+      tags:
+        - 💬 Slack
+      summary: 👥 List Slack users
+      description: |
+        Returns all active (non-bot, non-deleted) users from Slack workspace.
+
+        **Filters Applied**:
+        - ❌ Excludes bots
+        - ❌ Excludes deleted users
+        - ✅ Only active human users
+
+        **Use Case**: Select a Slack user to assign to a service for notifications.
+      operationId: listSlackUsers
+      responses:
+        '200':
+          description: ✅ Slack users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SlackUser'
+        '500':
+          description: ❌ Failed to fetch Slack users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # 🚨 Incidents Endpoints
+  /api/incidents/trigger:
+    post:
+      tags:
+        - 🚨 Incidents
+      summary: ⚡ Trigger a test incident
+      description: |
+        Creates a test incident in PagerDuty and sends a Slack notification.
+
+        **Process Flow**:
+        1. 🔍 Fetch service from PagerDuty
+        2. 👤 Get Slack assignee from local metadata
+        3. 📧 Find PagerDuty user by Slack user's email
+        4. 🚨 Create incident in PagerDuty
+        5. 💬 Send Slack notification to assignee
+
+        **Requirements**:
+        - Service must be created through this app (to have Slack assignee)
+        - Slack user must have matching PagerDuty account (same email)
+
+        **Note**: If Slack notification fails, incident is still created.
+      operationId: triggerIncident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerIncidentRequest'
+      responses:
+        '201':
+          description: ✅ Incident created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  incident_id:
+                    type: string
+                    description: 🆔 PagerDuty incident ID
+                    example: "Q1XXXXX"
+                  incident_url:
+                    type: string
+                    description: 🔗 URL to view incident in PagerDuty
+                    example: "https://myorg.pagerduty.com/incidents/Q1XXXXX"
+                  message:
+                    type: string
+                    example: "Incident created and notification sent"
+          headers:
+            X-Slack-Error:
+              description: ⚠️ Present if Slack notification failed (incident still created)
+              schema:
+                type: string
+        '400':
+          description: ❌ Invalid request or missing requirements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                no_assignee:
+                  summary: Service not created through app
+                  value:
+                    error: "Service was not created through this app. Please add it first to associate a Slack user."
+                no_pd_user:
+                  summary: No matching PagerDuty user
+                  value:
+                    error: "No PagerDuty user found with email: user@example.com. Please ensure the Slack user has a matching PagerDuty account."
+        '404':
+          description: ❌ Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: ❌ Failed to create incident
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    # 🔧 Common Schemas
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: ❌ Error message
+          example: "Failed to fetch services from PagerDuty"
+      required:
+        - error
+
+    # 🏢 Organization Schema
+    Organization:
+      type: object
+      description: 🏢 Represents an organization
+      properties:
+        id:
+          type: string
+          description: 🆔 Organization ID
+          example: "1"
+        name:
+          type: string
+          description: 📝 Organization name
+          example: "My Organization"
+      required:
+        - id
+        - name
+
+    # 🛠️ Service Schemas
+    Service:
+      type: object
+      description: |
+        🛠️ Represents a service with PagerDuty integration.
+
+        **Data Sources**:
+        - PagerDuty: id, name, pd_service_id
+        - Local: github_repo, slack_assignee, slack_assignee_id, org_name
+      properties:
+        id:
+          type: string
+          description: 🆔 Service ID (PagerDuty service ID)
+          example: "PXXXXXX"
+        name:
+          type: string
+          description: 📝 Service name
+          example: "my-api-service"
+        pd_service_id:
+          type: string
+          description: 🔔 PagerDuty service ID (same as id)
+          example: "PXXXXXX"
+        github_repo:
+          type: string
+          description: 🐙 Associated GitHub repository
+          example: "my-org/my-api-service"
+          nullable: true
+        slack_assignee:
+          type: string
+          description: 💬 Slack assignee name
+          example: "John Doe"
+          nullable: true
+        slack_assignee_id:
+          type: string
+          description: 💬 Slack user ID for notifications
+          example: "U01234567"
+          nullable: true
+        org_name:
+          type: string
+          description: 🏢 Organization name
+          example: "My Organization"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          description: 🕐 Creation timestamp
+          example: "2024-03-05T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: 🕐 Last update timestamp
+          example: "2024-03-05T10:30:00Z"
+      required:
+        - id
+        - name
+        - pd_service_id
+
+    CreateServiceRequest:
+      type: object
+      description: |
+        ➕ Request body for creating a new service.
+
+        **Required Fields**: name, user_email, user_name
+        **Optional Fields**: github_repo, slack_assignee, slack_assignee_id
+      properties:
+        name:
+          type: string
+          description: 📝 Service name (must be unique in PagerDuty)
+          example: "my-api-service"
+        user_email:
+          type: string
+          format: email
+          description: 📧 Email for PagerDuty user (creates user if doesn't exist)
+          example: "oncall@example.com"
+        user_name:
+          type: string
+          description: 👤 Name for PagerDuty user
+          example: "On-Call Engineer"
+        github_repo:
+          type: string
+          description: 🐙 GitHub repository to associate (optional)
+          example: "my-org/my-api-service"
+          nullable: true
+        slack_assignee:
+          type: string
+          description: 💬 Slack assignee name (optional)
+          example: "John Doe"
+          nullable: true
+        slack_assignee_id:
+          type: string
+          description: 💬 Slack user ID for notifications (optional)
+          example: "U01234567"
+          nullable: true
+      required:
+        - name
+        - user_email
+        - user_name
+
+    # 📊 Metrics Schema
+    ServiceMetrics:
+      type: object
+      description: |
+        📊 Service metrics from PagerDuty.
+
+        **Metrics Calculated**:
+        - Incident counts (open, total, high priority)
+        - Response times (average time to resolve/respond)
+        - Last incident timestamp
+      properties:
+        service_id:
+          type: string
+          description: 🆔 PagerDuty service ID
+          example: "PXXXXXX"
+        service_name:
+          type: string
+          description: 📝 Service name
+          example: "my-api-service"
+        open_incidents:
+          type: integer
+          description: 🔢 Number of currently open incidents
+          example: 2
+        total_incidents:
+          type: integer
+          description: 📊 Total number of incidents (all time)
+          example: 45
+        high_priority:
+          type: integer
+          description: ⚠️ Number of high priority incidents
+          example: 5
+        avg_time_to_resolve:
+          type: number
+          format: double
+          description: ⏱️ Average time to resolve incidents (in minutes)
+          example: 45.5
+        avg_time_to_respond:
+          type: number
+          format: double
+          description: ⏱️ Average time to respond to incidents (in minutes)
+          example: 12.3
+        assignee_name:
+          type: string
+          description: 👤 Assigned person name
+          example: "John Doe"
+          nullable: true
+        assignee_slack_id:
+          type: string
+          description: 💬 Slack ID of assignee
+          example: "U01234567"
+          nullable: true
+        last_incident_time:
+          type: string
+          format: date-time
+          description: 🕐 Timestamp of last incident
+          example: "2024-03-05T10:30:00Z"
+          nullable: true
+      required:
+        - service_id
+        - service_name
+        - open_incidents
+        - total_incidents
+        - high_priority
+        - avg_time_to_resolve
+        - avg_time_to_respond
+
+    # 🐙 GitHub Schema
+    GitHubRepo:
+      type: object
+      description: 📦 Represents a GitHub repository
+      properties:
+        name:
+          type: string
+          description: 📝 Repository name
+          example: "my-api-service"
+        full_name:
+          type: string
+          description: 📝 Full repository name (org/repo)
+          example: "my-org/my-api-service"
+        url:
+          type: string
+          description: 🔗 Repository URL
+          example: "https://github.com/my-org/my-api-service"
+      required:
+        - name
+        - full_name
+        - url
+
+    # 💬 Slack Schema
+    SlackUser:
+      type: object
+      description: |
+        👤 Represents a Slack user.
+
+        **Filters**: Only active, non-bot, non-deleted users are returned.
+      properties:
+        id:
+          type: string
+          description: 🆔 Slack user ID
+          example: "U01234567"
+        name:
+          type: string
+          description: 📝 Slack username
+          example: "john.doe"
+        real_name:
+          type: string
+          description: 👤 Real name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          description: 📧 Email address
+          example: "john.doe@example.com"
+      required:
+        - id
+        - name
+        - real_name
+        - email
+
+    # 🚨 Incident Schemas
+    TriggerIncidentRequest:
+      type: object
+      description: |
+        ⚡ Request body for triggering a test incident.
+
+        **Requirements**:
+        - service_id must be a valid PagerDuty service ID
+        - Service must have been created through this app (to have Slack assignee)
+        - Slack user must have matching PagerDuty account
+      properties:
+        service_id:
+          type: string
+          description: 🆔 PagerDuty service ID
+          example: "PXXXXXX"
+        title:
+          type: string
+          description: 📝 Incident title
+          example: "Test Incident - API Latency"
+        description:
+          type: string
+          description: 📄 Incident description
+          example: "This is a test incident to verify alerting workflow"
+        priority:
+          type: string
+          description: |
+            ⚠️ Incident priority (optional).
+
+            **Note**: Must be a valid PagerDuty priority ID if provided.
+          example: "P1"
+          nullable: true
+      required:
+        - service_id
+        - title
+        - description
+
+    Incident:
+      type: object
+      description: 🚨 Represents a PagerDuty incident
+      properties:
+        id:
+          type: string
+          description: 🆔 Incident ID
+          example: "Q1XXXXX"
+        title:
+          type: string
+          description: 📝 Incident title
+          example: "Test Incident - API Latency"
+        status:
+          type: string
+          description: 📊 Incident status
+          enum:
+            - triggered
+            - acknowledged
+            - resolved
+          example: "triggered"
+        priority:
+          type: string
+          description: ⚠️ Incident priority
+          example: "high"
+        service_id:
+          type: string
+          description: 🆔 Associated service ID
+          example: "PXXXXXX"
+        service_name:
+          type: string
+          description: 📝 Associated service name
+          example: "my-api-service"
+        created_at:
+          type: string
+          format: date-time
+          description: 🕐 Creation timestamp
+          example: "2024-03-05T10:30:00Z"
+        resolved_at:
+          type: string
+          format: date-time
+          description: 🕐 Resolution timestamp
+          example: "2024-03-05T11:15:00Z"
+          nullable: true
+      required:
+        - id
+        - title
+        - status
+        - priority
+        - service_id
+        - service_name
+        - created_at
+
