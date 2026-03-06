@@ -29,7 +29,6 @@ func GetCodeQualityScorecard() models.ScorecardDefinition {
 		{Name: "Coverage >= 60%", Description: "Test coverage at least 60%", Property: "coverage", Operator: models.OperatorGreaterThanOrEqual, Threshold: 60, RuleType: models.RuleTypeProperty},
 		{Name: "Vulnerabilities <= 10", Description: "No more than 10 vulnerabilities", Property: "vulnerabilities", Operator: models.OperatorLessThanOrEqual, Threshold: 10, RuleType: models.RuleTypeProperty},
 		{Name: "Duplications <= 5%", Description: "Code duplication under 5%", Property: "duplicated_lines_density", Operator: models.OperatorLessThanOrEqual, Threshold: 5, RuleType: models.RuleTypeProperty},
-		{Name: "Has README", Description: "Repository has README file", Property: "has_readme", Operator: models.OperatorEqual, Threshold: 1, RuleType: models.RuleTypeProperty},
 	}
 
 	// Silver Level Rules
