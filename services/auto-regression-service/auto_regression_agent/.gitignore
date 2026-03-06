@@ -46,10 +46,16 @@ configs/*.local.yaml
 /cmd/scheduler/scheduler
 /cmd/agent-runner/agent-runner
 /cmd/cli/cli
+chat
+middleman
 
 # Test artifacts
 /tests/integration/results/
 /tests/fixtures/generated/
+output/
+test_suites/
+*test-results.json
+debug-response-*.json
 
 # Temporary files
 tmp/
@@ -87,4 +93,20 @@ deployments/kubernetes/*/secrets/
 
 # Docker
 docker-compose.override.yml
+
+# Web UI
+web-ui/node_modules/
+web-ui/dist/
+
+# Sample files
+openAPISample*.json
+*.backup
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
 
