@@ -1,8 +1,8 @@
 package mcp
 
-import (
-	mcp_golang "github.com/metoro-io/mcp-golang"
-)
+// Jira tool argument types for documentation purposes.
+// The HTTP-based MCP server uses dynamic tool mapping via mapJiraToolToEndpoint()
+// instead of explicit tool registration.
 
 type GetJiraIssueStatsArgs struct {
 	Project string `json:"project" jsonschema:"required,description=Jira project key"`
@@ -33,87 +33,57 @@ type SearchJiraIssuesArgs struct {
 	MaxResults string `json:"max_results" jsonschema:"description=Maximum number of results"`
 }
 
-func (s *Server) registerJiraTools() error {
-	if err := s.mcpServer.RegisterTool("get_jira_issue_stats", "Get issue statistics for a Jira project", func(args GetJiraIssueStatsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"project": args.Project}
-		result, err := s.makeRequest("GET", "/api/v1/jira/issues/stats", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+// mapJiraToolToEndpoint maps Jira tool names to API endpoints
+func mapJiraToolToEndpoint(toolName string, args map[string]interface{}) (endpoint, method string, params map[string]string, body interface{}, found bool) {
+	params = make(map[string]string)
 
-	if err := s.mcpServer.RegisterTool("get_jira_open_bugs", "Get open bugs for a Jira project", func(args GetJiraOpenBugsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"project": args.Project}
-		result, err := s.makeRequest("GET", "/api/v1/jira/bugs/open", params, nil)
-		if err != nil {
-			return nil, err
+	switch toolName {
+	case "get_jira_issue_stats":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/jira/issues/stats", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_jira_open_tasks", "Get open tasks for a Jira project", func(args GetJiraOpenTasksArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"project": args.Project}
-		result, err := s.makeRequest("GET", "/api/v1/jira/tasks/open", params, nil)
-		if err != nil {
-			return nil, err
+	case "get_jira_open_bugs":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/jira/bugs/open", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_jira_issues_by_assignee", "Get issues grouped by assignee", func(args GetJiraIssuesByAssigneeArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"project": args.Project}
-		result, err := s.makeRequest("GET", "/api/v1/jira/issues/by-assignee", params, nil)
-		if err != nil {
-			return nil, err
+	case "get_jira_open_tasks":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/jira/tasks/open", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_jira_sprint_stats", "Get sprint statistics for a Jira project", func(args GetJiraSprintStatsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"project": args.Project}
-		result, err := s.makeRequest("GET", "/api/v1/jira/sprints/stats", params, nil)
-		if err != nil {
-			return nil, err
+	case "get_jira_issues_by_assignee":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/jira/issues/by-assignee", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_jira_project_metrics", "Get comprehensive project metrics", func(args GetJiraProjectMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"project": args.Project}
-		result, err := s.makeRequest("GET", "/api/v1/jira/metrics", params, nil)
-		if err != nil {
-			return nil, err
+	case "get_jira_sprint_stats":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/jira/sprints/stats", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("search_jira_issues", "Search for Jira issues using JQL", func(args SearchJiraIssuesArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"jql": args.JQL}
-		if args.MaxResults != "" {
-			params["max_results"] = args.MaxResults
+	case "get_jira_project_metrics":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
 		}
-		result, err := s.makeRequest("GET", "/api/v1/jira/issues/search", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/jira/metrics", "GET", params, nil, true
 
-	return nil
+	case "search_jira_issues":
+		if jql, ok := args["jql"].(string); ok {
+			params["jql"] = jql
+		}
+		if maxResults, ok := args["max_results"].(string); ok {
+			params["max_results"] = maxResults
+		}
+		return "/api/v1/jira/issues/search", "GET", params, nil, true
+
+	default:
+		return "", "", nil, nil, false
+	}
 }
-

@@ -1,8 +1,8 @@
 package mcp
 
-import (
-	mcp_golang "github.com/metoro-io/mcp-golang"
-)
+// Repository tool argument types for documentation purposes.
+// The HTTP-based MCP server uses dynamic tool mapping via mapRepoToolToEndpoint()
+// instead of explicit tool registration.
 
 type FetchReposByOrgArgs struct {
 	OrgID string `json:"org_id" jsonschema:"required,description=Organization ID"`
@@ -26,69 +26,49 @@ type FetchSonarMetricsByRepoArgs struct {
 	RepoID string `json:"repo_id" jsonschema:"required,description=Repository ID"`
 }
 
-func (s *Server) registerRepoTools() error {
-	if err := s.mcpServer.RegisterTool("fetch_repos_by_org", "Fetch repositories for an organization from GitHub", func(args FetchReposByOrgArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"org_id": args.OrgID}
-		result, err := s.makeRequest("GET", "/api/v1/repos/fetch", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+// mapRepoToolToEndpoint maps Repository tool names to API endpoints
+func mapRepoToolToEndpoint(toolName string, args map[string]interface{}) (endpoint, method string, params map[string]string, body interface{}, found bool) {
+	params = make(map[string]string)
 
-	if err := s.mcpServer.RegisterTool("update_repo", "Update repository configuration", func(args UpdateRepoArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo_id": args.RepoID}
-		body := make(map[string]string)
-		if args.JiraProjectKey != "" {
-			body["jira_project_key"] = args.JiraProjectKey
+	switch toolName {
+	case "fetch_repos_by_org":
+		if orgID, ok := args["org_id"].(string); ok {
+			params["org_id"] = orgID
 		}
-		if args.EnvironmentName != "" {
-			body["environment_name"] = args.EnvironmentName
-		}
-		result, err := s.makeRequest("PUT", "/api/v1/repos/update", params, body)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/repos/fetch", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("fetch_github_metrics_by_repo", "Fetch and store GitHub metrics for a repository", func(args FetchGitHubMetricsByRepoArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo_id": args.RepoID}
-		result, err := s.makeRequest("GET", "/api/v1/repos/metrics/github", params, nil)
-		if err != nil {
-			return nil, err
+	case "update_repo":
+		if repoID, ok := args["repo_id"].(string); ok {
+			params["repo_id"] = repoID
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
-
-	if err := s.mcpServer.RegisterTool("fetch_jira_metrics_by_repo", "Fetch and store Jira metrics for a repository", func(args FetchJiraMetricsByRepoArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo_id": args.RepoID}
-		result, err := s.makeRequest("GET", "/api/v1/repos/metrics/jira", params, nil)
-		if err != nil {
-			return nil, err
+		bodyMap := make(map[string]string)
+		if jiraKey, ok := args["jira_project_key"].(string); ok {
+			bodyMap["jira_project_key"] = jiraKey
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
-
-	if err := s.mcpServer.RegisterTool("fetch_sonar_metrics_by_repo", "Fetch and store SonarCloud metrics for a repository", func(args FetchSonarMetricsByRepoArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo_id": args.RepoID}
-		result, err := s.makeRequest("GET", "/api/v1/repos/metrics/sonar", params, nil)
-		if err != nil {
-			return nil, err
+		if envName, ok := args["environment_name"].(string); ok {
+			bodyMap["environment_name"] = envName
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/repos/update", "PUT", params, bodyMap, true
 
-	return nil
+	case "fetch_github_metrics_by_repo":
+		if repoID, ok := args["repo_id"].(string); ok {
+			params["repo_id"] = repoID
+		}
+		return "/api/v1/repos/metrics/github", "GET", params, nil, true
+
+	case "fetch_jira_metrics_by_repo":
+		if repoID, ok := args["repo_id"].(string); ok {
+			params["repo_id"] = repoID
+		}
+		return "/api/v1/repos/metrics/jira", "GET", params, nil, true
+
+	case "fetch_sonar_metrics_by_repo":
+		if repoID, ok := args["repo_id"].(string); ok {
+			params["repo_id"] = repoID
+		}
+		return "/api/v1/repos/metrics/sonar", "GET", params, nil, true
+
+	default:
+		return "", "", nil, nil, false
+	}
 }
-
