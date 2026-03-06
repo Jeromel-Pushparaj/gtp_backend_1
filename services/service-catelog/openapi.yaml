@@ -1,0 +1,461 @@
+openapi: 3.0.3
+info:
+  title: Service Catalog API
+  description: |
+    Service Catalog API provides comprehensive service management and metadata aggregation.
+    It aggregates data from multiple sources including GitHub, Jira, SonarCloud, Jenkins, Wiz, and PagerDuty
+    to provide a unified view of all services in the organization.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8085
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: Service
+    description: Service management operations
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the service is running and healthy
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: service-catalog
+
+  /api/v1/org/{org_id}/service:
+    post:
+      tags:
+        - Service
+      summary: Fetch/refresh services for organization
+      description: |
+        Fetch and refresh services from sonar-shell-test for a specific organization.
+        This endpoint triggers data synchronization from the backend.
+      operationId: fetchServicesForOrg
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: Services fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags:
+        - Service
+      summary: Get all services for organization
+      description: |
+        Retrieve all services for a specific organization.
+        Returns aggregated data from GitHub, Jira, SonarCloud, and other sources.
+      operationId: getAllServicesForOrg
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: Successfully retrieved services
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServicesResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/org/{org_id}/service/{id}:
+    get:
+      tags:
+        - Service
+      summary: Get service by organization and ID
+      description: |
+        Retrieve a specific service by organization ID and service ID.
+        Returns comprehensive service information including evaluation metrics.
+      operationId: getServiceByOrgAndId
+      parameters:
+        - name: org_id
+          in: path
+          required: true
+          description: Organization ID
+          schema:
+            type: integer
+            format: int64
+            example: 1
+        - name: id
+          in: path
+          required: true
+          description: Service ID in format svc_12345
+          schema:
+            type: string
+            pattern: '^svc_\d+$'
+            example: svc_1
+      responses:
+        '200':
+          description: Successfully retrieved service
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ServiceResponse'
+        '404':
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  
+components:
+  schemas:
+    APIResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          example: success
+        message:
+          type: string
+          example: Operation completed successfully
+        data:
+          type: object
+          description: Response data (varies by endpoint)
+        error:
+          type: string
+          description: Error message (only present when status is error)
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        message:
+          type: string
+          example: An error occurred
+        error:
+          type: string
+          example: Detailed error message
+
+
+
+    ServicesResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of services
+          example: 4
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceResponse'
+
+    ServiceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Service ID in format svc_12345
+          example: svc_1
+        title:
+          type: string
+          description: Service name
+          example: delivery-management-frontend
+        repositoryUrl:
+          type: string
+          format: uri
+          description: Repository URL
+          example: https://github.com/teknex-poc/delivery-management-frontend
+        owner:
+          type: string
+          description: Repository owner
+          example: ANUGRAHA630
+        defaultBranch:
+          type: string
+          description: Default branch name
+          example: main
+        language:
+          type: string
+          description: Primary programming language
+          example: JavaScript
+        organization:
+          $ref: '#/components/schemas/OrganizationInfo'
+        jiraProjectKey:
+          type: string
+          description: Jira project key
+          example: SCRUM
+        onCall:
+          type: string
+          description: On-call person/team
+          example: ANUGRAHA630
+        metrics:
+          $ref: '#/components/schemas/MetricsInfo'
+        evaluationMetrics:
+          $ref: '#/components/schemas/EvaluationMetricsInfo'
+        pullRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/PullRequestInfo'
+        jiraIssues:
+          type: array
+          items:
+            $ref: '#/components/schemas/JiraIssueInfo'
+
+    OrganizationInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Organization ID
+          example: 1
+        name:
+          type: string
+          description: Organization name
+          example: teknex-poc
+
+    MetricsInfo:
+      type: object
+      description: Aggregated metrics from GitHub and Jira
+      properties:
+        openPullRequests:
+          type: integer
+          description: Number of open pull requests
+          example: 1
+        commitsLast90Days:
+          type: integer
+          description: Number of commits in the last 90 days
+          example: 4
+        contributors:
+          type: integer
+          description: Number of unique contributors
+          example: 2
+        jiraOpenBugs:
+          type: integer
+          description: Number of open Jira bugs
+          example: 6
+        jiraOpenTasks:
+          type: integer
+          description: Number of open Jira tasks
+          example: 13
+        jiraActiveSprints:
+          type: integer
+          description: Number of active Jira sprints
+          example: 4
+
+    EvaluationMetricsInfo:
+      type: object
+      description: |
+        Scorecard evaluation metrics aggregated from multiple sonar-shell-test endpoints.
+
+        Data Sources:
+        - coverage, codeSmells, vulnerabilities, duplicatedLinesDensity: GET /api/v1/repos/metrics/sonar
+        - hasReadme: GET /api/v1/repos/metrics/github
+        - mttr: GET /api/v1/repos/metrics/jira (avg_time_to_resolve)
+        - deploymentFrequency: NOT AVAILABLE (hardcoded to 0)
+      properties:
+        serviceName:
+          type: string
+          description: Service/repository name
+          example: delivery-management-frontend
+        coverage:
+          type: number
+          format: double
+          description: Code coverage percentage from SonarCloud
+          example: 85.5
+        codeSmells:
+          type: integer
+          description: Number of code smells from SonarCloud
+          example: 12
+        vulnerabilities:
+          type: integer
+          description: Number of vulnerabilities from SonarCloud
+          example: 2
+        duplicatedLinesDensity:
+          type: number
+          format: double
+          description: Percentage of duplicated lines from SonarCloud
+          example: 3.2
+        hasReadme:
+          type: integer
+          description: Whether repository has README (1=yes, 0=no)
+          enum: [0, 1]
+          example: 1
+        deploymentFrequency:
+          type: integer
+          description: Deployment frequency (NOT AVAILABLE - always 0)
+          example: 0
+        mttr:
+          type: integer
+          description: Mean Time To Resolve in days (from Jira avg_time_to_resolve)
+          example: 8
+
+    PullRequestInfo:
+      type: object
+      properties:
+        number:
+          type: integer
+          description: Pull request number
+          example: 1
+        title:
+          type: string
+          description: Pull request title
+          example: "fix: added meta description"
+        state:
+          type: string
+          description: Pull request state
+          enum: [open, closed]
+          example: open
+        author:
+          type: string
+          description: Pull request author
+          example: Jeromel-Pushparaj
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2026-02-23T09:23:01Z"
+        url:
+          type: string
+          format: uri
+          description: Pull request URL
+          example: https://github.com/teknex-poc/delivery-management-frontend/pull/1
+
+    JiraIssueInfo:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Jira issue key
+          example: SCRUM-123
+        summary:
+          type: string
+          description: Issue summary/title
+          example: Fix login bug
+        issueType:
+          type: string
+          description: Type of issue
+          example: Bug
+        status:
+          type: string
+          description: Current status
+          example: In Progress
+        priority:
+          type: string
+          description: Issue priority
+          example: High
+        assignee:
+          type: string
+          description: Assigned person
+          example: john.doe
+
+  examples:
+    ServiceResponseExample:
+      value:
+        status: success
+        message: Service retrieved successfully
+        data:
+          id: svc_1
+          title: delivery-management-frontend
+          repositoryUrl: https://github.com/teknex-poc/delivery-management-frontend
+          owner: ANUGRAHA630
+          defaultBranch: main
+          language: JavaScript
+          organization:
+            id: 1
+            name: teknex-poc
+          jiraProjectKey: SCRUM
+          onCall: ANUGRAHA630
+          metrics:
+            openPullRequests: 1
+            commitsLast90Days: 4
+            contributors: 2
+            jiraOpenBugs: 6
+            jiraOpenTasks: 13
+            jiraActiveSprints: 4
+          evaluationMetrics:
+            serviceName: delivery-management-frontend
+            coverage: 85.5
+            codeSmells: 12
+            vulnerabilities: 2
+            duplicatedLinesDensity: 3.2
+            hasReadme: 1
+            deploymentFrequency: 0
+            mttr: 8
+          pullRequests:
+            - number: 1
+              title: "fix: added meta description"
+              state: open
+              author: Jeromel-Pushparaj
+              createdAt: "2026-02-23T09:23:01Z"
+              url: https://github.com/teknex-poc/delivery-management-frontend/pull/1
+          jiraIssues:
+            - key: SCRUM-123
+              summary: Fix login bug
+              issueType: Bug
+              status: In Progress
+              priority: High
+              assignee: john.doe
+

@@ -673,3 +673,31 @@ func (gs *GitHubService) CompareCommits(owner, repo, base, head string) (*github
 	return comparison, nil
 }
 
+// GetRepositoryLanguages fetches the programming languages used in a repository
+func (gs *GitHubService) GetRepositoryLanguages(owner, repo string) (map[string]int, error) {
+	languages, _, err := gs.client.Repositories.ListLanguages(gs.ctx, owner, repo)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get languages: %w", err)
+	}
+
+	return languages, nil
+}
+
+// GetPrimaryLanguage determines the primary language from language stats
+func (gs *GitHubService) GetPrimaryLanguage(languages map[string]int) string {
+	if len(languages) == 0 {
+		return ""
+	}
+
+	var primaryLang string
+	var maxBytes int
+
+	for lang, bytes := range languages {
+		if bytes > maxBytes {
+			maxBytes = bytes
+			primaryLang = lang
+		}
+	}
+
+	return primaryLang
+}

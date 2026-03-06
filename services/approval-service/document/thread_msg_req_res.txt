@@ -1,0 +1,35 @@
+1. Send main message
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{"channel_name": "channel_approval_service", "text": "Main message"}'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772351854.950029",
+  "text": "Main message"
+}
+
+
+
+2 Copy timestamp from response, then send threaded reply
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{"channel_name": "channel_approval_service", "text": "Threaded reply", "thread_ts": "1772351854.950029"}'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772351987.349299",
+  "text": "Threaded reply"
+}
