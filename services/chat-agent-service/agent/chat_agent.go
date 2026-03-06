@@ -14,14 +14,15 @@ const MaxRetries = 3
 
 type ChatAgent struct {
 	groqClient   *client.GroqClient
-	toolExecutor *client.ToolExecutor
+	toolExecutor *client.MCPToolExecutor
 	tools        []client.Tool
 }
 
-func NewChatAgent(groqAPIKey, backendURL, backendAPIKey string) *ChatAgent {
+// NewChatAgent creates a ChatAgent that uses the MCP server for tool execution
+func NewChatAgent(groqAPIKey string, mcpServerURL string) *ChatAgent {
 	return &ChatAgent{
 		groqClient:   client.NewGroqClient(groqAPIKey),
-		toolExecutor: client.NewToolExecutor(backendURL, backendAPIKey),
+		toolExecutor: client.NewMCPToolExecutor(mcpServerURL),
 		tools:        client.GetAvailableTools(),
 	}
 }
@@ -89,6 +90,11 @@ AVAILABLE WORKFLOWS:
 - To get open Jira bugs: Use get_jira_open_bugs with project key
 - To get open Jira tasks: Use get_jira_open_tasks with project key
 - To search Jira issues: Use search_jira_issues with JQL query string
+- To get SonarCloud metrics: Use get_sonar_metrics with repo name (e.g., test-backend)
+- To collect and store SonarCloud metrics: Use collect_sonar_metrics with repo name
+- To get stored SonarCloud metrics: Use get_stored_sonar_metrics with repo name
+- To perform full SonarCloud setup: Use full_setup (no parameters needed)
+- To fetch SonarCloud analysis results: Use fetch_results (no parameters needed)
 
 RESPONSE FORMATTING RULES (CRITICAL - MUST FOLLOW):
 1. ALWAYS format responses in Markdown - NEVER return raw JSON

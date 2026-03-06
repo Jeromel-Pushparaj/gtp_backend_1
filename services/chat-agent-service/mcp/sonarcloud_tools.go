@@ -1,8 +1,8 @@
 package mcp
 
-import (
-	mcp_golang "github.com/metoro-io/mcp-golang"
-)
+// SonarCloud tool argument types for documentation purposes.
+// The HTTP-based MCP server uses dynamic tool mapping via mapSonarCloudToolToEndpoint()
+// instead of explicit tool registration.
 
 type ListSecretsArgs struct{}
 
@@ -15,90 +15,51 @@ type FullSetupArgs struct{}
 type FetchResultsArgs struct{}
 
 type GetSonarMetricsArgs struct {
-	Repo           string `json:"repo" jsonschema:"required,description=Repository name"`
-	IncludeIssues  string `json:"include_issues" jsonschema:"description=Set to 'true' to include issue details"`
+	Repo          string `json:"repo" jsonschema:"required,description=Repository name"`
+	IncludeIssues string `json:"include_issues" jsonschema:"description=Set to 'true' to include issue details"`
 }
 
 type ProcessRepositoryArgs struct {
 	RepositoryName string `json:"repository_name" jsonschema:"required,description=Repository name to process"`
 }
 
-func (s *Server) registerSonarCloudTools() error {
-	if err := s.mcpServer.RegisterTool("list_secrets", "List all secrets for repositories in the organization", func(args ListSecretsArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("GET", "/api/v1/secrets/list", nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+// mapSonarCloudToolToEndpoint maps SonarCloud tool names to API endpoints
+func mapSonarCloudToolToEndpoint(toolName string, args map[string]interface{}) (endpoint, method string, params map[string]string, body interface{}, found bool) {
+	params = make(map[string]string)
 
-	if err := s.mcpServer.RegisterTool("add_env_secrets", "Add environment secrets to all repositories", func(args AddEnvSecretsArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("POST", "/api/v1/secrets/add", nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+	switch toolName {
+	case "list_secrets":
+		return "/api/v1/secrets/list", "GET", nil, nil, true
 
-	if err := s.mcpServer.RegisterTool("update_workflows", "Update GitHub workflows to use environment secrets", func(args UpdateWorkflowsArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("POST", "/api/v1/workflows/update", nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+	case "add_env_secrets":
+		return "/api/v1/secrets/add", "POST", nil, nil, true
 
-	if err := s.mcpServer.RegisterTool("full_setup", "Perform full SonarCloud setup for all repositories", func(args FullSetupArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("POST", "/api/v1/setup/full", nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+	case "update_workflows":
+		return "/api/v1/workflows/update", "POST", nil, nil, true
 
-	if err := s.mcpServer.RegisterTool("fetch_results", "Fetch SonarCloud analysis results for all repositories", func(args FetchResultsArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("GET", "/api/v1/results/fetch", nil, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+	case "full_setup":
+		return "/api/v1/setup/full", "POST", nil, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_sonar_metrics", "Get SonarCloud metrics for a specific repository", func(args GetSonarMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		if args.IncludeIssues != "" {
-			params["include_issues"] = args.IncludeIssues
-		}
-		result, err := s.makeRequest("GET", "/api/v1/sonar/metrics", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+	case "fetch_results":
+		return "/api/v1/results/fetch", "GET", nil, nil, true
 
-	if err := s.mcpServer.RegisterTool("process_repository", "Process a single repository for SonarCloud setup", func(args ProcessRepositoryArgs) (*mcp_golang.ToolResponse, error) {
-		body := map[string]string{"repository_name": args.RepositoryName}
-		result, err := s.makeRequest("POST", "/api/v1/repository/process", nil, body)
-		if err != nil {
-			return nil, err
+	case "get_sonar_metrics":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		if includeIssues, ok := args["include_issues"].(string); ok {
+			params["include_issues"] = includeIssues
+		}
+		return "/api/v1/sonar/metrics", "GET", params, nil, true
 
-	return nil
+	case "process_repository":
+		bodyMap := make(map[string]string)
+		if repoName, ok := args["repository_name"].(string); ok {
+			bodyMap["repository_name"] = repoName
+		}
+		return "/api/v1/repository/process", "POST", nil, bodyMap, true
+
+	default:
+		return "", "", nil, nil, false
+	}
 }
-
