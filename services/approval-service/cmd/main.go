@@ -100,6 +100,10 @@ func main() {
 	log.Printf("   GET  /api/v1/approval/all                 - Get all approvals")
 	log.Printf("   GET  /api/v1/approval/pending             - Get pending approvals")
 	log.Printf("   POST /api/v1/approval/by-id               - Get approval by ID")
+
+	log.Printf("   POST /api/v1/slack/dm-channel/get         - Get DM channel id")
+	log.Printf("   POST /api/v1/approval/domain-change       - Create domain change approval request")
+
 	log.Printf("   POST /api/v1/approval/request             - Create approval request (publishes to Kafka)")
 	log.Printf("Slack Socket Mode: ENABLED")
 	log.Printf("Kafka Consumer 1: Listening on %s", constants.KafkaTopicApprovalRequested)
