@@ -50,16 +50,34 @@ func (s *ServiceService) FetchServices(orgID int64) ([]resources.ServiceResponse
 		return nil, fmt.Errorf("failed to fetch repositories from API: %w", err)
 	}
 
-	// Convert to service response DTOs
-	var responses []resources.ServiceResponse
+	// Convert to service response DTOs in parallel
+	type repoResult struct {
+		response resources.ServiceResponse
+		err      error
+		repoName string
+	}
+
+	resultChan := make(chan repoResult, len(repos))
+
+	// Process all repositories in parallel
 	for i := range repos {
-		response, err := s.convertToServiceResponse(&repos[i], org)
-		if err != nil {
-			log.Printf("Warning: failed to convert repository %s: %v", repos[i].Name, err)
+		go func(idx int, repo *models.Repository) {
+			response, err := s.convertToServiceResponse(repo, org)
+			resultChan <- repoResult{response, err, repo.Name}
+		}(i, &repos[i])
+	}
+
+	// Collect results
+	responses := make([]resources.ServiceResponse, 0, len(repos))
+	for i := 0; i < len(repos); i++ {
+		result := <-resultChan
+		if result.err != nil {
+			log.Printf("Warning: failed to convert repository %s: %v", result.repoName, result.err)
 			continue
 		}
-		responses = append(responses, response)
+		responses = append(responses, result.response)
 	}
+
 	return responses, nil
 }
 
@@ -208,16 +226,34 @@ func (s *ServiceService) GetAllServices() (*resources.ServicesResponse, error) {
 		return nil, fmt.Errorf("failed to fetch repositories from API: %w", err)
 	}
 
-	// 3. Convert to service responses
-	var responses []resources.ServiceResponse
+	// 3. Convert to service responses in parallel
+	type repoResult struct {
+		response resources.ServiceResponse
+		err      error
+		repoName string
+	}
+
+	resultChan := make(chan repoResult, len(repos))
+
+	// Process all repositories in parallel
 	for i := range repos {
-		response, err := s.convertToServiceResponse(&repos[i], org)
-		if err != nil {
-			log.Printf("Warning: failed to convert repository %s: %v", repos[i].Name, err)
+		go func(idx int, repo *models.Repository) {
+			response, err := s.convertToServiceResponse(repo, org)
+			resultChan <- repoResult{response, err, repo.Name}
+		}(i, &repos[i])
+	}
+
+	// Collect results
+	responses := make([]resources.ServiceResponse, 0, len(repos))
+	for i := 0; i < len(repos); i++ {
+		result := <-resultChan
+		if result.err != nil {
+			log.Printf("Warning: failed to convert repository %s: %v", result.repoName, result.err)
 			continue
 		}
-		responses = append(responses, response)
+		responses = append(responses, result.response)
 	}
+
 	log.Printf("Successfully fetched %d repositories", len(responses))
 
 	return &resources.ServicesResponse{
