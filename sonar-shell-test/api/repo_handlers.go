@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -70,6 +71,7 @@ func (s *Server) fetchReposByOrgHandler(w http.ResponseWriter, r *http.Request) 
 		// Get or create repository
 		dbRepo, err := s.db.GetRepositoryByName(orgID, ghRepo.GetName())
 		if err != nil {
+
 			// Get repository owner (user with admin permissions)
 			repoOwner, err := gs.GetRepositoryOwner(org.Name, ghRepo.GetName())
 			if err != nil {
@@ -97,8 +99,14 @@ func (s *Server) fetchReposByOrgHandler(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 
+			languages, err := gs.GetRepositoryLanguages(org.Name, ghRepo.GetName())
+			if err == nil && len(languages) > 0 {
+				primaryLang := gs.GetPrimaryLanguage(languages)
+				dbRepo.PrimaryLanguage = &primaryLang
+			}
+
 			if err := s.db.CreateRepository(dbRepo); err != nil {
-				// Log error but continue
+				log.Printf("ERROR creating repo '%s': %v", dbRepo.Name, err)
 				continue
 			}
 		} else {
@@ -125,8 +133,15 @@ func (s *Server) fetchReposByOrgHandler(w http.ResponseWriter, r *http.Request) 
 				}
 			}
 
+			languages, err := gs.GetRepositoryLanguages(org.Name, ghRepo.GetName())
+			if err == nil && len(languages) > 0 {
+				primaryLang := gs.GetPrimaryLanguage(languages)
+				dbRepo.PrimaryLanguage = &primaryLang
+			}
+
 			if err := s.db.UpdateRepository(dbRepo); err != nil {
 				// Log error but continue
+				log.Printf("ERROR updating repo '%s': %v", dbRepo.Name, err)
 				continue
 			}
 		}
@@ -170,7 +185,7 @@ func (s *Server) updateRepoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var updateData struct {
-		JiraProjectKey string `json:"jira_project_key"`
+		JiraProjectKey  string `json:"jira_project_key"`
 		EnvironmentName string `json:"environment_name"`
 	}
 
@@ -217,4 +232,3 @@ func (s *Server) updateRepoHandler(w http.ResponseWriter, r *http.Request) {
 		Data:    repo,
 	})
 }
-
