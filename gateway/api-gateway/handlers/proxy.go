@@ -2,14 +2,18 @@ package handlers
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jeromelp/gtp_backend_1/gateway/api-gateway/config"
+	"golang.org/x/net/http2"
 )
 
 // ProxyHandler handles proxying requests to backend services
@@ -18,11 +22,57 @@ type ProxyHandler struct {
 	client *http.Client
 }
 
-// NewProxyHandler creates a new proxy handler
+// NewProxyHandler creates a new proxy handler with optimized HTTP client
 func NewProxyHandler(cfg *config.Config) *ProxyHandler {
+	// Create custom transport with connection pooling and timeouts
+	transport := &http.Transport{
+		// Connection pooling settings
+		MaxIdleConns:        cfg.HTTPMaxIdleConns,
+		MaxIdleConnsPerHost: 20,
+		MaxConnsPerHost:     cfg.HTTPMaxConnsPerHost,
+		IdleConnTimeout:     cfg.HTTPIdleConnTimeout,
+
+		// Timeout settings
+		TLSHandshakeTimeout:   cfg.HTTPTLSTimeout,
+		ResponseHeaderTimeout: cfg.HTTPTimeout,
+		ExpectContinueTimeout: 1 * time.Second,
+
+		// Connection settings
+		DisableKeepAlives: false,
+		DisableCompression: false,
+
+		// Dial settings for connection establishment
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+
+		// Force attempt HTTP/2
+		ForceAttemptHTTP2: true,
+
+		// TLS configuration
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+	}
+
+	// Enable HTTP/2 support
+	if err := http2.ConfigureTransport(transport); err != nil {
+		log.Printf("WARNING: Failed to configure HTTP/2: %v", err)
+	}
+
+	// Create HTTP client with configured transport
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   cfg.HTTPTimeout,
+	}
+
+	log.Printf("INFO: HTTP client configured - Timeout: %v, MaxIdleConns: %d, MaxConnsPerHost: %d",
+		cfg.HTTPTimeout, cfg.HTTPMaxIdleConns, cfg.HTTPMaxConnsPerHost)
+
 	return &ProxyHandler{
 		config: cfg,
-		client: &http.Client{},
+		client: client,
 	}
 }
 
