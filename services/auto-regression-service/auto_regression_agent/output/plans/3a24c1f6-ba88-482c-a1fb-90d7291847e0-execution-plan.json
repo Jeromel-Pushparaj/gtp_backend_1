@@ -1,0 +1,435 @@
+{
+  "id": "af825b86-26ad-4a97-8c66-ec619935e252",
+  "spec_id": "3a24c1f6-ba88-482c-a1fb-90d7291847e0",
+  "workflow_id": "85eac007-acc1-4032-aaaf-f0ef10f53329",
+  "created_at": "2026-03-03T14:47:37.082725+05:30",
+  "ai_reasoning": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+  "tests": [
+    {
+      "order": 1,
+      "name": "Get all employees",
+      "description": "Retrieve a list of all employees",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees",
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 2,
+      "name": "Get employee by valid ID",
+      "description": "Retrieve existing employee",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "123"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 3,
+      "name": "Get employee with large ID",
+      "description": "Retrieve existing employee with large ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "99999"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 4,
+      "name": "Get employee with small ID",
+      "description": "Retrieve existing employee with small ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "1"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 5,
+      "name": "Get employees with pagination",
+      "description": "Retrieve a paginated list of employees",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees",
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 6,
+      "name": "Get employees with valid response",
+      "description": "Retrieve a list of employees with a valid response",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees",
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 7,
+      "name": "Get employee with invalid ID type",
+      "description": "Retrieve non-existent employee with invalid ID type",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "abc"
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 8,
+      "name": "Get employee with negative ID",
+      "description": "Retrieve non-existent employee with negative ID",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "-1"
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 9,
+      "name": "Get employee with non-existent ID",
+      "description": "Retrieve non-existent employee",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "99999999"
+      },
+      "expected_status": 404
+    },
+    {
+      "order": 10,
+      "name": "Get employees with invalid HTTP method",
+      "description": "Retrieve a list of employees with an invalid HTTP method",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees",
+      "expected_status": 405,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 11,
+      "name": "Get employees with invalid query parameter",
+      "description": "Retrieve a list of employees with an invalid query parameter",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees",
+      "query_params": {
+        "invalid": "parameter"
+      },
+      "expected_status": 400,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 12,
+      "name": "Get employees with missing required header",
+      "description": "Retrieve a list of employees with a missing required header",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees",
+      "headers": {
+        "Missing-Header": "value"
+      },
+      "expected_status": 400,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 13,
+      "name": "Get employee with maximum ID",
+      "description": "Retrieve existing employee with maximum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "2147483647"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 14,
+      "name": "Get employee with minimum ID",
+      "description": "Retrieve existing employee with minimum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "1"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 15,
+      "name": "Get employees with empty response",
+      "description": "Retrieve an empty list of employees",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": 200,
+        "data": [],
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 16,
+      "name": "Get employees with large response",
+      "description": "Retrieve a large list of employees",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": 200,
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          },
+          {
+            "email": "jane.doe@example.com",
+            "id": 2,
+            "name": "Jane Doe"
+          },
+          {
+            "email": "bob.smith@example.com",
+            "id": 3,
+            "name": "Bob Smith"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 17,
+      "name": "Delete employee successfully",
+      "description": "Delete an existing employee",
+      "category": "positive",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "{{CONTEXT:resource.id}}"
+      },
+      "payload": {
+        "code": 200,
+        "message": "Employee deleted successfully"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "order": 18,
+      "name": "Delete employee with another valid ID",
+      "description": "Delete an employee with another valid ID",
+      "category": "positive",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": 67890
+      },
+      "payload": {
+        "code": 200,
+        "message": "Employee deleted successfully"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 19,
+      "name": "Delete employee with valid ID",
+      "description": "Delete an employee with a valid ID",
+      "category": "positive",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": 12345
+      },
+      "payload": {
+        "code": 200,
+        "message": "Employee deleted successfully"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 20,
+      "name": "Delete employee with invalid ID type",
+      "description": "Delete an employee with an invalid ID type",
+      "category": "negative",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "abcde"
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 21,
+      "name": "Delete employee with missing ID",
+      "description": "Delete an employee with a missing ID",
+      "category": "negative",
+      "method": "DELETE",
+      "path": "/employees/",
+      "expected_status": 400
+    },
+    {
+      "order": 22,
+      "name": "Delete employee with non-existent ID",
+      "description": "Delete an employee with a non-existent ID",
+      "category": "negative",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": 99999
+      },
+      "expected_status": 404
+    },
+    {
+      "order": 23,
+      "name": "Delete employee with maximum ID",
+      "description": "Delete an employee with the maximum ID",
+      "category": "boundary",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": 2147483647
+      },
+      "payload": {
+        "code": 200,
+        "message": "Employee deleted successfully"
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 24,
+      "name": "Delete employee with minimum ID",
+      "description": "Delete an employee with the minimum ID",
+      "category": "boundary",
+      "method": "DELETE",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": 1
+      },
+      "payload": {
+        "code": 200,
+        "message": "Employee deleted successfully"
+      },
+      "expected_status": 200
+    }
+  ],
+  "statistics": {
+    "total_tests": 24,
+    "positive_tests": 9,
+    "negative_tests": 9,
+    "boundary_tests": 6,
+    "tests_with_context": 16
+  }
+}

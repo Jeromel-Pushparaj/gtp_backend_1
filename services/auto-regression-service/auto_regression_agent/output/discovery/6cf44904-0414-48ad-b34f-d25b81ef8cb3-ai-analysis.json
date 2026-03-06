@@ -1,0 +1,57 @@
+{
+  "base_url": "https://petstore3.swagger.io/api/v3",
+  "complexity": 8,
+  "context_type_mappings": {
+    "buyer": "customer",
+    "entity": "pet",
+    "item": "pet",
+    "purchase": "order",
+    "resource": "pet"
+  },
+  "dependencies": {
+    "/pet": [
+      "/pet/findByStatus",
+      "/pet/findByTags"
+    ],
+    "/store/order": [
+      "/pet"
+    ],
+    "/user": [
+      "/user/login"
+    ]
+  },
+  "key_endpoints": [
+    "/pet",
+    "/store/order",
+    "/user"
+  ],
+  "recommendations": [
+    "Test CRUD operations for /pet endpoint first",
+    "Test CRUD operations for /store/order endpoint second",
+    "Test /user endpoint with login functionality third"
+  ],
+  "security": {
+    "scopes": [
+      "read:pets",
+      "write:pets"
+    ],
+    "type": "oauth2"
+  },
+  "test_priorities": [
+    {
+      "endpoint": "/pet",
+      "priority": 1,
+      "reason": "CRUD operations"
+    },
+    {
+      "endpoint": "/store/order",
+      "priority": 2,
+      "reason": "CRUD operations"
+    },
+    {
+      "endpoint": "/user",
+      "priority": 3,
+      "reason": "CRUD operations and login functionality"
+    }
+  ]
+}

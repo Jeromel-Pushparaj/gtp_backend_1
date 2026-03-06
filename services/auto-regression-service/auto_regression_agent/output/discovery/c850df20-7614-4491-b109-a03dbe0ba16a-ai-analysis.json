@@ -1,0 +1,64 @@
+{
+  "base_url": "http://10.140.16.78:8080/api/v1",
+  "complexity": 6,
+  "context_type_mappings": {
+    "employee": "employee",
+    "entity": "employee",
+    "item": "employee",
+    "resource": "employee"
+  },
+  "dependencies": {
+    "/employees/{id}": [
+      "/employees"
+    ],
+    "/employees/{id} DELETE": [
+      "/employees"
+    ],
+    "/employees/{id} PUT": [
+      "/employees"
+    ]
+  },
+  "key_endpoints": [
+    "/employees",
+    "/employees/{id}",
+    "/employees POST",
+    "/employees/{id} DELETE",
+    "/employees/{id} PUT"
+  ],
+  "recommendations": [
+    "Test for valid and invalid input data",
+    "Test edge cases such as empty or null inputs",
+    "Test authentication and authorization for secured endpoints (if any)"
+  ],
+  "security": {
+    "scopes": [],
+    "type": "none"
+  },
+  "test_priorities": [
+    {
+      "endpoint": "/employees POST",
+      "priority": 1,
+      "reason": "Creates a new employee, which is a fundamental operation"
+    },
+    {
+      "endpoint": "/employees",
+      "priority": 2,
+      "reason": "Retrieves a list of all employees, a crucial read operation"
+    },
+    {
+      "endpoint": "/employees/{id}",
+      "priority": 3,
+      "reason": "Retrieves a single employee by ID, another essential read operation"
+    },
+    {
+      "endpoint": "/employees/{id} DELETE",
+      "priority": 4,
+      "reason": "Deletes an employee, a critical update operation"
+    },
+    {
+      "endpoint": "/employees/{id} PUT",
+      "priority": 5,
+      "reason": "Updates an existing employee, another vital update operation"
+    }
+  ]
+}

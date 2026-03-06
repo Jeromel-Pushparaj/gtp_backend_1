@@ -1,0 +1,136 @@
+{
+  "execution_order": [
+    "/employees POST",
+    "/employees",
+    "/employees/{id}",
+    "/employees/{id} DELETE",
+    "/employees/{id} PUT"
+  ],
+  "phases": [
+    {
+      "description": "Verify basic functionality of API",
+      "endpoints": [
+        "/employees",
+        "/employees POST"
+      ],
+      "name": "smoke"
+    },
+    {
+      "description": "Verify detailed functionality of API",
+      "endpoints": [
+        "/employees/{id}",
+        "/employees/{id} DELETE",
+        "/employees/{id} PUT"
+      ],
+      "name": "functional"
+    },
+    {
+      "description": "Verify integration of API with other components",
+      "endpoints": [
+        "/employees",
+        "/employees POST",
+        "/employees/{id}",
+        "/employees/{id} DELETE",
+        "/employees/{id} PUT"
+      ],
+      "name": "integration"
+    }
+  ],
+  "scenarios": [
+    {
+      "context_requirements": {
+        "context_fields_created": [],
+        "context_fields_needed": [],
+        "context_type": "",
+        "creates_context": false,
+        "needs_context": false
+      },
+      "endpoint": "/employees",
+      "scenarios": [
+        "get all employees",
+        "get all employees with invalid parameters"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name"
+        ],
+        "context_type": "employee",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "/employees POST",
+      "scenarios": [
+        "create a new employee with valid data",
+        "create a new employee with invalid data"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": false,
+        "depends_on": "/employees POST",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "scenarios": [
+        "get employee by ID with valid ID",
+        "get employee by ID with invalid ID"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": false,
+        "depends_on": "/employees POST",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id} DELETE",
+      "scenarios": [
+        "delete an employee with valid ID",
+        "delete an employee with invalid ID"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": true,
+        "depends_on": "/employees POST",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id} PUT",
+      "scenarios": [
+        "update an existing employee with valid data",
+        "update an existing employee with invalid data"
+      ]
+    }
+  ],
+  "success_criteria": {
+    "max_failures": 5,
+    "min_coverage": 80
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "ca4af190-2493-44b6-8868-61a0ffd708b4",
+  "name": "Test Suite - c5390f1f-92d8-4c44-bbc9-dc7cbb7412f1",
+  "description": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+  "version": "1.0.0",
+  "created_at": "2026-03-03T14:54:33.022181+05:30",
+  "updated_at": "2026-03-03T14:54:33.022675+05:30",
+  "spec_id": "c5390f1f-92d8-4c44-bbc9-dc7cbb7412f1",
+  "spec_name": "c5390f1f-92d8-4c44-bbc9-dc7cbb7412f1",
+  "base_url": "http://3.25.71.86:8080/api/v1",
+  "tests": [],
+  "statistics": {
+    "total_tests": 0,
+    "positive_tests": 0,
+    "negative_tests": 0,
+    "boundary_tests": 0,
+    "security_tests": 0
+  }
+}

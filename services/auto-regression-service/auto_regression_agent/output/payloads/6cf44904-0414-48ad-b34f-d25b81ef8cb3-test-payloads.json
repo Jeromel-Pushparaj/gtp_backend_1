@@ -1,0 +1,539 @@
+{
+  "DELETE /pet/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Boundary DELETE request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "DELETE",
+        "name": "Invalid DELETE request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for DELETE /pet/{id}",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Basic DELETE request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        }
+      }
+    ]
+  },
+  "DELETE /store/order/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Boundary DELETE request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "DELETE",
+        "name": "Invalid DELETE request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for DELETE /store/order/{id}",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Basic DELETE request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        }
+      }
+    ]
+  },
+  "DELETE /user/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Boundary DELETE request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "DELETE",
+        "name": "Invalid DELETE request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for DELETE /user/{id}",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Basic DELETE request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        }
+      }
+    ]
+  },
+  "GET /pet/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Boundary GET request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "GET",
+        "name": "Invalid GET request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for GET /pet/{id}",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Basic GET request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        }
+      }
+    ]
+  },
+  "GET /store/order/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Boundary GET request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "GET",
+        "name": "Invalid GET request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for GET /store/order/{id}",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Basic GET request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        }
+      }
+    ]
+  },
+  "GET /user/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Boundary GET request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "GET",
+        "name": "Invalid GET request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for GET /user/{id}",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Basic GET request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        }
+      }
+    ]
+  },
+  "POST /pet": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 201,
+        "method": "POST",
+        "name": "Boundary POST request",
+        "path": "/pet"
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "POST",
+        "name": "Invalid POST request",
+        "path": "/pet",
+        "payload": {}
+      }
+    ],
+    "positive": [
+      {
+        "context_capture": {
+          "enabled": true,
+          "fields": [
+            "id"
+          ],
+          "store_as": "pet"
+        },
+        "description": "Fallback: Basic positive test for POST /pet",
+        "expected_status": 201,
+        "method": "POST",
+        "name": "Basic POST request",
+        "path": "/pet",
+        "payload": {}
+      }
+    ]
+  },
+  "POST /store/order": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 201,
+        "method": "POST",
+        "name": "Boundary POST request",
+        "path": "/store/order"
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "POST",
+        "name": "Invalid POST request",
+        "path": "/store/order",
+        "payload": {}
+      }
+    ],
+    "positive": [
+      {
+        "context_capture": {
+          "enabled": true,
+          "fields": [
+            "id"
+          ],
+          "store_as": "order"
+        },
+        "description": "Fallback: Basic positive test for POST /store/order",
+        "expected_status": 201,
+        "method": "POST",
+        "name": "Basic POST request",
+        "path": "/store/order",
+        "payload": {}
+      }
+    ]
+  },
+  "POST /user": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 201,
+        "method": "POST",
+        "name": "Boundary POST request",
+        "path": "/user"
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "POST",
+        "name": "Invalid POST request",
+        "path": "/user",
+        "payload": {}
+      }
+    ],
+    "positive": [
+      {
+        "context_capture": {
+          "enabled": true,
+          "fields": [
+            "id"
+          ],
+          "store_as": "user"
+        },
+        "description": "Fallback: Basic positive test for POST /user",
+        "expected_status": 201,
+        "method": "POST",
+        "name": "Basic POST request",
+        "path": "/user",
+        "payload": {}
+      }
+    ]
+  },
+  "PUT /pet/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "PUT",
+        "name": "Boundary PUT request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "PUT",
+        "name": "Invalid PUT request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {}
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for PUT /pet/{id}",
+        "expected_status": 200,
+        "method": "PUT",
+        "name": "Basic PUT request",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        }
+      }
+    ]
+  },
+  "PUT /store/order/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "PUT",
+        "name": "Boundary PUT request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "PUT",
+        "name": "Invalid PUT request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {}
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for PUT /store/order/{id}",
+        "expected_status": 200,
+        "method": "PUT",
+        "name": "Basic PUT request",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        }
+      }
+    ]
+  },
+  "PUT /user/{id}": {
+    "boundary": [
+      {
+        "description": "Fallback: Boundary test with edge values",
+        "expected_status": 200,
+        "method": "PUT",
+        "name": "Boundary PUT request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        }
+      }
+    ],
+    "fallback": true,
+    "negative": [
+      {
+        "description": "Fallback: Negative test with invalid data",
+        "expected_status": 400,
+        "method": "PUT",
+        "name": "Invalid PUT request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {}
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Fallback: Basic positive test for PUT /user/{id}",
+        "expected_status": 200,
+        "method": "PUT",
+        "name": "Basic PUT request",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        }
+      }
+    ]
+  }
+}

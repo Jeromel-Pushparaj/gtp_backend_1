@@ -1,0 +1,148 @@
+{
+  "execution_order": [
+    "/employees",
+    "/employees/{id}",
+    "/employees",
+    "post /employees",
+    "/employees/{id}",
+    "/employees/{id}/update",
+    "/employees/{id}/delete"
+  ],
+  "phases": [
+    {
+      "description": "Verify basic API functionality",
+      "endpoints": [
+        "/employees",
+        "/employees/{id}"
+      ],
+      "name": "smoke"
+    },
+    {
+      "description": "Verify API endpoint functionality",
+      "endpoints": [
+        "/employees",
+        "/employees/{id}",
+        "/employees/{id}/delete",
+        "/employees/{id}/update"
+      ],
+      "name": "functional"
+    },
+    {
+      "description": "Verify API endpoint interactions",
+      "endpoints": [
+        "/employees",
+        "/employees/{id}",
+        "/employees/{id}/delete",
+        "/employees/{id}/update"
+      ],
+      "name": "integration"
+    }
+  ],
+  "scenarios": [
+    {
+      "context_requirements": {
+        "context_fields_created": [],
+        "context_fields_needed": [],
+        "context_mapping": {},
+        "context_type": "",
+        "creates_context": false,
+        "needs_context": false
+      },
+      "endpoint": "/employees",
+      "priority": 1,
+      "scenarios": [
+        "get all employees",
+        "get all employees with query parameters"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": false,
+        "depends_on": "/employees",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "priority": 2,
+      "scenarios": [
+        "get existing employee",
+        "get non-existent employee"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name"
+        ],
+        "context_mapping": {},
+        "context_type": "employee",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "/employees",
+      "method": "post",
+      "priority": 3,
+      "scenarios": [
+        "create valid employee",
+        "create invalid employee"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": true,
+        "depends_on": "/employees/{id}",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "method": "put",
+      "priority": 4,
+      "scenarios": [
+        "update existing employee",
+        "update non-existent employee"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": false,
+        "depends_on": "/employees/{id}",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "method": "delete",
+      "priority": 5,
+      "scenarios": [
+        "delete existing employee",
+        "delete non-existent employee"
+      ]
+    }
+  ],
+  "success_criteria": {
+    "max_failures": 5,
+    "min_coverage": 80
+  }
+}

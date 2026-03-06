@@ -1,0 +1,30 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# IDE
+.vscode/
+.idea/
+
+# Build artifacts
+/tmp/
+*.log
+
+# Output directories (will be mounted as volumes)
+output/
+logs/
+
+# Scripts
+scripts/
+
+# Web UI (handled separately)
+web-ui/node_modules/
+web-ui/dist/
+
+# Test files
+*_test.go
+

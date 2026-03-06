@@ -1,0 +1,597 @@
+{
+  "id": "df430a95-6df2-407e-9cf3-6e4c05878735",
+  "name": "Test Suite - 34b39b4a-750a-4300-9903-547deca4a061",
+  "description": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+  "version": "1.0.0",
+  "created_at": "2026-03-03T14:40:19.813103+05:30",
+  "updated_at": "2026-03-03T14:40:19.813889+05:30",
+  "spec_id": "34b39b4a-750a-4300-9903-547deca4a061",
+  "spec_name": "34b39b4a-750a-4300-9903-547deca4a061",
+  "base_url": "http://3.25.71.86:8080/api/v1",
+  "tests": [
+    {
+      "id": "test-1",
+      "name": "Delete employee with another valid ID",
+      "description": "Delete an employee with another valid ID",
+      "category": "positive",
+      "method": "/employees/{id}",
+      "path": "/employees/{{CONTEXT:employee.id}}",
+      "path_params": {
+        "id": "67890"
+      },
+      "expected_status": 204,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "employee",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-2",
+      "name": "Delete employee with valid ID",
+      "description": "Delete an employee with a valid ID",
+      "category": "positive",
+      "method": "/employees/{id}",
+      "path": "/employees/{{CONTEXT:employee.id}}",
+      "path_params": {
+        "id": "12345"
+      },
+      "expected_status": 204,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "employee",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-3",
+      "name": "Delete existing employee",
+      "description": "Delete an existing employee",
+      "category": "positive",
+      "method": "/employees/{id}",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "{{CONTEXT:resource.id}}"
+      },
+      "expected_status": 204,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-4",
+      "name": "Delete employee with invalid ID",
+      "description": "Delete an employee with an invalid ID",
+      "category": "negative",
+      "method": "/employees/{id}",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "abcde"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-5",
+      "name": "Delete employee with missing ID",
+      "description": "Delete an employee with a missing ID",
+      "category": "negative",
+      "method": "/employees/{id}",
+      "path": "/employees/{id}",
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-6",
+      "name": "Delete non-existent employee",
+      "description": "Delete a non-existent employee",
+      "category": "negative",
+      "method": "/employees/{id}",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "99999"
+      },
+      "expected_status": 404,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-7",
+      "name": "Delete employee with maximum ID length",
+      "description": "Delete an employee with a maximum ID length",
+      "category": "boundary",
+      "method": "/employees/{id}",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "12345678901234567890"
+      },
+      "expected_status": 204,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-8",
+      "name": "Delete employee with minimum ID length",
+      "description": "Delete an employee with a minimum ID length",
+      "category": "boundary",
+      "method": "/employees/{id}",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "1"
+      },
+      "expected_status": 204,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-9",
+      "name": "Get all employees",
+      "description": "Retrieve a list of all employees",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees",
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-10",
+      "name": "Get employee with large ID",
+      "description": "Retrieve existing employee with large ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "1000"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-11",
+      "name": "Get employee with valid ID",
+      "description": "Retrieve existing employee with valid ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "123"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-12",
+      "name": "Get employees with code 200",
+      "description": "Retrieve a list of employees with code 200",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": 200,
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-13",
+      "name": "Get employees with data",
+      "description": "Retrieve a list of employees with data",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees",
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-14",
+      "name": "Get existing employee",
+      "description": "Retrieve existing employee",
+      "category": "positive",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "1"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-15",
+      "name": "Get employee with invalid ID type",
+      "description": "Retrieve employee with invalid ID type",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "abc"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-16",
+      "name": "Get employee with missing ID",
+      "description": "Retrieve employee with missing ID",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees/",
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-17",
+      "name": "Get employees with incorrect payload",
+      "description": "Retrieve a list of employees with incorrect payload",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees",
+      "payload": "invalid payload",
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-18",
+      "name": "Get employees with invalid code",
+      "description": "Retrieve a list of employees with invalid code",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": "invalid",
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-19",
+      "name": "Get employees with missing data",
+      "description": "Retrieve a list of employees with missing data",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": 200,
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-20",
+      "name": "Get non-existent employee",
+      "description": "Retrieve non-existent employee",
+      "category": "negative",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "-1"
+      },
+      "expected_status": 404,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-21",
+      "name": "Get employee with maximum ID",
+      "description": "Retrieve employee with maximum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "2147483647"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-22",
+      "name": "Get employee with minimum ID",
+      "description": "Retrieve employee with minimum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees/{id}",
+      "path_params": {
+        "id": "1"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-23",
+      "name": "Get employees with empty data",
+      "description": "Retrieve a list of employees with empty data",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": 200,
+        "data": [],
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "id": "test-24",
+      "name": "Get employees with large data",
+      "description": "Retrieve a list of employees with large data",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/employees",
+      "payload": {
+        "code": 200,
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          },
+          {
+            "email": "jane.doe@example.com",
+            "id": 2,
+            "name": "Jane Doe"
+          },
+          {
+            "email": "bob.smith@example.com",
+            "id": 3,
+            "name": "Bob Smith"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    }
+  ],
+  "statistics": {
+    "total_tests": 24,
+    "positive_tests": 9,
+    "negative_tests": 9,
+    "boundary_tests": 6,
+    "security_tests": 0
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "execution_order": [
+    "POST /pet",
+    "GET /pet/{petId}",
+    "PUT /pet/{petId}",
+    "DELETE /pet/{petId}",
+    "POST /user/login",
+    "GET /user/{username}",
+    "POST /store/order",
+    "GET /store/order/{orderId}",
+    "POST /pet/{petId}/uploadImage"
+  ],
+  "phases": [
+    {
+      "description": "Basic functionality and error handling tests",
+      "endpoints": [
+        "POST /pet",
+        "GET /pet/{petId}",
+        "PUT /pet/{petId}",
+        "DELETE /pet/{petId}",
+        "POST /user/login",
+        "GET /user/{username}",
+        "POST /store/order",
+        "GET /store/order/{orderId}"
+      ],
+      "name": "smoke"
+    },
+    {
+      "description": "Testing of specific business logic and edge cases",
+      "endpoints": [
+        "POST /pet",
+        "GET /pet/{petId}",
+        "PUT /pet/{petId}",
+        "DELETE /pet/{petId}",
+        "POST /user/login",
+        "GET /user/{username}",
+        "POST /store/order",
+        "GET /store/order/{orderId}"
+      ],
+      "name": "functional"
+    },
+    {
+      "description": "Testing of API interactions and dependencies",
+      "endpoints": [
+        "POST /pet/{petId}/uploadImage",
+        "GET /store/order/{orderId}",
+        "POST /user/{username}"
+      ],
+      "name": "integration"
+    }
+  ],
+  "scenarios": [
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name",
+          "tag"
+        ],
+        "context_type": "pet",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "POST /pet",
+      "scenarios": [
+        "create valid pet",
+        "create pet with invalid data",
+        "create pet with duplicate name"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": false,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "GET /pet/{petId}",
+      "scenarios": [
+        "get existing pet",
+        "get non-existent pet"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "name",
+          "tag"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": true,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "PUT /pet/{petId}",
+      "scenarios": [
+        "update existing pet",
+        "update non-existent pet"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": false,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "DELETE /pet/{petId}",
+      "scenarios": [
+        "delete existing pet",
+        "delete non-existent pet"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "username",
+          "password"
+        ],
+        "context_type": "user",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "POST /user/login",
+      "scenarios": [
+        "login with valid credentials",
+        "login with invalid credentials"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "username"
+        ],
+        "context_mapping": {
+          "path_params.username": "{{CONTEXT:user.username}}"
+        },
+        "context_type": "user",
+        "creates_context": false,
+        "depends_on": "POST /user/login",
+        "needs_context": true
+      },
+      "endpoint": "GET /user/{username}",
+      "scenarios": [
+        "get existing user",
+        "get non-existent user"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "petId",
+          "username"
+        ],
+        "context_type": "order",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "POST /store/order",
+      "scenarios": [
+        "create valid order",
+        "create order with invalid data"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "orderId"
+        ],
+        "context_mapping": {
+          "path_params.orderId": "{{CONTEXT:order.orderId}}"
+        },
+        "context_type": "order",
+        "creates_context": false,
+        "depends_on": "POST /store/order",
+        "needs_context": true
+      },
+      "endpoint": "GET /store/order/{orderId}",
+      "scenarios": [
+        "get existing order",
+        "get non-existent order"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "petId"
+        ],
+        "context_mapping": {
+          "path_params.petId": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": false,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "POST /pet/{petId}/uploadImage",
+      "scenarios": [
+        "upload image for existing pet",
+        "upload image for non-existent pet"
+      ]
+    }
+  ],
+  "success_criteria": {
+    "max_failures": 5,
+    "min_coverage": 80
+  }
+}

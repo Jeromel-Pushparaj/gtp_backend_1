@@ -1,0 +1,491 @@
+{
+  "id": "70c476b0-74d4-48eb-97cc-3f4d564af3a0",
+  "spec_id": "47813f9e-21e2-4f84-bd56-505ac17d6a67",
+  "workflow_id": "90efb659-c92d-4ec9-9a35-5d8a043ad69b",
+  "created_at": "2026-03-03T12:23:11.625793+05:30",
+  "ai_reasoning": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+  "tests": [
+    {
+      "order": 1,
+      "name": "Get all orders",
+      "description": "Retrieve a list of all orders",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order",
+      "expected_status": 200
+    },
+    {
+      "order": 2,
+      "name": "Get all pets",
+      "description": "Retrieve a list of all pets",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet",
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 3,
+      "name": "Get existing pet by ID",
+      "description": "Retrieve existing pet",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet/{{CONTEXT:pet.id}}",
+      "path_params": {
+        "petId": 123
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "pet",
+        "fields": [
+          "id"
+        ]
+      },
+      "skip_on_context_missing": true
+    },
+    {
+      "order": 4,
+      "name": "Get order by another valid ID",
+      "description": "Retrieve another existing order",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order/{{CONTEXT:order.id}}",
+      "path_params": {
+        "orderId": 67890
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "order",
+        "fields": [
+          "id"
+        ]
+      },
+      "skip_on_context_missing": true
+    },
+    {
+      "order": 5,
+      "name": "Get order by valid ID",
+      "description": "Retrieve existing order",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order/{{CONTEXT:order.id}}",
+      "path_params": {
+        "orderId": 12345
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "order",
+        "fields": [
+          "id"
+        ]
+      },
+      "skip_on_context_missing": true
+    },
+    {
+      "order": 6,
+      "name": "Get order with large ID",
+      "description": "Retrieve order with large ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order/{{CONTEXT:order.id}}",
+      "path_params": {
+        "orderId": 2147483647
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "order",
+        "fields": [
+          "id"
+        ]
+      },
+      "skip_on_context_missing": true
+    },
+    {
+      "order": 7,
+      "name": "Get orders with pagination",
+      "description": "Retrieve a paginated list of orders",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order",
+      "query_params": {
+        "limit": "10",
+        "offset": "0"
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 8,
+      "name": "Get orders with query parameters",
+      "description": "Retrieve a list of orders with query parameters",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order",
+      "query_params": {
+        "customerId": "12345",
+        "status": "pending"
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 9,
+      "name": "Get pet by ID",
+      "description": "Retrieve a pet by ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet/{id}",
+      "path_params": {
+        "id": "{{CONTEXT:pet.id}}"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "pet",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "order": 10,
+      "name": "Get pet with large ID",
+      "description": "Retrieve existing pet with large ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet/{{CONTEXT:pet.id}}",
+      "path_params": {
+        "petId": 987654321
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "pet",
+        "fields": [
+          "id"
+        ]
+      },
+      "skip_on_context_missing": true
+    },
+    {
+      "order": 11,
+      "name": "Get pet with small ID",
+      "description": "Retrieve existing pet with small ID",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet/{{CONTEXT:pet.id}}",
+      "path_params": {
+        "petId": 1
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "pet",
+        "fields": [
+          "id"
+        ]
+      },
+      "skip_on_context_missing": true
+    },
+    {
+      "order": 12,
+      "name": "Get pets with query parameters",
+      "description": "Retrieve a list of pets with query parameters",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet",
+      "query_params": {
+        "limit": "10",
+        "status": "active"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 13,
+      "name": "Get non-existent order",
+      "description": "Retrieve a non-existent order",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order",
+      "query_params": {
+        "orderId": "non-existent"
+      },
+      "expected_status": 404
+    },
+    {
+      "order": 14,
+      "name": "Get non-existent pet by ID",
+      "description": "Retrieve non-existent pet",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": 999999999
+      },
+      "expected_status": 404
+    },
+    {
+      "order": 15,
+      "name": "Get order with invalid ID (string)",
+      "description": "Invalid ID type",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": "abcde"
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 16,
+      "name": "Get order with negative ID",
+      "description": "Invalid ID value",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": -12345
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 17,
+      "name": "Get order with zero ID",
+      "description": "Invalid ID value",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": 0
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 18,
+      "name": "Get orders with invalid query parameters",
+      "description": "Retrieve a list of orders with invalid query parameters",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order",
+      "query_params": {
+        "invalidParam": "value"
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 19,
+      "name": "Get orders with missing required query parameters",
+      "description": "Retrieve a list of orders with missing required query parameters",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order",
+      "expected_status": 400
+    },
+    {
+      "order": 20,
+      "name": "Get pet with invalid ID",
+      "description": "Retrieve a pet with an invalid ID",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet/{id}",
+      "path_params": {
+        "id": "invalid_id"
+      },
+      "expected_status": 404,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 21,
+      "name": "Get pet with invalid ID (string)",
+      "description": "Retrieve pet with invalid ID",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "abc"
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 22,
+      "name": "Get pet with negative ID",
+      "description": "Retrieve pet with negative ID",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": -1
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 23,
+      "name": "Get pet with non-numeric ID",
+      "description": "Retrieve a pet with a non-numeric ID",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet/{id}",
+      "path_params": {
+        "id": "abc"
+      },
+      "expected_status": 400,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 24,
+      "name": "Get pets with invalid query parameters",
+      "description": "Retrieve a list of pets with invalid query parameters",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet",
+      "query_params": {
+        "limit": "abc",
+        "status": "invalid_status"
+      },
+      "expected_status": 400,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 25,
+      "name": "Get order with maximum ID",
+      "description": "Retrieve order with maximum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": 9223372036854776000
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 26,
+      "name": "Get order with minimum ID",
+      "description": "Retrieve order with minimum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": 1
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 27,
+      "name": "Get orders with maximum limit",
+      "description": "Retrieve a list of orders with maximum limit",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/store/order",
+      "query_params": {
+        "limit": "100"
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 28,
+      "name": "Get orders with minimum limit",
+      "description": "Retrieve a list of orders with minimum limit",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/store/order",
+      "query_params": {
+        "limit": "1"
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 29,
+      "name": "Get pet with maximum ID",
+      "description": "Retrieve existing pet with maximum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": 9223372036854776000
+      },
+      "expected_status": 200
+    },
+    {
+      "order": 30,
+      "name": "Get pet with maximum ID",
+      "description": "Retrieve a pet with a maximum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/pet/{id}",
+      "path_params": {
+        "id": "1000000"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      }
+    },
+    {
+      "order": 31,
+      "name": "Get pet with minimum ID",
+      "description": "Retrieve pet with minimum ID",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": -9223372036854776000
+      },
+      "expected_status": 400
+    },
+    {
+      "order": 32,
+      "name": "Get pets with maximum limit",
+      "description": "Retrieve a list of pets with a maximum limit",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/pet",
+      "query_params": {
+        "limit": "100"
+      },
+      "expected_status": 200,
+      "context_required": {
+        "type": "",
+        "fields": null
+      },
+      "context_capture": {
+        "enabled": false,
+        "store_as": "",
+        "fields": null
+      }
+    }
+  ],
+  "statistics": {
+    "total_tests": 32,
+    "positive_tests": 12,
+    "negative_tests": 12,
+    "boundary_tests": 8,
+    "tests_with_context": 14
+  }
+}

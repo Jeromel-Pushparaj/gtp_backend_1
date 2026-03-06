@@ -1,0 +1,618 @@
+{
+  "id": "8bada282-bab9-4510-aeb4-94a8ce5a1945",
+  "name": "Test Suite - df1fc9ff-2992-46d9-9355-72e009a4d3cd",
+  "description": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+  "version": "1.0.0",
+  "created_at": "2026-03-03T11:52:25.297126+05:30",
+  "updated_at": "2026-03-03T11:52:25.297856+05:30",
+  "spec_id": "df1fc9ff-2992-46d9-9355-72e009a4d3cd",
+  "spec_name": "df1fc9ff-2992-46d9-9355-72e009a4d3cd",
+  "base_url": "https://api.example.com/v3",
+  "tests": [
+    {
+      "id": "test-1",
+      "name": "Basic POST request",
+      "description": "Fallback: Basic positive test for POST /pet/{petId}/uploadImage",
+      "category": "positive",
+      "method": "POST",
+      "path": "/pet/{petId}/uploadImage",
+      "path_params": {
+        "petId": "{{CONTEXT:pet.id}}"
+      },
+      "payload": {
+        "name": "test_item",
+        "status": "active"
+      },
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "uploadimage",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-2",
+      "name": "Basic POST request",
+      "description": "Fallback: Basic positive test for POST /user/login",
+      "category": "positive",
+      "method": "POST",
+      "path": "/user/login",
+      "payload": {
+        "name": "test_item",
+        "status": "active"
+      },
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "login",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-3",
+      "name": "Basic POST request",
+      "description": "Fallback: Basic positive test for POST /store/order",
+      "category": "positive",
+      "method": "POST",
+      "path": "/store/order",
+      "payload": {},
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "order",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-4",
+      "name": "Basic POST request",
+      "description": "Fallback: Basic positive test for POST /pet",
+      "category": "positive",
+      "method": "POST",
+      "path": "/pet",
+      "payload": {},
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "pet",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-5",
+      "name": "Invalid POST request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "POST",
+      "path": "/user/login",
+      "payload": {},
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "login",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-6",
+      "name": "Invalid POST request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "POST",
+      "path": "/store/order",
+      "payload": {},
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "order",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-7",
+      "name": "Invalid POST request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "POST",
+      "path": "/pet/{petId}/uploadImage",
+      "path_params": {
+        "petId": "invalid_value_!@#"
+      },
+      "payload": {},
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "uploadimage",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-8",
+      "name": "Invalid POST request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "POST",
+      "path": "/pet",
+      "payload": {},
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "pet",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-9",
+      "name": "Boundary POST request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "POST",
+      "path": "/user/login",
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "login",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-10",
+      "name": "Boundary POST request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "POST",
+      "path": "/store/order",
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "order",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-11",
+      "name": "Boundary POST request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "POST",
+      "path": "/pet/{petId}/uploadImage",
+      "path_params": {
+        "petId": 1
+      },
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "uploadimage",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-12",
+      "name": "Boundary POST request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "POST",
+      "path": "/pet",
+      "expected_status": 201,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_capture": {
+        "enabled": true,
+        "store_as": "pet",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-13",
+      "name": "Basic GET request",
+      "description": "Fallback: Basic positive test for GET /user/{username}",
+      "category": "positive",
+      "method": "GET",
+      "path": "/user/{username}",
+      "path_params": {
+        "username": "test_username"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-14",
+      "name": "Basic GET request",
+      "description": "Fallback: Basic positive test for GET /pet/{petId}",
+      "category": "positive",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "{{CONTEXT:pet.id}}"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-15",
+      "name": "Basic GET request",
+      "description": "Fallback: Basic positive test for GET /store/order/{orderId}",
+      "category": "positive",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": "{{CONTEXT:order.id}}"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-16",
+      "name": "Invalid GET request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "GET",
+      "path": "/user/{username}",
+      "path_params": {
+        "username": "invalid_value_!@#"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-17",
+      "name": "Invalid GET request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": "invalid_value_!@#"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-18",
+      "name": "Invalid GET request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "invalid_value_!@#"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-19",
+      "name": "Boundary GET request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/user/{username}",
+      "path_params": {
+        "username": "a"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-20",
+      "name": "Boundary GET request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": 1
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-21",
+      "name": "Boundary GET request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "GET",
+      "path": "/store/order/{orderId}",
+      "path_params": {
+        "orderId": 1
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-22",
+      "name": "Basic PUT request",
+      "description": "Fallback: Basic positive test for PUT /pet/{petId}",
+      "category": "positive",
+      "method": "PUT",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "{{CONTEXT:pet.id}}"
+      },
+      "payload": {
+        "name": "test_item",
+        "status": "active"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-23",
+      "name": "Invalid PUT request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "PUT",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "invalid_value_!@#"
+      },
+      "payload": {},
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-24",
+      "name": "Boundary PUT request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "PUT",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": 1
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-25",
+      "name": "Basic DELETE request",
+      "description": "Fallback: Basic positive test for DELETE /pet/{petId}",
+      "category": "positive",
+      "method": "DELETE",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "{{CONTEXT:pet.id}}"
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      },
+      "context_required": {
+        "type": "resource",
+        "fields": [
+          "id"
+        ]
+      }
+    },
+    {
+      "id": "test-26",
+      "name": "Invalid DELETE request",
+      "description": "Fallback: Negative test with invalid data",
+      "category": "negative",
+      "method": "DELETE",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": "invalid_value_!@#"
+      },
+      "expected_status": 400,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    },
+    {
+      "id": "test-27",
+      "name": "Boundary DELETE request",
+      "description": "Fallback: Boundary test with edge values",
+      "category": "boundary",
+      "method": "DELETE",
+      "path": "/pet/{petId}",
+      "path_params": {
+        "petId": 1
+      },
+      "expected_status": 200,
+      "response_validation": {
+        "validate_schema": true,
+        "validate_required": true,
+        "validate_types": true,
+        "allow_extra_fields": true
+      }
+    }
+  ],
+  "statistics": {
+    "total_tests": 27,
+    "positive_tests": 9,
+    "negative_tests": 9,
+    "boundary_tests": 9,
+    "security_tests": 0
+  }
+}

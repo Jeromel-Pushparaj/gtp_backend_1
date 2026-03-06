@@ -1,0 +1,355 @@
+{
+  "DELETE /employees/{id}": {
+    "boundary": [
+      {
+        "context_required": {},
+        "description": "Delete an employee with minimum id",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Delete employee with minimum id",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "payload": {
+          "code": 200,
+          "message": "Employee deleted successfully"
+        }
+      },
+      {
+        "description": "Delete an employee with maximum id",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Delete employee with maximum id",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 2147483647
+        },
+        "payload": {
+          "code": 200,
+          "message": "Employee deleted successfully"
+        }
+      }
+    ],
+    "negative": [
+      {
+        "description": "Delete an employee with invalid id type",
+        "expected_status": 400,
+        "method": "DELETE",
+        "name": "Delete employee with invalid id type",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abcde"
+        },
+        "payload": null
+      },
+      {
+        "description": "Delete an employee with id out of range",
+        "expected_status": 400,
+        "method": "DELETE",
+        "name": "Delete employee with id out of range",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 2147483648
+        },
+        "payload": null
+      },
+      {
+        "description": "Delete an employee with missing id",
+        "expected_status": 400,
+        "method": "DELETE",
+        "name": "Delete employee with missing id",
+        "path": "/employees/",
+        "path_params": {},
+        "payload": null
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {
+          "fields": [
+            "id"
+          ],
+          "type": "resource"
+        },
+        "description": "Delete an existing employee",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Delete employee successfully",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "code": 200,
+          "message": "Employee deleted successfully"
+        }
+      },
+      {
+        "description": "Delete an existing employee with valid id",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Delete employee with valid id",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 12345
+        },
+        "payload": {
+          "code": 200,
+          "message": "Employee deleted successfully"
+        }
+      },
+      {
+        "description": "Delete an existing employee with another valid id",
+        "expected_status": 200,
+        "method": "DELETE",
+        "name": "Delete employee with another valid id",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 67890
+        },
+        "payload": {
+          "code": 200,
+          "message": "Employee deleted successfully"
+        }
+      }
+    ]
+  },
+  "GET /employees": {
+    "boundary": [
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees with maximum pagination",
+        "expected_status": 200,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with maximum limit",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "limit": 100
+        }
+      },
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees with minimum pagination",
+        "expected_status": 200,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with minimum limit",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "limit": 1
+        }
+      }
+    ],
+    "negative": [
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees with invalid filter",
+        "expected_status": 400,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with invalid department filter",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "department": null
+        }
+      },
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees with invalid pagination",
+        "expected_status": 400,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with invalid limit",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "limit": -1
+        }
+      },
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees with invalid pagination",
+        "expected_status": 400,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with invalid offset",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "offset": -1
+        }
+      }
+    ],
+    "positive": [
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees",
+        "expected_status": 200,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees successfully",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {}
+      },
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a paginated list of employees",
+        "expected_status": 200,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with pagination",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "limit": 10,
+          "offset": 0
+        }
+      },
+      {
+        "context_capture": {},
+        "context_required": {},
+        "description": "Retrieve a list of employees filtered by department",
+        "expected_status": 200,
+        "headers": {},
+        "method": "GET",
+        "name": "Get employees with filter",
+        "path": "/employees",
+        "path_params": {},
+        "payload": null,
+        "query_params": {
+          "department": "HR"
+        }
+      }
+    ]
+  },
+  "GET /employees/{id}": {
+    "boundary": [
+      {
+        "context_required": {},
+        "description": "Retrieve employee with minimum ID",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Get employee with minimum ID",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1"
+        },
+        "payload": null
+      },
+      {
+        "context_required": {},
+        "description": "Retrieve employee with maximum ID",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Get employee with maximum ID",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "2147483647"
+        },
+        "payload": null
+      }
+    ],
+    "negative": [
+      {
+        "context_required": {},
+        "description": "Retrieve non-existent employee",
+        "expected_status": 404,
+        "method": "GET",
+        "name": "Get non-existent employee",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "99999"
+        },
+        "payload": null
+      },
+      {
+        "context_required": {},
+        "description": "Retrieve employee with invalid ID",
+        "expected_status": 400,
+        "method": "GET",
+        "name": "Get employee with invalid ID",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abc"
+        },
+        "payload": null
+      },
+      {
+        "context_required": {},
+        "description": "Retrieve employee with negative ID",
+        "expected_status": 400,
+        "method": "GET",
+        "name": "Get employee with negative ID",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "-1"
+        },
+        "payload": null
+      }
+    ],
+    "positive": [
+      {
+        "context_required": {},
+        "description": "Retrieve existing employee",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Get existing employee",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1"
+        },
+        "payload": null
+      },
+      {
+        "context_required": {},
+        "description": "Retrieve employee with valid ID",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Get employee with valid ID",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "100"
+        },
+        "payload": null
+      },
+      {
+        "context_required": {},
+        "description": "Retrieve employee with large ID",
+        "expected_status": 200,
+        "method": "GET",
+        "name": "Get employee with large ID",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1000"
+        },
+        "payload": null
+      }
+    ]
+  },
+  "POST /employees": {
+    "raw_response": "{\n  \"positive\": [\n    {\n      \"name\": \"Create new employee with valid data\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"Doe\", \"email\": \"john.doe@example.com\", \"jobTitle\": \"Software Engineer\"},\n      \"expected_status\": 201,\n      \"description\": \"Create a new employee with valid data\",\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\"], \"store_as\": \"employee\"}\n    },\n    {\n      \"name\": \"Create new employee with valid data and address\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"Jane\", \"lastName\": \"Doe\", \"email\": \"jane.doe@example.com\", \"jobTitle\": \"Marketing Manager\", \"address\": {\"street\": \"123 Main St\", \"city\": \"Anytown\", \"state\": \"CA\", \"zip\": \"12345\"}},\n      \"expected_status\": 201,\n      \"description\": \"Create a new employee with valid data and address\",\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\"], \"store_as\": \"employee\"}\n    },\n    {\n      \"name\": \"Create new employee with valid data and phone number\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"Bob\", \"lastName\": \"Smith\", \"email\": \"bob.smith@example.com\", \"jobTitle\": \"Sales Representative\", \"phone\": \"+1 123 456 7890\"},\n      \"expected_status\": 201,\n      \"description\": \"Create a new employee with valid data and phone number\",\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\"], \"store_as\": \"employee\"}\n    }\n  ],\n  \"negative\": [\n    {\n      \"name\": \"Create new employee with missing first name\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"lastName\": \"Doe\", \"email\": \"john.doe@example.com\", \"jobTitle\": \"Software Engineer\"},\n      \"expected_status\": 400,\n      \"description\": \"Create a new employee with missing first name\"\n    },\n    {\n      \"name\": \"Create new employee with invalid email\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"Doe\", \"email\": \"invalid_email\", \"jobTitle\": \"Software Engineer\"},\n      \"expected_status\": 400,\n      \"description\": \"Create a new employee with invalid email\"\n    },\n    {\n      \"name\": \"Create new employee with missing job title\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"Doe\", \"email\": \"john.doe@example.com\"},\n      \"expected_status\": 400,\n      \"description\": \"Create a new employee with missing job title\"\n    }\n  ],\n  \"boundary\": [\n    {\n      \"name\": \"Create new employee with very long first name\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"a\".repeat(100), \"lastName\": \"Doe\", \"email\": \"john.doe@example.com\", \"jobTitle\": \"Software Engineer\"},\n      \"expected_status\": 201,\n      \"description\": \"Create a new employee with very long first name\",\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\"], \"store_as\": \"employee\"}\n    },\n    {\n      \"name\": \"Create new employee with empty last name\",\n      \"method\": \"POST\",\n      \"path\": \"/employees\",\n      \"path_params\": {},\n      \"query_params\": {},\n      \"headers\": {},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"\", \"email\": \"john.doe@example.com\", \"jobTitle\": \"Software Engineer\"},\n      \"expected_status\": 201,\n      \"description\": \"Create a new employee with empty last name\",\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\"], \"store_as\": \"employee\"}\n    }\n  ]\n}"
+  },
+  "PUT /employees/{id}": {
+    "raw_response": "{\n  \"positive\": [\n    {\n      \"name\": \"Update employee with valid data\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"Doe\", \"email\": \"john.doe@example.com\"},\n      \"expected_status\": 200,\n      \"description\": \"Update existing employee with valid data\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]},\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\", \"email\"], \"store_as\": \"resource\"}\n    },\n    {\n      \"name\": \"Update employee with minimal data\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {\"firstName\": \"Jane\"},\n      \"expected_status\": 200,\n      \"description\": \"Update existing employee with minimal data\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]},\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\"], \"store_as\": \"resource\"}\n    },\n    {\n      \"name\": \"Update employee with additional data\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {\"firstName\": \"Jim\", \"lastName\": \"Smith\", \"email\": \"jim.smith@example.com\", \"jobTitle\": \"Software Engineer\"},\n      \"expected_status\": 200,\n      \"description\": \"Update existing employee with additional data\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]},\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\", \"email\", \"jobTitle\"], \"store_as\": \"resource\"}\n    }\n  ],\n  \"negative\": [\n    {\n      \"name\": \"Update employee with invalid ID\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"invalid\"},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"Doe\"},\n      \"expected_status\": 400,\n      \"description\": \"Update existing employee with invalid ID\",\n      \"context_required\": {}\n    },\n    {\n      \"name\": \"Update employee with missing required field\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {},\n      \"expected_status\": 400,\n      \"description\": \"Update existing employee with missing required field\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]}\n    },\n    {\n      \"name\": \"Update employee with invalid email\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {\"firstName\": \"John\", \"lastName\": \"Doe\", \"email\": \"invalid\"},\n      \"expected_status\": 400,\n      \"description\": \"Update existing employee with invalid email\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]}\n    }\n  ],\n  \"boundary\": [\n    {\n      \"name\": \"Update employee with maximum length fields\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {\"firstName\": \"a\".repeat(50), \"lastName\": \"b\".repeat(50), \"email\": \"a\".repeat(50) + \"@example.com\"},\n      \"expected_status\": 200,\n      \"description\": \"Update existing employee with maximum length fields\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]},\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\", \"email\"], \"store_as\": \"resource\"}\n    },\n    {\n      \"name\": \"Update employee with minimum length fields\",\n      \"method\": \"PUT\",\n      \"path\": \"/employees/{id}\",\n      \"path_params\": {\"id\": \"{{CONTEXT:resource.id}}\"},\n      \"payload\": {\"firstName\": \"a\", \"lastName\": \"b\", \"email\": \"a@b.c\"},\n      \"expected_status\": 200,\n      \"description\": \"Update existing employee with minimum length fields\",\n      \"context_required\": {\"type\": \"resource\", \"fields\": [\"id\"]},\n      \"context_capture\": {\"enabled\": true, \"fields\": [\"id\", \"firstName\", \"lastName\", \"email\"], \"store_as\": \"resource\"}\n    }\n  ]\n}"
+  }
+}

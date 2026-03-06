@@ -1,0 +1,1533 @@
+{
+  "plan": {
+    "id": "09313b45-e161-4126-9c83-4664f2a1da4d",
+    "spec_id": "c850df20-7614-4491-b109-a03dbe0ba16a",
+    "workflow_id": "659aa947-5853-47af-b466-7117d6136a5b",
+    "created_at": "2026-03-03T13:14:35.621762+05:30",
+    "ai_reasoning": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+    "tests": [
+      {
+        "order": 1,
+        "name": "Delete employee with another valid ID",
+        "description": "Delete an employee with another valid ID",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{{CONTEXT:employee.id}}",
+        "path_params": {
+          "id": "67890"
+        },
+        "expected_status": 204,
+        "context_required": {
+          "type": "employee",
+          "fields": [
+            "id"
+          ]
+        },
+        "skip_on_context_missing": true
+      },
+      {
+        "order": 2,
+        "name": "Delete employee with valid ID",
+        "description": "Delete an employee with a valid ID",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{{CONTEXT:employee.id}}",
+        "path_params": {
+          "id": "12345"
+        },
+        "expected_status": 204,
+        "context_required": {
+          "type": "employee",
+          "fields": [
+            "id"
+          ]
+        },
+        "skip_on_context_missing": true
+      },
+      {
+        "order": 3,
+        "name": "Delete existing employee",
+        "description": "Delete an existing employee",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "expected_status": 204,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "name": "Update employee with new job title",
+        "description": "Update employee job title",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "department": "IT",
+          "jobTitle": "Senior Software Engineer"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "jobTitle",
+            "department"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "name": "Update employee with new phone number",
+        "description": "Update employee phone number",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "phoneNumber": "+1 123 456 7890"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "phoneNumber"
+          ]
+        }
+      },
+      {
+        "order": 6,
+        "name": "Update existing employee",
+        "description": "Update existing employee",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "email": "john.doe@example.com",
+          "firstName": "John",
+          "lastName": "Doe"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName",
+            "email"
+          ]
+        }
+      },
+      {
+        "order": 7,
+        "name": "Delete employee with invalid ID",
+        "description": "Delete an employee with an invalid ID",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abcde"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 8,
+        "name": "Delete employee with missing ID",
+        "description": "Delete an employee with a missing ID",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/",
+        "expected_status": 404
+      },
+      {
+        "order": 9,
+        "name": "Delete non-existent employee",
+        "description": "Delete a non-existent employee",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "99999"
+        },
+        "expected_status": 404
+      },
+      {
+        "order": 10,
+        "name": "Update employee with empty payload",
+        "description": "Update employee with empty payload",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {},
+        "expected_status": 400,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 11,
+        "name": "Update employee with invalid email",
+        "description": "Update employee with invalid email",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "email": "invalid_email"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 12,
+        "name": "Update non-existent employee",
+        "description": "Update non-existent employee",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "99999"
+        },
+        "payload": {
+          "firstName": "Jane",
+          "lastName": "Doe"
+        },
+        "expected_status": 404
+      },
+      {
+        "order": 13,
+        "name": "Delete employee with maximum ID length",
+        "description": "Delete an employee with the maximum ID length",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "12345678901234567890"
+        },
+        "expected_status": 204
+      },
+      {
+        "order": 14,
+        "name": "Delete employee with minimum ID length",
+        "description": "Delete an employee with the minimum ID length",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1"
+        },
+        "expected_status": 204
+      },
+      {
+        "order": 15,
+        "name": "Update employee with null fields",
+        "description": "Update employee with null fields",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "firstName": null,
+          "lastName": null
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName"
+          ]
+        }
+      },
+      {
+        "order": 16,
+        "name": "Update employee with very long job title",
+        "description": "Update employee with very long job title",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "jobTitle": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "jobTitle"
+          ]
+        }
+      },
+      {
+        "order": 17,
+        "name": "Get all employees",
+        "description": "Retrieve a list of all employees",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 18,
+        "name": "Get employee by ID",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "123"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 19,
+        "name": "Get employee by ID with large ID",
+        "description": "Retrieve existing employee with large ID",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "2147483647"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 20,
+        "name": "Get employee by ID with valid data",
+        "description": "Retrieve existing employee with valid data",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "456"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 21,
+        "name": "Get employees with code 200",
+        "description": "Retrieve a list of employees with code 200",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 22,
+        "name": "Get employees with data",
+        "description": "Retrieve a list of employees with data",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 23,
+        "name": "Get employee by empty ID",
+        "description": "Retrieve employee with empty ID",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": ""
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 24,
+        "name": "Get employee by invalid ID",
+        "description": "Retrieve non-existent employee",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "-1"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 25,
+        "name": "Get employee by non-numeric ID",
+        "description": "Retrieve employee with non-numeric ID",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abc"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 26,
+        "name": "Get employees with invalid code",
+        "description": "Retrieve a list of employees with invalid code",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": "abc"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 27,
+        "name": "Get employees with invalid data type",
+        "description": "Retrieve a list of employees with invalid data type",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "data": "string"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 28,
+        "name": "Get employees with missing message",
+        "description": "Retrieve a list of employees with missing message",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": []
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 29,
+        "name": "Get employee by maximum ID",
+        "description": "Retrieve existing employee with maximum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "2147483647"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 30,
+        "name": "Get employee by minimum ID",
+        "description": "Retrieve existing employee with minimum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 31,
+        "name": "Get employees with empty data array",
+        "description": "Retrieve a list of employees with empty data array",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 32,
+        "name": "Get employees with large data array",
+        "description": "Retrieve a list of employees with large data array",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      }
+    ],
+    "statistics": {
+      "total_tests": 32,
+      "positive_tests": 12,
+      "negative_tests": 12,
+      "boundary_tests": 8,
+      "tests_with_context": 26
+    }
+  },
+  "results": [
+    {
+      "test": {
+        "order": 1,
+        "name": "Delete employee with another valid ID",
+        "description": "Delete an employee with another valid ID",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{{CONTEXT:employee.id}}",
+        "path_params": {
+          "id": "67890"
+        },
+        "expected_status": 204,
+        "context_required": {
+          "type": "employee",
+          "fields": [
+            "id"
+          ]
+        },
+        "skip_on_context_missing": true
+      },
+      "resolved_path": "/employees/{{CONTEXT:employee.id}}",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 0,
+      "skipped": true,
+      "skip_reason": "Unresolved context in path: /employees/{{CONTEXT:employee.id}}"
+    },
+    {
+      "test": {
+        "order": 2,
+        "name": "Delete employee with valid ID",
+        "description": "Delete an employee with a valid ID",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{{CONTEXT:employee.id}}",
+        "path_params": {
+          "id": "12345"
+        },
+        "expected_status": 204,
+        "context_required": {
+          "type": "employee",
+          "fields": [
+            "id"
+          ]
+        },
+        "skip_on_context_missing": true
+      },
+      "resolved_path": "/employees/{{CONTEXT:employee.id}}",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 0,
+      "skipped": true,
+      "skip_reason": "Unresolved context in path: /employees/{{CONTEXT:employee.id}}"
+    },
+    {
+      "test": {
+        "order": 3,
+        "name": "Delete existing employee",
+        "description": "Delete an existing employee",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "expected_status": 204,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 18500,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 4,
+        "name": "Update employee with new job title",
+        "description": "Update employee job title",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "department": "IT",
+          "jobTitle": "Senior Software Engineer"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "jobTitle",
+            "department"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {
+        "department": "IT",
+        "jobTitle": "Senior Software Engineer"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 147750,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 5,
+        "name": "Update employee with new phone number",
+        "description": "Update employee phone number",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "phoneNumber": "+1 123 456 7890"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "phoneNumber"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {
+        "phoneNumber": "+1 123 456 7890"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 25041,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 6,
+        "name": "Update existing employee",
+        "description": "Update existing employee",
+        "category": "positive",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "email": "john.doe@example.com",
+          "firstName": "John",
+          "lastName": "Doe"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName",
+            "email"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {
+        "email": "john.doe@example.com",
+        "firstName": "John",
+        "lastName": "Doe"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 15125,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 7,
+        "name": "Delete employee with invalid ID",
+        "description": "Delete an employee with an invalid ID",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abcde"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/employees/abcde",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 4333,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 8,
+        "name": "Delete employee with missing ID",
+        "description": "Delete an employee with a missing ID",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/",
+        "expected_status": 404
+      },
+      "resolved_path": "/employees/",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 1083,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 9,
+        "name": "Delete non-existent employee",
+        "description": "Delete a non-existent employee",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "99999"
+        },
+        "expected_status": 404
+      },
+      "resolved_path": "/employees/99999",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 4334,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 10,
+        "name": "Update employee with empty payload",
+        "description": "Update employee with empty payload",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {},
+        "expected_status": 400,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 0,
+      "response_time": 16750,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 11,
+        "name": "Update employee with invalid email",
+        "description": "Update employee with invalid email",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "email": "invalid_email"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {
+        "email": "invalid_email"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 12042,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 12,
+        "name": "Update non-existent employee",
+        "description": "Update non-existent employee",
+        "category": "negative",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "99999"
+        },
+        "payload": {
+          "firstName": "Jane",
+          "lastName": "Doe"
+        },
+        "expected_status": 404
+      },
+      "resolved_path": "/employees/99999",
+      "resolved_payload": {
+        "firstName": "Jane",
+        "lastName": "Doe"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 7541,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 13,
+        "name": "Delete employee with maximum ID length",
+        "description": "Delete an employee with the maximum ID length",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "12345678901234567890"
+        },
+        "expected_status": 204
+      },
+      "resolved_path": "/employees/12345678901234567890",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 5542,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 14,
+        "name": "Delete employee with minimum ID length",
+        "description": "Delete an employee with the minimum ID length",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1"
+        },
+        "expected_status": 204
+      },
+      "resolved_path": "/employees/1",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 3958,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 15,
+        "name": "Update employee with null fields",
+        "description": "Update employee with null fields",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "firstName": null,
+          "lastName": null
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "firstName",
+            "lastName"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {
+        "firstName": null,
+        "lastName": null
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 11833,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 16,
+        "name": "Update employee with very long job title",
+        "description": "Update employee with very long job title",
+        "category": "boundary",
+        "method": "/employees/{id}",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:resource.id}}"
+        },
+        "payload": {
+          "jobTitle": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        },
+        "context_capture": {
+          "enabled": true,
+          "store_as": "resource",
+          "fields": [
+            "id",
+            "jobTitle"
+          ]
+        }
+      },
+      "resolved_path": "/employees/%7B%7BCONTEXT:resource.id%7D%7D",
+      "resolved_payload": {
+        "jobTitle": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 13667,
+      "error": "failed to create request: net/http: invalid method \"/employees/{id}\"",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 17,
+        "name": "Get all employees",
+        "description": "Retrieve a list of all employees",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 1007583,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 18,
+        "name": "Get employee by ID",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "123"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/123",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 678292,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/123\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 19,
+        "name": "Get employee by ID with large ID",
+        "description": "Retrieve existing employee with large ID",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "2147483647"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/2147483647",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 819208,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/2147483647\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 20,
+        "name": "Get employee by ID with valid data",
+        "description": "Retrieve existing employee with valid data",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "456"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/456",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 566417,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/456\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 21,
+        "name": "Get employees with code 200",
+        "description": "Retrieve a list of employees with code 200",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 437542,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 22,
+        "name": "Get employees with data",
+        "description": "Retrieve a list of employees with data",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 424208,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 23,
+        "name": "Get employee by empty ID",
+        "description": "Retrieve employee with empty ID",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": ""
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 403958,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 24,
+        "name": "Get employee by invalid ID",
+        "description": "Retrieve non-existent employee",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "-1"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/-1",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 418500,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/-1\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 25,
+        "name": "Get employee by non-numeric ID",
+        "description": "Retrieve employee with non-numeric ID",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abc"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/abc",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 484708,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/abc\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 26,
+        "name": "Get employees with invalid code",
+        "description": "Retrieve a list of employees with invalid code",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": "abc"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": "abc"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 574958,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 27,
+        "name": "Get employees with invalid data type",
+        "description": "Retrieve a list of employees with invalid data type",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "data": "string"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "data": "string"
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 426292,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 28,
+        "name": "Get employees with missing message",
+        "description": "Retrieve a list of employees with missing message",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": []
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": 200,
+        "data": []
+      },
+      "passed": false,
+      "status_code": 0,
+      "response_time": 430250,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 29,
+        "name": "Get employee by maximum ID",
+        "description": "Retrieve existing employee with maximum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "2147483647"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/2147483647",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 412666,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/2147483647\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 30,
+        "name": "Get employee by minimum ID",
+        "description": "Retrieve existing employee with minimum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "1"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/1",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 404000,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees/1\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 31,
+        "name": "Get employees with empty data array",
+        "description": "Retrieve a list of employees with empty data array",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 465375,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 32,
+        "name": "Get employees with large data array",
+        "description": "Retrieve a list of employees with large data array",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": false,
+      "status_code": 0,
+      "response_time": 433833,
+      "error": "request failed: Get \"http://10.140.16.78:8080/api/v1/employees\": dial tcp 10.140.16.78:8080: connect: no route to host",
+      "skipped": false
+    }
+  ],
+  "summary": {
+    "total_tests": 32,
+    "passed": 0,
+    "failed": 30,
+    "skipped": 2,
+    "pass_rate": 0,
+    "total_time": 9164167,
+    "llm_calls": 1
+  },
+  "executed_at": "2026-03-03T13:14:35.623078+05:30",
+  "duration": 9164167,
+  "context_data": {}
+}

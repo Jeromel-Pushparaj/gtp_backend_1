@@ -1,0 +1,53 @@
+{
+  "base_url": "http://10.140.16.78:8080/api/v1",
+  "complexity": 5,
+  "context_type_mappings": {
+    "employee": "employee",
+    "entity": "employee",
+    "item": "employee",
+    "resource": "employee"
+  },
+  "dependencies": {
+    "/employees/{id}": [
+      "/employees"
+    ],
+    "/employees/{id}/delete": [
+      "/employees"
+    ],
+    "/employees/{id}/put": [
+      "/employees"
+    ]
+  },
+  "key_endpoints": [
+    "/employees",
+    "/employees/{id}",
+    "/employees/{id}/delete",
+    "/employees/{id}/put"
+  ],
+  "recommendations": [
+    "Test the API with a variety of employee data to ensure validation and error handling are correct.",
+    "Test the API with a large number of employees to ensure performance and scalability."
+  ],
+  "security": {
+    "scopes": [],
+    "type": "none"
+  },
+  "test_priorities": [
+    {
+      "endpoint": "/employees",
+      "priority": 1,
+      "reason": "This endpoint is used to get all employees and is a fundamental part of the API."
+    },
+    {
+      "endpoint": "/employees/{id}",
+      "priority": 2,
+      "reason": "This endpoint is used to get a single employee by ID and relies on the existence of employees created by the first endpoint."
+    },
+    {
+      "endpoint": "/employees",
+      "method": "post",
+      "priority": 3,
+      "reason": "This endpoint is used to create a new employee and should be tested after verifying the get all employees endpoint."
+    }
+  ]
+}

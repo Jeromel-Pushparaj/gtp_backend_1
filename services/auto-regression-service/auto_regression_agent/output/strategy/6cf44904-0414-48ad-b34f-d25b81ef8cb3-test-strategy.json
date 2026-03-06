@@ -1,0 +1,327 @@
+{
+  "execution_order": [
+    "POST /pet",
+    "GET /pet/{id}",
+    "PUT /pet/{id}",
+    "DELETE /pet/{id}",
+    "POST /store/order",
+    "GET /store/order/{id}",
+    "PUT /store/order/{id}",
+    "DELETE /store/order/{id}",
+    "POST /user",
+    "GET /user/{id}",
+    "PUT /user/{id}",
+    "DELETE /user/{id}"
+  ],
+  "phases": [
+    {
+      "description": "Initial set of tests to verify basic functionality",
+      "endpoints": [
+        "POST /pet",
+        "GET /pet/{id}",
+        "PUT /pet/{id}",
+        "DELETE /pet/{id}",
+        "POST /store/order",
+        "GET /store/order/{id}",
+        "PUT /store/order/{id}",
+        "DELETE /store/order/{id}",
+        "POST /user",
+        "GET /user/{id}",
+        "PUT /user/{id}",
+        "DELETE /user/{id}"
+      ],
+      "name": "smoke"
+    },
+    {
+      "description": "Tests to verify specific business logic and edge cases",
+      "endpoints": [
+        "POST /pet",
+        "GET /pet/{id}",
+        "PUT /pet/{id}",
+        "DELETE /pet/{id}",
+        "POST /store/order",
+        "GET /store/order/{id}",
+        "PUT /store/order/{id}",
+        "DELETE /store/order/{id}",
+        "POST /user",
+        "GET /user/{id}",
+        "PUT /user/{id}",
+        "DELETE /user/{id}"
+      ],
+      "name": "functional"
+    },
+    {
+      "description": "Tests to verify interactions between endpoints",
+      "endpoints": [
+        "POST /pet",
+        "GET /pet/{id}",
+        "PUT /pet/{id}",
+        "DELETE /pet/{id}",
+        "POST /store/order",
+        "GET /store/order/{id}",
+        "PUT /store/order/{id}",
+        "DELETE /store/order/{id}",
+        "POST /user",
+        "GET /user/{id}",
+        "PUT /user/{id}",
+        "DELETE /user/{id}"
+      ],
+      "name": "integration"
+    }
+  ],
+  "scenarios": [
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name",
+          "status"
+        ],
+        "context_type": "pet",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "POST /pet",
+      "scenarios": [
+        "create valid pet",
+        "create pet with invalid data",
+        "create duplicate pet"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": false,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "GET /pet/{id}",
+      "scenarios": [
+        "get existing pet",
+        "get non-existent pet",
+        "get pet with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name",
+          "status"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": true,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "PUT /pet/{id}",
+      "scenarios": [
+        "update existing pet",
+        "update non-existent pet",
+        "update pet with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:pet.id}}"
+        },
+        "context_type": "pet",
+        "creates_context": false,
+        "depends_on": "POST /pet",
+        "needs_context": true
+      },
+      "endpoint": "DELETE /pet/{id}",
+      "scenarios": [
+        "delete existing pet",
+        "delete non-existent pet",
+        "delete pet with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "pet_id",
+          "status"
+        ],
+        "context_type": "order",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "POST /store/order",
+      "scenarios": [
+        "create valid order",
+        "create order with invalid data",
+        "create order with non-existent pet"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:order.id}}"
+        },
+        "context_type": "order",
+        "creates_context": false,
+        "depends_on": "POST /store/order",
+        "needs_context": true
+      },
+      "endpoint": "GET /store/order/{id}",
+      "scenarios": [
+        "get existing order",
+        "get non-existent order",
+        "get order with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "pet_id",
+          "status"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:order.id}}"
+        },
+        "context_type": "order",
+        "creates_context": true,
+        "depends_on": "POST /store/order",
+        "needs_context": true
+      },
+      "endpoint": "PUT /store/order/{id}",
+      "scenarios": [
+        "update existing order",
+        "update non-existent order",
+        "update order with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:order.id}}"
+        },
+        "context_type": "order",
+        "creates_context": false,
+        "depends_on": "POST /store/order",
+        "needs_context": true
+      },
+      "endpoint": "DELETE /store/order/{id}",
+      "scenarios": [
+        "delete existing order",
+        "delete non-existent order",
+        "delete order with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "email",
+          "password"
+        ],
+        "context_type": "user",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "POST /user",
+      "scenarios": [
+        "create valid user",
+        "create user with invalid data",
+        "create duplicate user"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:user.id}}"
+        },
+        "context_type": "user",
+        "creates_context": false,
+        "depends_on": "POST /user",
+        "needs_context": true
+      },
+      "endpoint": "GET /user/{id}",
+      "scenarios": [
+        "get existing user",
+        "get non-existent user",
+        "get user with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "email",
+          "password"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:user.id}}"
+        },
+        "context_type": "user",
+        "creates_context": true,
+        "depends_on": "POST /user",
+        "needs_context": true
+      },
+      "endpoint": "PUT /user/{id}",
+      "scenarios": [
+        "update existing user",
+        "update non-existent user",
+        "update user with invalid id"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:user.id}}"
+        },
+        "context_type": "user",
+        "creates_context": false,
+        "depends_on": "POST /user",
+        "needs_context": true
+      },
+      "endpoint": "DELETE /user/{id}",
+      "scenarios": [
+        "delete existing user",
+        "delete non-existent user",
+        "delete user with invalid id"
+      ]
+    }
+  ],
+  "success_criteria": {
+    "max_failures": 5,
+    "min_coverage": 80
+  }
+}

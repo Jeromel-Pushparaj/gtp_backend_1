@@ -1,0 +1,919 @@
+{
+  "plan": {
+    "id": "a2d29c51-f007-4280-803e-94bb4a250a79",
+    "spec_id": "da939fc3-749f-4266-bc80-e50520b0c596",
+    "workflow_id": "5c200fe1-db4a-4cbc-8a3b-8e873af20b7e",
+    "created_at": "2026-03-03T14:51:28.296024+05:30",
+    "ai_reasoning": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+    "tests": [
+      {
+        "order": 1,
+        "name": "Get all employees",
+        "description": "Retrieve a list of employees",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 2,
+        "name": "Get employee with large ID",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 987654321
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 3,
+        "name": "Get employee with valid ID",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 456
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 4,
+        "name": "Get employees with code 200",
+        "description": "Retrieve a list of employees with code 200",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": [
+            {
+              "email": "john.doe@example.com",
+              "id": 1,
+              "name": "John Doe"
+            }
+          ],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 5,
+        "name": "Get employees with data",
+        "description": "Retrieve a list of employees with data",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 6,
+        "name": "Get existing employee",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 123
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 7,
+        "name": "Get employee with invalid ID",
+        "description": "Invalid ID format",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abc"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 8,
+        "name": "Get employee with negative ID",
+        "description": "ID must be positive",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": -1
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 9,
+        "name": "Get employees with incorrect payload",
+        "description": "Retrieve a list of employees with incorrect payload",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": "invalid payload",
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 10,
+        "name": "Get employees with invalid code",
+        "description": "Retrieve a list of employees with invalid code",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": "invalid",
+          "data": [
+            {
+              "email": "john.doe@example.com",
+              "id": 1,
+              "name": "John Doe"
+            }
+          ],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 11,
+        "name": "Get employees with missing data",
+        "description": "Retrieve a list of employees with missing data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 12,
+        "name": "Get non-existent employee",
+        "description": "Employee not found",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 999999999
+        },
+        "expected_status": 404,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 13,
+        "name": "Get employee with maximum ID",
+        "description": "Retrieve existing employee with maximum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 2147483647
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 14,
+        "name": "Get employee with minimum ID",
+        "description": "Retrieve existing employee with minimum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 15,
+        "name": "Get employees with empty data",
+        "description": "Retrieve a list of employees with empty data",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": [],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      {
+        "order": 16,
+        "name": "Get employees with large data",
+        "description": "Retrieve a list of employees with large data",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": [
+            {
+              "email": "john.doe@example.com",
+              "id": 1,
+              "name": "John Doe"
+            },
+            {
+              "email": "jane.doe@example.com",
+              "id": 2,
+              "name": "Jane Doe"
+            },
+            {
+              "email": "bob.smith@example.com",
+              "id": 3,
+              "name": "Bob Smith"
+            }
+          ],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      }
+    ],
+    "statistics": {
+      "total_tests": 16,
+      "positive_tests": 6,
+      "negative_tests": 6,
+      "boundary_tests": 4,
+      "tests_with_context": 16
+    }
+  },
+  "results": [
+    {
+      "test": {
+        "order": 1,
+        "name": "Get all employees",
+        "description": "Retrieve a list of employees",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": true,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 285519500,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 2,
+        "name": "Get employee with large ID",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 987654321
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/987654321",
+      "passed": false,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 136668375,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 3,
+        "name": "Get employee with valid ID",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 456
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/456",
+      "passed": false,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 137131167,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 4,
+        "name": "Get employees with code 200",
+        "description": "Retrieve a list of employees with code 200",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": [
+            {
+              "email": "john.doe@example.com",
+              "id": 1,
+              "name": "John Doe"
+            }
+          ],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": 200,
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "passed": true,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 135246541,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 5,
+        "name": "Get employees with data",
+        "description": "Retrieve a list of employees with data",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees",
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "passed": true,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 143680292,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 6,
+        "name": "Get existing employee",
+        "description": "Retrieve existing employee",
+        "category": "positive",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 123
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/123",
+      "passed": false,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 133516209,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 7,
+        "name": "Get employee with invalid ID",
+        "description": "Invalid ID format",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": "abc"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/abc",
+      "passed": true,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Invalid employee ID"
+      },
+      "response_time": 136759291,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 8,
+        "name": "Get employee with negative ID",
+        "description": "ID must be positive",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": -1
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/-1",
+      "passed": false,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 133464333,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 9,
+        "name": "Get employees with incorrect payload",
+        "description": "Retrieve a list of employees with incorrect payload",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": "invalid payload",
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": "invalid payload",
+      "passed": false,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 135338125,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 10,
+        "name": "Get employees with invalid code",
+        "description": "Retrieve a list of employees with invalid code",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": "invalid",
+          "data": [
+            {
+              "email": "john.doe@example.com",
+              "id": 1,
+              "name": "John Doe"
+            }
+          ],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": "invalid",
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "passed": false,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 142066292,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 11,
+        "name": "Get employees with missing data",
+        "description": "Retrieve a list of employees with missing data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 400,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": 200,
+        "message": "Employees retrieved successfully"
+      },
+      "passed": false,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 154437041,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 12,
+        "name": "Get non-existent employee",
+        "description": "Employee not found",
+        "category": "negative",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 999999999
+        },
+        "expected_status": 404,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/999999999",
+      "passed": true,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 140934208,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 13,
+        "name": "Get employee with maximum ID",
+        "description": "Retrieve existing employee with maximum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 2147483647
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/2147483647",
+      "passed": false,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 132501375,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 14,
+        "name": "Get employee with minimum ID",
+        "description": "Retrieve existing employee with minimum ID",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees/1",
+      "passed": false,
+      "status_code": 404,
+      "response_body": {
+        "code": 404,
+        "message": "Employee not found"
+      },
+      "response_time": 141203792,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 15,
+        "name": "Get employees with empty data",
+        "description": "Retrieve a list of employees with empty data",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": [],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": 200,
+        "data": [],
+        "message": "Employees retrieved successfully"
+      },
+      "passed": true,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 145446750,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 16,
+        "name": "Get employees with large data",
+        "description": "Retrieve a list of employees with large data",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/employees",
+        "payload": {
+          "code": 200,
+          "data": [
+            {
+              "email": "john.doe@example.com",
+              "id": 1,
+              "name": "John Doe"
+            },
+            {
+              "email": "jane.doe@example.com",
+              "id": 2,
+              "name": "Jane Doe"
+            },
+            {
+              "email": "bob.smith@example.com",
+              "id": 3,
+              "name": "Bob Smith"
+            }
+          ],
+          "message": "Employees retrieved successfully"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "",
+          "fields": null
+        },
+        "context_capture": {
+          "enabled": false,
+          "store_as": "",
+          "fields": null
+        }
+      },
+      "resolved_path": "/employees",
+      "resolved_payload": {
+        "code": 200,
+        "data": [
+          {
+            "email": "john.doe@example.com",
+            "id": 1,
+            "name": "John Doe"
+          },
+          {
+            "email": "jane.doe@example.com",
+            "id": 2,
+            "name": "Jane Doe"
+          },
+          {
+            "email": "bob.smith@example.com",
+            "id": 3,
+            "name": "Bob Smith"
+          }
+        ],
+        "message": "Employees retrieved successfully"
+      },
+      "passed": true,
+      "status_code": 200,
+      "response_body": {
+        "code": 200,
+        "data": null,
+        "message": "Employees retrieved successfully"
+      },
+      "response_time": 137949875,
+      "skipped": false
+    }
+  ],
+  "summary": {
+    "total_tests": 16,
+    "passed": 7,
+    "failed": 9,
+    "skipped": 0,
+    "pass_rate": 43.75,
+    "total_time": 2372609042,
+    "llm_calls": 1
+  },
+  "executed_at": "2026-03-03T14:51:28.297752+05:30",
+  "duration": 2372609042,
+  "context_data": {}
+}

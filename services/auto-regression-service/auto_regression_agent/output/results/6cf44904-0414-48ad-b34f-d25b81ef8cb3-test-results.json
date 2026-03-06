@@ -1,0 +1,1519 @@
+{
+  "plan": {
+    "id": "fc751e20-a8db-41cc-a1b2-f5af73a4eaa2",
+    "spec_id": "6cf44904-0414-48ad-b34f-d25b81ef8cb3",
+    "workflow_id": "fe2ccffb-74e8-4d45-b4ce-a44e3f0734aa",
+    "created_at": "2026-03-03T11:54:48.951693+05:30",
+    "ai_reasoning": "Deterministic ordering: POST/CREATE first to establish resources, GET/read operations next, PUT/PATCH for updates, DELETE last for cleanup. Positive tests first within each endpoint, then negative/boundary tests.",
+    "tests": [
+      {
+        "order": 1,
+        "name": "Basic POST request",
+        "description": "Fallback: Basic positive test for POST /pet",
+        "category": "positive",
+        "method": "POST",
+        "path": "/pet",
+        "payload": {},
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "pet",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 2,
+        "name": "Basic POST request",
+        "description": "Fallback: Basic positive test for POST /user",
+        "category": "positive",
+        "method": "POST",
+        "path": "/user",
+        "payload": {},
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "user",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 3,
+        "name": "Basic POST request",
+        "description": "Fallback: Basic positive test for POST /store/order",
+        "category": "positive",
+        "method": "POST",
+        "path": "/store/order",
+        "payload": {},
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "order",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 4,
+        "name": "Invalid POST request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "POST",
+        "path": "/user",
+        "payload": {},
+        "expected_status": 400,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "user",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 5,
+        "name": "Invalid POST request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "POST",
+        "path": "/store/order",
+        "payload": {},
+        "expected_status": 400,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "order",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 6,
+        "name": "Invalid POST request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "POST",
+        "path": "/pet",
+        "payload": {},
+        "expected_status": 400,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "pet",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 7,
+        "name": "Boundary POST request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "POST",
+        "path": "/user",
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "user",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 8,
+        "name": "Boundary POST request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "POST",
+        "path": "/store/order",
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "order",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 9,
+        "name": "Boundary POST request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "POST",
+        "path": "/pet",
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "pet",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 10,
+        "name": "Basic GET request",
+        "description": "Fallback: Basic positive test for GET /user/{id}",
+        "category": "positive",
+        "method": "GET",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 11,
+        "name": "Basic GET request",
+        "description": "Fallback: Basic positive test for GET /pet/{id}",
+        "category": "positive",
+        "method": "GET",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 12,
+        "name": "Basic GET request",
+        "description": "Fallback: Basic positive test for GET /store/order/{id}",
+        "category": "positive",
+        "method": "GET",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 13,
+        "name": "Invalid GET request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 14,
+        "name": "Invalid GET request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 15,
+        "name": "Invalid GET request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 16,
+        "name": "Boundary GET request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 17,
+        "name": "Boundary GET request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 18,
+        "name": "Boundary GET request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 19,
+        "name": "Basic PUT request",
+        "description": "Fallback: Basic positive test for PUT /pet/{id}",
+        "category": "positive",
+        "method": "PUT",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 20,
+        "name": "Basic PUT request",
+        "description": "Fallback: Basic positive test for PUT /user/{id}",
+        "category": "positive",
+        "method": "PUT",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 21,
+        "name": "Basic PUT request",
+        "description": "Fallback: Basic positive test for PUT /store/order/{id}",
+        "category": "positive",
+        "method": "PUT",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 22,
+        "name": "Invalid PUT request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "PUT",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {},
+        "expected_status": 400
+      },
+      {
+        "order": 23,
+        "name": "Invalid PUT request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "PUT",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {},
+        "expected_status": 400
+      },
+      {
+        "order": 24,
+        "name": "Invalid PUT request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "PUT",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {},
+        "expected_status": 400
+      },
+      {
+        "order": 25,
+        "name": "Boundary PUT request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "PUT",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 26,
+        "name": "Boundary PUT request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "PUT",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 27,
+        "name": "Boundary PUT request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "PUT",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 28,
+        "name": "Basic DELETE request",
+        "description": "Fallback: Basic positive test for DELETE /store/order/{id}",
+        "category": "positive",
+        "method": "DELETE",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 29,
+        "name": "Basic DELETE request",
+        "description": "Fallback: Basic positive test for DELETE /pet/{id}",
+        "category": "positive",
+        "method": "DELETE",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 30,
+        "name": "Basic DELETE request",
+        "description": "Fallback: Basic positive test for DELETE /user/{id}",
+        "category": "positive",
+        "method": "DELETE",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      {
+        "order": 31,
+        "name": "Invalid DELETE request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "DELETE",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 32,
+        "name": "Invalid DELETE request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "DELETE",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 33,
+        "name": "Invalid DELETE request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "DELETE",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      {
+        "order": 34,
+        "name": "Boundary DELETE request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "DELETE",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 35,
+        "name": "Boundary DELETE request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "DELETE",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      {
+        "order": 36,
+        "name": "Boundary DELETE request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "DELETE",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      }
+    ],
+    "statistics": {
+      "total_tests": 36,
+      "positive_tests": 12,
+      "negative_tests": 12,
+      "boundary_tests": 12,
+      "tests_with_context": 18
+    }
+  },
+  "results": [
+    {
+      "test": {
+        "order": 1,
+        "name": "Basic POST request",
+        "description": "Fallback: Basic positive test for POST /pet",
+        "category": "positive",
+        "method": "POST",
+        "path": "/pet",
+        "payload": {},
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "pet",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/pet",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: f6bdc5185c4a1503)"
+      },
+      "response_time": 1183013000,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 2,
+        "name": "Basic POST request",
+        "description": "Fallback: Basic positive test for POST /user",
+        "category": "positive",
+        "method": "POST",
+        "path": "/user",
+        "payload": {},
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "user",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/user",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 323313a69b29a0e0)"
+      },
+      "response_time": 309841208,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 3,
+        "name": "Basic POST request",
+        "description": "Fallback: Basic positive test for POST /store/order",
+        "category": "positive",
+        "method": "POST",
+        "path": "/store/order",
+        "payload": {},
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "order",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/store/order",
+      "resolved_payload": {},
+      "passed": true,
+      "status_code": 200,
+      "response_body": {
+        "complete": false,
+        "id": 0,
+        "petId": 0,
+        "quantity": 0
+      },
+      "response_time": 324572166,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 4,
+        "name": "Invalid POST request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "POST",
+        "path": "/user",
+        "payload": {},
+        "expected_status": 400,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "user",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/user",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: a820714392d59ce9)"
+      },
+      "response_time": 291666000,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 5,
+        "name": "Invalid POST request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "POST",
+        "path": "/store/order",
+        "payload": {},
+        "expected_status": 400,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "order",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/store/order",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 200,
+      "response_body": {
+        "complete": false,
+        "id": 0,
+        "petId": 0,
+        "quantity": 0
+      },
+      "response_time": 300792584,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 6,
+        "name": "Invalid POST request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "POST",
+        "path": "/pet",
+        "payload": {},
+        "expected_status": 400,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "pet",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/pet",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 905422f060b9609d)"
+      },
+      "response_time": 291650958,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 7,
+        "name": "Boundary POST request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "POST",
+        "path": "/user",
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "user",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/user",
+      "passed": false,
+      "status_code": 400,
+      "response_time": 297041792,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 8,
+        "name": "Boundary POST request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "POST",
+        "path": "/store/order",
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "order",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/store/order",
+      "passed": false,
+      "status_code": 400,
+      "response_time": 292951167,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 9,
+        "name": "Boundary POST request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "POST",
+        "path": "/pet",
+        "expected_status": 201,
+        "context_capture": {
+          "enabled": true,
+          "store_as": "pet",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/pet",
+      "passed": false,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: The input body `class RequestBody {\n    description: Create a new pet in the store\n    content: class Content {\n        {application/json=class MediaType {\n            schema: class ObjectSchema {\n                class Schema {\n                    type: object\n                    format: null\n                    $ref: null\n                    description: null\n                    title: null\n                    multipleOf: null\n                    maximum: null\n                    exclusiveMaximum: null\n                    minimum: null\n                    exclusiveMinimum: null\n                    maxLength: null\n                    minLength: null\n                    pattern: null\n                    maxItems: null\n                    minItems: null\n                    uniqueItems: null\n                    maxProperties: null\n                    minProperties: null\n                    required: [name, photoUrls]\n                    not: null\n                    properties: {id=class IntegerSchema {\n                        class Schema {\n                            type: integer\n                            format: int64\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: 10\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }, name=class StringSchema {\n                        class Schema {\n                            type: string\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: doggie\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }, category=class ObjectSchema {\n                        class Schema {\n                            type: object\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: {id=class IntegerSchema {\n                                class Schema {\n                                    type: integer\n                                    format: int64\n                                    $ref: null\n                                    description: null\n                                    title: null\n                                    multipleOf: null\n                                    maximum: null\n                                    exclusiveMaximum: null\n                                    minimum: null\n                                    exclusiveMinimum: null\n                                    maxLength: null\n                                    minLength: null\n                                    pattern: null\n                                    maxItems: null\n                                    minItems: null\n                                    uniqueItems: null\n                                    maxProperties: null\n                                    minProperties: null\n                                    required: null\n                                    not: null\n                                    properties: null\n                                    additionalProperties: null\n                                    nullable: null\n                                    readOnly: null\n                                    writeOnly: null\n                                    example: 1\n                                    externalDocs: null\n                                    deprecated: null\n                                    discriminator: null\n                                    xml: null\n                                }\n                            }, name=class StringSchema {\n                                class Schema {\n                                    type: string\n                                    format: null\n                                    $ref: null\n                                    description: null\n                                    title: null\n                                    multipleOf: null\n                                    maximum: null\n                                    exclusiveMaximum: null\n                                    minimum: null\n                                    exclusiveMinimum: null\n                                    maxLength: null\n                                    minLength: null\n                                    pattern: null\n                                    maxItems: null\n                                    minItems: null\n                                    uniqueItems: null\n                                    maxProperties: null\n                                    minProperties: null\n                                    required: null\n                                    not: null\n                                    properties: null\n                                    additionalProperties: null\n                                    nullable: null\n                                    readOnly: null\n                                    writeOnly: null\n                                    example: Dogs\n                                    externalDocs: null\n                                    deprecated: null\n                                    discriminator: null\n                                    xml: null\n                                }\n                            }}\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: category\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: null\n                            }\n                        }\n                    }, photoUrls=class ArraySchema {\n                        class Schema {\n                            type: array\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: null\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: true\n                            }\n                        }\n                    }, tags=class ArraySchema {\n                        class Schema {\n                            type: array\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: null\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: true\n                            }\n                        }\n                    }, status=class StringSchema {\n                        class Schema {\n                            type: string\n                            format: null\n                            $ref: null\n                            description: pet status in the store\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }}\n                    additionalProperties: null\n                    nullable: null\n                    readOnly: null\n                    writeOnly: null\n                    example: null\n                    externalDocs: null\n                    deprecated: null\n                    discriminator: null\n                    xml: class XML {\n                        name: pet\n                        namespace: null\n                        prefix: null\n                        attribute: null\n                        wrapped: null\n                    }\n                }\n            }\n            examples: null\n            example: null\n            encoding: null\n        }, application/xml=class MediaType {\n            schema: class ObjectSchema {\n                class Schema {\n                    type: object\n                    format: null\n                    $ref: null\n                    description: null\n                    title: null\n                    multipleOf: null\n                    maximum: null\n                    exclusiveMaximum: null\n                    minimum: null\n                    exclusiveMinimum: null\n                    maxLength: null\n                    minLength: null\n                    pattern: null\n                    maxItems: null\n                    minItems: null\n                    uniqueItems: null\n                    maxProperties: null\n                    minProperties: null\n                    required: [name, photoUrls]\n                    not: null\n                    properties: {id=class IntegerSchema {\n                        class Schema {\n                            type: integer\n                            format: int64\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: 10\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }, name=class StringSchema {\n                        class Schema {\n                            type: string\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: doggie\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }, category=class ObjectSchema {\n                        class Schema {\n                            type: object\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: {id=class IntegerSchema {\n                                class Schema {\n                                    type: integer\n                                    format: int64\n                                    $ref: null\n                                    description: null\n                                    title: null\n                                    multipleOf: null\n                                    maximum: null\n                                    exclusiveMaximum: null\n                                    minimum: null\n                                    exclusiveMinimum: null\n                                    maxLength: null\n                                    minLength: null\n                                    pattern: null\n                                    maxItems: null\n                                    minItems: null\n                                    uniqueItems: null\n                                    maxProperties: null\n                                    minProperties: null\n                                    required: null\n                                    not: null\n                                    properties: null\n                                    additionalProperties: null\n                                    nullable: null\n                                    readOnly: null\n                                    writeOnly: null\n                                    example: 1\n                                    externalDocs: null\n                                    deprecated: null\n                                    discriminator: null\n                                    xml: null\n                                }\n                            }, name=class StringSchema {\n                                class Schema {\n                                    type: string\n                                    format: null\n                                    $ref: null\n                                    description: null\n                                    title: null\n                                    multipleOf: null\n                                    maximum: null\n                                    exclusiveMaximum: null\n                                    minimum: null\n                                    exclusiveMinimum: null\n                                    maxLength: null\n                                    minLength: null\n                                    pattern: null\n                                    maxItems: null\n                                    minItems: null\n                                    uniqueItems: null\n                                    maxProperties: null\n                                    minProperties: null\n                                    required: null\n                                    not: null\n                                    properties: null\n                                    additionalProperties: null\n                                    nullable: null\n                                    readOnly: null\n                                    writeOnly: null\n                                    example: Dogs\n                                    externalDocs: null\n                                    deprecated: null\n                                    discriminator: null\n                                    xml: null\n                                }\n                            }}\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: category\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: null\n                            }\n                        }\n                    }, photoUrls=class ArraySchema {\n                        class Schema {\n                            type: array\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: null\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: true\n                            }\n                        }\n                    }, tags=class ArraySchema {\n                        class Schema {\n                            type: array\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: null\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: true\n                            }\n                        }\n                    }, status=class StringSchema {\n                        class Schema {\n                            type: string\n                            format: null\n                            $ref: null\n                            description: pet status in the store\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }}\n                    additionalProperties: null\n                    nullable: null\n                    readOnly: null\n                    writeOnly: null\n                    example: null\n                    externalDocs: null\n                    deprecated: null\n                    discriminator: null\n                    xml: class XML {\n                        name: pet\n                        namespace: null\n                        prefix: null\n                        attribute: null\n                        wrapped: null\n                    }\n                }\n            }\n            examples: null\n            example: null\n            encoding: null\n        }, application/x-www-form-urlencoded=class MediaType {\n            schema: class ObjectSchema {\n                class Schema {\n                    type: object\n                    format: null\n                    $ref: null\n                    description: null\n                    title: null\n                    multipleOf: null\n                    maximum: null\n                    exclusiveMaximum: null\n                    minimum: null\n                    exclusiveMinimum: null\n                    maxLength: null\n                    minLength: null\n                    pattern: null\n                    maxItems: null\n                    minItems: null\n                    uniqueItems: null\n                    maxProperties: null\n                    minProperties: null\n                    required: [name, photoUrls]\n                    not: null\n                    properties: {id=class IntegerSchema {\n                        class Schema {\n                            type: integer\n                            format: int64\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: 10\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }, name=class StringSchema {\n                        class Schema {\n                            type: string\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: doggie\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }, category=class ObjectSchema {\n                        class Schema {\n                            type: object\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: {id=class IntegerSchema {\n                                class Schema {\n                                    type: integer\n                                    format: int64\n                                    $ref: null\n                                    description: null\n                                    title: null\n                                    multipleOf: null\n                                    maximum: null\n                                    exclusiveMaximum: null\n                                    minimum: null\n                                    exclusiveMinimum: null\n                                    maxLength: null\n                                    minLength: null\n                                    pattern: null\n                                    maxItems: null\n                                    minItems: null\n                                    uniqueItems: null\n                                    maxProperties: null\n                                    minProperties: null\n                                    required: null\n                                    not: null\n                                    properties: null\n                                    additionalProperties: null\n                                    nullable: null\n                                    readOnly: null\n                                    writeOnly: null\n                                    example: 1\n                                    externalDocs: null\n                                    deprecated: null\n                                    discriminator: null\n                                    xml: null\n                                }\n                            }, name=class StringSchema {\n                                class Schema {\n                                    type: string\n                                    format: null\n                                    $ref: null\n                                    description: null\n                                    title: null\n                                    multipleOf: null\n                                    maximum: null\n                                    exclusiveMaximum: null\n                                    minimum: null\n                                    exclusiveMinimum: null\n                                    maxLength: null\n                                    minLength: null\n                                    pattern: null\n                                    maxItems: null\n                                    minItems: null\n                                    uniqueItems: null\n                                    maxProperties: null\n                                    minProperties: null\n                                    required: null\n                                    not: null\n                                    properties: null\n                                    additionalProperties: null\n                                    nullable: null\n                                    readOnly: null\n                                    writeOnly: null\n                                    example: Dogs\n                                    externalDocs: null\n                                    deprecated: null\n                                    discriminator: null\n                                    xml: null\n                                }\n                            }}\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: category\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: null\n                            }\n                        }\n                    }, photoUrls=class ArraySchema {\n                        class Schema {\n                            type: array\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: null\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: true\n                            }\n                        }\n                    }, tags=class ArraySchema {\n                        class Schema {\n                            type: array\n                            format: null\n                            $ref: null\n                            description: null\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: class XML {\n                                name: null\n                                namespace: null\n                                prefix: null\n                                attribute: null\n                                wrapped: true\n                            }\n                        }\n                    }, status=class StringSchema {\n                        class Schema {\n                            type: string\n                            format: null\n                            $ref: null\n                            description: pet status in the store\n                            title: null\n                            multipleOf: null\n                            maximum: null\n                            exclusiveMaximum: null\n                            minimum: null\n                            exclusiveMinimum: null\n                            maxLength: null\n                            minLength: null\n                            pattern: null\n                            maxItems: null\n                            minItems: null\n                            uniqueItems: null\n                            maxProperties: null\n                            minProperties: null\n                            required: null\n                            not: null\n                            properties: null\n                            additionalProperties: null\n                            nullable: null\n                            readOnly: null\n                            writeOnly: null\n                            example: null\n                            externalDocs: null\n                            deprecated: null\n                            discriminator: null\n                            xml: null\n                        }\n                    }}\n                    additionalProperties: null\n                    nullable: null\n                    readOnly: null\n                    writeOnly: null\n                    example: null\n                    externalDocs: null\n                    deprecated: null\n                    discriminator: null\n                    xml: class XML {\n                        name: pet\n                        namespace: null\n                        prefix: null\n                        attribute: null\n                        wrapped: null\n                    }\n                }\n            }\n            examples: null\n            example: null\n            encoding: null\n        }}\n    }\n    required: true\n}` is required"
+      },
+      "response_time": 840318208,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 10,
+        "name": "Basic GET request",
+        "description": "Fallback: Basic positive test for GET /user/{id}",
+        "category": "positive",
+        "method": "GET",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/user/%7B%7BCONTEXT:id.id%7D%7D",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 1e428cffe954c460)"
+      },
+      "response_time": 299275167,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 11,
+        "name": "Basic GET request",
+        "description": "Fallback: Basic positive test for GET /pet/{id}",
+        "category": "positive",
+        "method": "GET",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/pet/%7B%7BCONTEXT:id.id%7D%7D",
+      "passed": false,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `{{CONTEXT:id.id}}` to type `class java.lang.Long`"
+      },
+      "response_time": 289132334,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 12,
+        "name": "Basic GET request",
+        "description": "Fallback: Basic positive test for GET /store/order/{id}",
+        "category": "positive",
+        "method": "GET",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/store/order/%7B%7BCONTEXT:id.id%7D%7D",
+      "passed": false,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `{{CONTEXT:id.id}}` to type `class java.lang.Long`"
+      },
+      "response_time": 286628125,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 13,
+        "name": "Invalid GET request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/user/invalid_value_%21@%23",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 4d42955fad889bea)"
+      },
+      "response_time": 288171958,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 14,
+        "name": "Invalid GET request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/pet/invalid_value_%21@%23",
+      "passed": true,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `invalid_value_!@#` to type `class java.lang.Long`"
+      },
+      "response_time": 292792125,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 15,
+        "name": "Invalid GET request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "GET",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/store/order/invalid_value_%21@%23",
+      "passed": true,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `invalid_value_!@#` to type `class java.lang.Long`"
+      },
+      "response_time": 287395458,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 16,
+        "name": "Boundary GET request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/user/1",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: d69b88f73c2ea272)"
+      },
+      "response_time": 288410334,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 17,
+        "name": "Boundary GET request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/pet/1",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 5b904aaa3cefe5ae)"
+      },
+      "response_time": 295960833,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 18,
+        "name": "Boundary GET request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "GET",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/store/order/1",
+      "passed": false,
+      "status_code": 404,
+      "response_time": 291786417,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 19,
+        "name": "Basic PUT request",
+        "description": "Fallback: Basic positive test for PUT /pet/{id}",
+        "category": "positive",
+        "method": "PUT",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/pet/%7B%7BCONTEXT:id.id%7D%7D",
+      "resolved_payload": {
+        "name": "test_item",
+        "status": "active"
+      },
+      "passed": false,
+      "status_code": 405,
+      "response_body": {
+        "code": 405,
+        "message": "HTTP 405 Method Not Allowed"
+      },
+      "response_time": 290394750,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 20,
+        "name": "Basic PUT request",
+        "description": "Fallback: Basic positive test for PUT /user/{id}",
+        "category": "positive",
+        "method": "PUT",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/user/%7B%7BCONTEXT:id.id%7D%7D",
+      "resolved_payload": {
+        "name": "test_item",
+        "status": "active"
+      },
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 019b46bfd43fbc64)"
+      },
+      "response_time": 291709333,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 21,
+        "name": "Basic PUT request",
+        "description": "Fallback: Basic positive test for PUT /store/order/{id}",
+        "category": "positive",
+        "method": "PUT",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "payload": {
+          "name": "test_item",
+          "status": "active"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/store/order/%7B%7BCONTEXT:id.id%7D%7D",
+      "resolved_payload": {
+        "name": "test_item",
+        "status": "active"
+      },
+      "passed": false,
+      "status_code": 405,
+      "response_body": {
+        "code": 405,
+        "message": "HTTP 405 Method Not Allowed"
+      },
+      "response_time": 289233250,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 22,
+        "name": "Invalid PUT request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "PUT",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {},
+        "expected_status": 400
+      },
+      "resolved_path": "/user/invalid_value_%21@%23",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: ba98e2479aae8514)"
+      },
+      "response_time": 308722625,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 23,
+        "name": "Invalid PUT request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "PUT",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {},
+        "expected_status": 400
+      },
+      "resolved_path": "/store/order/invalid_value_%21@%23",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 405,
+      "response_body": {
+        "code": 405,
+        "message": "HTTP 405 Method Not Allowed"
+      },
+      "response_time": 286604500,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 24,
+        "name": "Invalid PUT request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "PUT",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "payload": {},
+        "expected_status": 400
+      },
+      "resolved_path": "/pet/invalid_value_%21@%23",
+      "resolved_payload": {},
+      "passed": false,
+      "status_code": 405,
+      "response_body": {
+        "code": 405,
+        "message": "HTTP 405 Method Not Allowed"
+      },
+      "response_time": 286567250,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 25,
+        "name": "Boundary PUT request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "PUT",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/user/1",
+      "passed": false,
+      "status_code": 400,
+      "response_time": 286540209,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 26,
+        "name": "Boundary PUT request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "PUT",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/store/order/1",
+      "passed": false,
+      "status_code": 405,
+      "response_body": {
+        "code": 405,
+        "message": "HTTP 405 Method Not Allowed"
+      },
+      "response_time": 287245834,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 27,
+        "name": "Boundary PUT request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "PUT",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/pet/1",
+      "passed": false,
+      "status_code": 405,
+      "response_body": {
+        "code": 405,
+        "message": "HTTP 405 Method Not Allowed"
+      },
+      "response_time": 297066792,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 28,
+        "name": "Basic DELETE request",
+        "description": "Fallback: Basic positive test for DELETE /store/order/{id}",
+        "category": "positive",
+        "method": "DELETE",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/store/order/%7B%7BCONTEXT:id.id%7D%7D",
+      "passed": false,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `{{CONTEXT:id.id}}` to type `class java.lang.Long`"
+      },
+      "response_time": 285220500,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 29,
+        "name": "Basic DELETE request",
+        "description": "Fallback: Basic positive test for DELETE /pet/{id}",
+        "category": "positive",
+        "method": "DELETE",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/pet/%7B%7BCONTEXT:id.id%7D%7D",
+      "passed": false,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `{{CONTEXT:id.id}}` to type `class java.lang.Long`"
+      },
+      "response_time": 287332250,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 30,
+        "name": "Basic DELETE request",
+        "description": "Fallback: Basic positive test for DELETE /user/{id}",
+        "category": "positive",
+        "method": "DELETE",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "{{CONTEXT:id.id}}"
+        },
+        "expected_status": 200,
+        "context_required": {
+          "type": "resource",
+          "fields": [
+            "id"
+          ]
+        }
+      },
+      "resolved_path": "/user/%7B%7BCONTEXT:id.id%7D%7D",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: e1ae728299644abe)"
+      },
+      "response_time": 291605000,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 31,
+        "name": "Invalid DELETE request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "DELETE",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/pet/invalid_value_%21@%23",
+      "passed": true,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `invalid_value_!@#` to type `class java.lang.Long`"
+      },
+      "response_time": 293737292,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 32,
+        "name": "Invalid DELETE request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "DELETE",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/user/invalid_value_%21@%23",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 8e0e97da8ee676d7)"
+      },
+      "response_time": 294345750,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 33,
+        "name": "Invalid DELETE request",
+        "description": "Fallback: Negative test with invalid data",
+        "category": "negative",
+        "method": "DELETE",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": "invalid_value_!@#"
+        },
+        "expected_status": 400
+      },
+      "resolved_path": "/store/order/invalid_value_%21@%23",
+      "passed": true,
+      "status_code": 400,
+      "response_body": {
+        "code": 400,
+        "message": "Input error: couldn't convert `invalid_value_!@#` to type `class java.lang.Long`"
+      },
+      "response_time": 290765041,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 34,
+        "name": "Boundary DELETE request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "DELETE",
+        "path": "/pet/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/pet/1",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 37a9ccaaed011b03)"
+      },
+      "response_time": 289650708,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 35,
+        "name": "Boundary DELETE request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "DELETE",
+        "path": "/user/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/user/1",
+      "passed": false,
+      "status_code": 500,
+      "response_body": {
+        "code": 500,
+        "message": "There was an error processing your request. It has been logged (ID: 0879de4e48e123c8)"
+      },
+      "response_time": 292711750,
+      "skipped": false
+    },
+    {
+      "test": {
+        "order": 36,
+        "name": "Boundary DELETE request",
+        "description": "Fallback: Boundary test with edge values",
+        "category": "boundary",
+        "method": "DELETE",
+        "path": "/store/order/{id}",
+        "path_params": {
+          "id": 1
+        },
+        "expected_status": 200
+      },
+      "resolved_path": "/store/order/1",
+      "passed": true,
+      "status_code": 200,
+      "response_time": 277081417,
+      "skipped": false
+    }
+  ],
+  "summary": {
+    "total_tests": 36,
+    "passed": 6,
+    "failed": 30,
+    "skipped": 0,
+    "pass_rate": 16.666666666666664,
+    "total_time": 11980060500,
+    "llm_calls": 1
+  },
+  "executed_at": "2026-03-03T11:54:48.953298+05:30",
+  "duration": 11980060500,
+  "context_data": {}
+}

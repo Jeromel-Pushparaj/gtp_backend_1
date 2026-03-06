@@ -1,0 +1,63 @@
+{
+  "base_url": "http://3.25.71.86:8080/api/v1",
+  "complexity": 6,
+  "context_type_mappings": {
+    "employee": "employee",
+    "entity": "employee",
+    "item": "employee",
+    "resource": "employee"
+  },
+  "dependencies": {
+    "/employees/{id}": [
+      "/employees"
+    ],
+    "/employees/{id} DELETE": [
+      "/employees"
+    ],
+    "/employees/{id} PUT": [
+      "/employees"
+    ]
+  },
+  "key_endpoints": [
+    "/employees",
+    "/employees/{id}",
+    "/employees POST",
+    "/employees/{id} DELETE",
+    "/employees/{id} PUT"
+  ],
+  "recommendations": [
+    "Test for valid and invalid inputs",
+    "Test for authentication and authorization"
+  ],
+  "security": {
+    "scopes": [],
+    "type": "none"
+  },
+  "test_priorities": [
+    {
+      "endpoint": "/employees POST",
+      "priority": 1,
+      "reason": "Create a new employee"
+    },
+    {
+      "endpoint": "/employees",
+      "priority": 2,
+      "reason": "Get all employees"
+    },
+    {
+      "endpoint": "/employees/{id}",
+      "priority": 3,
+      "reason": "Get employee by ID"
+    },
+    {
+      "endpoint": "/employees/{id} DELETE",
+      "priority": 4,
+      "reason": "Delete an employee"
+    },
+    {
+      "endpoint": "/employees/{id} PUT",
+      "priority": 5,
+      "reason": "Update an existing employee"
+    }
+  ]
+}

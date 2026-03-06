@@ -1,0 +1,65 @@
+{
+  "base_url": "https://api.example.com/v3",
+  "complexity": 8,
+  "context_type_mappings": {
+    "buyer": "customer",
+    "entity": "pet",
+    "item": "pet",
+    "purchase": "order",
+    "resource": "pet"
+  },
+  "dependencies": {
+    "/pet/{petId}": [
+      "/pet"
+    ],
+    "/pet/{petId}/uploadImage": [
+      "/pet/{petId}"
+    ],
+    "/store/order/{orderId}": [
+      "/store/order"
+    ],
+    "/user/{username}": [
+      "/user"
+    ]
+  },
+  "key_endpoints": [
+    "/pet",
+    "/user",
+    "/store/order",
+    "/user/login"
+  ],
+  "recommendations": [
+    "Test the CRUD operations for pets first",
+    "Implement user authentication before testing other endpoints",
+    "Use OAuth2 for authentication and authorization"
+  ],
+  "security": {
+    "scopes": [
+      "read:pets",
+      "write:pets"
+    ],
+    "type": "oauth2"
+  },
+  "test_priorities": [
+    {
+      "endpoint": "/pet",
+      "priority": 1,
+      "reason": "CRUD operations"
+    },
+    {
+      "endpoint": "/user",
+      "priority": 2,
+      "reason": "user authentication"
+    },
+    {
+      "endpoint": "/store/order",
+      "priority": 3,
+      "reason": "order creation and deletion"
+    },
+    {
+      "endpoint": "/user/login",
+      "priority": 4,
+      "reason": "user login functionality"
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+# Auto-Regression Platform CI/CD for GitLab
+# Repository: https://gitlab.com/tekion/development/toc/poc/opentest
+
+stages:
+  - test
+  - build
+  - integration
+  - deploy
+
+variables:
+  GO_VERSION: "1.21"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_REGISTRY: $CI_REGISTRY
+  IMAGE_PREFIX: $CI_REGISTRY_IMAGE
+
+# ============================================================
+# Test Stage
+# ============================================================
+test:
+  stage: test
+  image: golang:1.21-alpine
+
+  services:
+    - name: postgres:14-alpine
+      alias: postgres
+    - name: redis:7-alpine
+      alias: redis
+
+  variables:
+    POSTGRES_DB: auto_regression_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: "5432"
+    REDIS_ADDRESS: redis:6379
+
+  before_script:
+    - apk add --no-cache git make gcc musl-dev
+    - go mod download
+
+  script:
+    - echo "Running tests with coverage..."
+    - go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+    - go tool cover -func=coverage.out
+
+  coverage: '/total:.*?(\d+\.\d+)%/'
+
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.out
+    paths:
+      - coverage.out
+    expire_in: 1 week
+
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+lint:
+  stage: test
+  image: golangci/golangci-lint:latest
+
+  before_script:
+    - go mod download
+
+  script:
+    - echo "Running golangci-lint..."
+    - golangci-lint run -v ./...
+
+  allow_failure: true
+
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+# ============================================================
+# Build Stage - Docker Images
+# ============================================================
+.build_template: &build_template
+  stage: build
+  image: docker:24-git
+
+  services:
+    - docker:24-dind
+
+  variables:
+    DOCKER_BUILDKIT: 1
+
+  before_script:
+    - echo "Logging in to GitLab Container Registry..."
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+
+  after_script:
+    - docker logout $CI_REGISTRY
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+  needs:
+    - test
+    - lint
+
+build-server:
+  <<: *build_template
+
+  script:
+    - echo "Building server image..."
+    - |
+      docker build \
+        -f deployments/docker/Dockerfile.server \
+        -t $CI_REGISTRY_IMAGE/server:$CI_COMMIT_SHA \
+        -t $CI_REGISTRY_IMAGE/server:$CI_COMMIT_REF_SLUG \
+        -t $CI_REGISTRY_IMAGE/server:latest \
+        --build-arg GO_VERSION=$GO_VERSION \
+        .
+    - docker push $CI_REGISTRY_IMAGE/server:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/server:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE/server:latest
+
+build-worker:
+  <<: *build_template
+
+  script:
+    - echo "Building worker image..."
+    - |
+      docker build \
+        -f deployments/docker/Dockerfile.worker \
+        -t $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_SHA \
+        -t $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG \
+        -t $CI_REGISTRY_IMAGE/worker:latest \
+        --build-arg GO_VERSION=$GO_VERSION \
+        .
+    - docker push $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE/worker:latest
+
+build-executor:
+  <<: *build_template
+
+  script:
+    - echo "Building executor image..."
+    - |
+      docker build \
+        -f deployments/docker/Dockerfile.executor \
+        -t $CI_REGISTRY_IMAGE/executor:$CI_COMMIT_SHA \
+        -t $CI_REGISTRY_IMAGE/executor:$CI_COMMIT_REF_SLUG \
+        -t $CI_REGISTRY_IMAGE/executor:latest \
+        --build-arg GO_VERSION=$GO_VERSION \
+        .
+    - docker push $CI_REGISTRY_IMAGE/executor:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/executor:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE/executor:latest
+
+# ============================================================
+# Integration Stage
+# ============================================================
+integration-test:
+  stage: integration
+  image: docker/compose:latest
+
+  services:
+    - docker:24-dind
+
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+
+  before_script:
+    - apk add --no-cache curl bash go
+    - docker --version
+    - docker-compose --version
+
+  script:
+    - echo "Starting integration test environment..."
+    - cd deployments/docker
+    - docker-compose up -d postgres redis minio
+    - echo "Waiting for services to be ready..."
+    - sleep 20
+    - docker-compose ps
+    - echo "Checking service health..."
+    - docker-compose logs postgres | tail -20
+    - docker-compose logs redis | tail -20
+    - echo "Integration tests would run here..."
+    # Uncomment when integration tests are ready:
+    # - cd ../..
+    # - go test -v -tags=integration ./tests/integration/...
+
+  after_script:
+    - cd deployments/docker
+    - docker-compose logs
+    - docker-compose down -v
+
+  artifacts:
+    when: on_failure
+    paths:
+      - deployments/docker/integration-logs.txt
+    expire_in: 1 week
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+  needs:
+    - build-server
+    - build-worker
+    - build-executor
+
+# ============================================================
+# Deploy Stage
+# ============================================================
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+
+  before_script:
+    - apk add --no-cache curl bash
+
+  script:
+    - echo "Deploying to staging environment..."
+    - echo "Server image: $CI_REGISTRY_IMAGE/server:$CI_COMMIT_SHA"
+    - echo "Worker image: $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_SHA"
+    - echo "Executor image: $CI_REGISTRY_IMAGE/executor:$CI_COMMIT_SHA"
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Commit: $CI_COMMIT_SHORT_SHA"
+    # Add your deployment commands here
+    # Example: kubectl set image deployment/server server=$CI_REGISTRY_IMAGE/server:$CI_COMMIT_SHA
+    # Example: kubectl set image deployment/worker worker=$CI_REGISTRY_IMAGE/worker:$CI_COMMIT_SHA
+    # Example: kubectl set image deployment/executor executor=$CI_REGISTRY_IMAGE/executor:$CI_COMMIT_SHA
+
+  environment:
+    name: staging
+    url: https://staging.opentest.tekion.com
+    on_stop: stop-staging
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
+  needs:
+    - integration-test
+
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+
+  before_script:
+    - apk add --no-cache curl bash
+
+  script:
+    - echo "Deploying to production environment..."
+    - echo "Server image: $CI_REGISTRY_IMAGE/server:$CI_COMMIT_SHA"
+    - echo "Worker image: $CI_REGISTRY_IMAGE/worker:$CI_COMMIT_SHA"
+    - echo "Executor image: $CI_REGISTRY_IMAGE/executor:$CI_COMMIT_SHA"
+    - echo "Branch: $CI_COMMIT_REF_NAME"
+    - echo "Commit: $CI_COMMIT_SHORT_SHA"
+    # Add your deployment commands here
+    # Add smoke tests after deployment
+    - echo "Running smoke tests..."
+    # Example: curl --fail https://opentest.tekion.com/health
+
+  environment:
+    name: production
+    url: https://opentest.tekion.com
+
+  when: manual
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+  needs:
+    - integration-test
+
+stop-staging:
+  stage: deploy
+  image: alpine:latest
+
+  script:
+    - echo "Stopping staging environment..."
+    # Add commands to stop/cleanup staging environment
+
+  environment:
+    name: staging
+    action: stop
+
+  when: manual
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+

@@ -1,0 +1,135 @@
+{
+  "execution_order": [
+    "POST /employees",
+    "GET /employees",
+    "GET /employees/{id}",
+    "PUT /employees/{id}",
+    "DELETE /employees/{id}"
+  ],
+  "phases": [
+    {
+      "description": "Verify basic functionality of API",
+      "endpoints": [
+        "/employees",
+        "/employees/{id}"
+      ],
+      "name": "smoke"
+    },
+    {
+      "description": "Verify detailed functionality of API",
+      "endpoints": [
+        "/employees/{id}/delete",
+        "/employees/{id}/update"
+      ],
+      "name": "functional"
+    },
+    {
+      "description": "Verify integration of API with other components",
+      "endpoints": [
+        "/employees"
+      ],
+      "name": "integration"
+    }
+  ],
+  "scenarios": [
+    {
+      "context_requirements": {
+        "context_fields_created": [],
+        "context_fields_needed": [],
+        "context_type": "",
+        "creates_context": false,
+        "needs_context": false
+      },
+      "endpoint": "/employees",
+      "method": "GET",
+      "scenarios": [
+        "get all employees"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name"
+        ],
+        "context_type": "employee",
+        "creates_context": true,
+        "needs_context": false
+      },
+      "endpoint": "/employees",
+      "method": "POST",
+      "scenarios": [
+        "create valid employee",
+        "create invalid employee"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": false,
+        "depends_on": "POST /employees",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "method": "GET",
+      "scenarios": [
+        "get existing employee",
+        "get non-existent employee"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_created": [
+          "id",
+          "name"
+        ],
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": true,
+        "depends_on": "POST /employees",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "method": "PUT",
+      "scenarios": [
+        "update existing employee",
+        "update non-existent employee"
+      ]
+    },
+    {
+      "context_requirements": {
+        "context_fields_needed": [
+          "id"
+        ],
+        "context_mapping": {
+          "path_params.id": "{{CONTEXT:employee.id}}"
+        },
+        "context_type": "employee",
+        "creates_context": false,
+        "depends_on": "POST /employees",
+        "needs_context": true
+      },
+      "endpoint": "/employees/{id}",
+      "method": "DELETE",
+      "scenarios": [
+        "delete existing employee",
+        "delete non-existent employee"
+      ]
+    }
+  ],
+  "success_criteria": {
+    "max_failures": 5,
+    "min_coverage": 80
+  }
+}
