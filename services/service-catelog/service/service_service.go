@@ -416,11 +416,10 @@ func (s *ServiceService) convertToServiceResponse(repo *models.Repository, org *
 		JiraActiveSprints: jiraActiveSprints,
 	}
 
-	// Determine language from GitHub metrics
+	// Determine language from repository data
 	language := ""
-	if githubMetrics != nil {
-		// You can add language detection logic here if available in metrics
-		language = "JavaScript" // Default for now
+	if repo.PrimaryLanguage != nil && *repo.PrimaryLanguage != "" {
+		language = *repo.PrimaryLanguage
 	}
 
 	// Build evaluation metrics from already-fetched data (REUSE - no duplicate API calls!)

@@ -26,6 +26,7 @@ type Repository struct {
 	DefaultBranch   string     `json:"default_branch"`
 	EnvironmentName string     `json:"environment_name,omitempty"`
 	JiraProjectKey  string     `json:"jira_project_key,omitempty"`
+	PrimaryLanguage *string    `json:"primary_language,omitempty"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
 }
