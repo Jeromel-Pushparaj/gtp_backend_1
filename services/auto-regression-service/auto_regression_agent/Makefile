@@ -47,7 +47,7 @@ build-server:
 build-worker:
 	@echo "Building worker..."
 	@mkdir -p $(BINARY_DIR)
-	$(GO) build $(GOFLAGS) $(LDFLAGS) -o $(WORKER_BINARY) ./cmd/worker
+	$(GO) build $(GOFLAGS) $(LDFLAGS) -o $(WORKER_BINARY) ./cmd/autonomous-worker
 
 build-scheduler:
 	@echo "Building scheduler..."

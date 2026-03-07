@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "Auto-Regression API",
+    "description": "API middleware service for automated regression testing of APIs from GitHub repositories",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8092",
+      "type": "string"
+    },
+    {
+      "key": "github_url",
+      "value": "https://github.com/teknex-poc/test-backend",
+      "type": "string"
+    },
+    {
+      "key": "pat_token",
+      "value": "ghp_your_token_here",
+      "type": "string"
+    },
+    {
+      "key": "branch",
+      "value": "main",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check if the service is running and healthy"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/health",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"healthy\",\n  \"time\": \"2024-03-07T10:30:00Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Testing",
+      "item": [
+        {
+          "name": "Execute Regression Tests",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"github_url\": \"{{github_url}}\",\n  \"pat_token\": \"{{pat_token}}\",\n  \"branch\": \"{{branch}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/test/aggregate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "test", "aggregate"]
+            },
+            "description": "Execute automated regression tests on an API by fetching its OpenAPI specification from a GitHub repository"
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"github_url\": \"https://github.com/example/api-repo\",\n  \"pat_token\": \"ghp_xxxxxxxxxxxxxxxxxxxx\",\n  \"branch\": \"main\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/test/aggregate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "test", "aggregate"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"unique_test_cases\": [\n    {\n      \"name\": \"GET /users - Happy Path\",\n      \"status_code\": 200,\n      \"passed\": true,\n      \"skipped\": false,\n      \"category\": \"happy_path\",\n      \"method\": \"GET\",\n      \"path\": \"/api/v1/users\"\n    },\n    {\n      \"name\": \"POST /users - Create User\",\n      \"status_code\": 201,\n      \"passed\": true,\n      \"skipped\": false,\n      \"category\": \"happy_path\",\n      \"method\": \"POST\",\n      \"path\": \"/api/v1/users\"\n    }\n  ],\n  \"total_tests\": 15,\n  \"tests_passed\": 13,\n  \"tests_failed\": 2,\n  \"tests_skipped\": 0,\n  \"pass_rate\": 86.67,\n  \"executed_at\": \"2024-03-07T10:35:42Z\",\n  \"duration_ns\": 5234567890\n}"
+            },
+            {
+              "name": "Missing Required Fields",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/test/aggregate",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "test", "aggregate"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "text",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/plain"
+                }
+              ],
+              "body": "github_url and pat_token are required"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+

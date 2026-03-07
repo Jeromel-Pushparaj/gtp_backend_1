@@ -3,19 +3,19 @@
 
 server:
   host: 0.0.0.0
-  port: 8080
+  port: 8096
   grpc_port: 9090
   read_timeout: 30s
   write_timeout: 30s
   shutdown_timeout: 10s
-  max_header_bytes: 1048576  # 1MB
+  max_header_bytes: 1048576 # 1MB
 
 database:
   host: localhost
   port: 5432
   name: auto_regression
   user: postgres
-  password: ${DB_PASSWORD}  # Set via environment variable
+  password: ${DB_PASSWORD} # Set via environment variable
   ssl_mode: disable
   max_open_conns: 25
   max_idle_conns: 5
@@ -32,7 +32,7 @@ redis:
   min_idle_conns: 5
 
 queue:
-  provider: redis_streams  # Options: redis_streams, nats
+  provider: redis_streams # Options: redis_streams, nats
   redis:
     stream_name: auto_regression_jobs
     consumer_group: workers
@@ -43,11 +43,11 @@ queue:
 
 storage:
   artifacts:
-    provider: s3  # Options: s3, gcs, local
+    provider: s3 # Options: s3, gcs, local
     s3:
       bucket: auto-regression-artifacts
       region: us-east-1
-      endpoint: ${S3_ENDPOINT}  # Optional for MinIO
+      endpoint: ${S3_ENDPOINT} # Optional for MinIO
       access_key: ${AWS_ACCESS_KEY_ID}
       secret_key: ${AWS_SECRET_ACCESS_KEY}
     gcs:
@@ -58,15 +58,15 @@ storage:
 
 llm:
   # Currently using Groq (active)
-  provider: groq  # Options: groq, openai, anthropic, local
-  api_key: ${GROQ_API_KEY}  # Or ${LLM_API_KEY}
+  provider: groq # Options: groq, openai, anthropic, local
+  api_key: ${GROQ_API_KEY} # Or ${LLM_API_KEY}
   model: meta-llama/llama-4-scout-17b-16e-instruct # Llama 4 Scout, 6K TPM, 500K/day
   temperature: 0.2
-  max_tokens: 1024  # Reduced to avoid rate limits
-  timeout: 90  # seconds (increased for retries)
-  retry_delay: 15s  # Wait 15 seconds between retries on rate limit
-  max_retries: 5  # Retry up to 5 times on rate limit
-  base_url: https://api.groq.com/openai/v1  # Groq API endpoint
+  max_tokens: 1024 # Reduced to avoid rate limits
+  timeout: 90 # seconds (increased for retries)
+  retry_delay: 15s # Wait 15 seconds between retries on rate limit
+  max_retries: 5 # Retry up to 5 times on rate limit
+  base_url: https://api.groq.com/openai/v1 # Groq API endpoint
 
   # For OpenAI support:
   # provider: openai
@@ -76,44 +76,44 @@ llm:
 
 agents:
   payload:
-    enabled: true  # ✅ ENABLED - LLM-powered payload generation
+    enabled: true # ✅ ENABLED - LLM-powered payload generation
     temperature: 0.3
     max_tokens: 2048
     max_retries: 3
-    strict_mode: true  # Reject hallucinated fields
-    generate_negative: true  # Generate negative test cases
-    generate_boundary: true  # Generate boundary test cases
+    strict_mode: true # Reject hallucinated fields
+    generate_negative: true # Generate negative test cases
+    generate_boundary: true # Generate boundary test cases
 
   healing:
-    enabled: false  # ❌ DISABLED - Not fully implemented yet
-    approval_required: true  # Always require human approval for fixes
+    enabled: false # ❌ DISABLED - Not fully implemented yet
+    approval_required: true # Always require human approval for fixes
     max_fixes: 10
-    confidence_threshold: 0.8  # Min confidence to propose fix (0.0-1.0)
+    confidence_threshold: 0.8 # Min confidence to propose fix (0.0-1.0)
 
 # Knowledge Base & Learning Configuration
 knowledge:
-  enabled: true  # Enable cross-agent intelligence
+  enabled: true # Enable cross-agent intelligence
   storage_path: ./output/knowledge/knowledge_base.json
   auto_save: true
-  save_interval: 60s  # Auto-save every 60 seconds
+  save_interval: 60s # Auto-save every 60 seconds
 
   learning:
-    enabled: true  # Learn from test execution
-    min_confidence: 0.7  # Minimum confidence to use learned patterns
-    pattern_retention_days: 90  # Keep patterns for 90 days
+    enabled: true # Learn from test execution
+    min_confidence: 0.7 # Minimum confidence to use learned patterns
+    pattern_retention_days: 90 # Keep patterns for 90 days
 
   collaboration:
-    enabled: true  # Enable agent collaboration
-    consensus_threshold: 0.6  # Minimum consensus confidence
+    enabled: true # Enable agent collaboration
+    consensus_threshold: 0.6 # Minimum consensus confidence
     feedback_buffer_size: 100
 
   adaptive:
-    enabled: true  # Enable adaptive testing
-    focus_on_failures: true  # Generate more tests for failing endpoints
-    skip_stable_tests: false  # Don't skip stable tests (set true to optimize)
-    stability_threshold: 5  # Number of consecutive successes to mark as stable
-    failure_focus_multiplier: 2.0  # Multiply test count for failing endpoints
-    risk_based_priority: true  # Prioritize high-risk endpoints
+    enabled: true # Enable adaptive testing
+    focus_on_failures: true # Generate more tests for failing endpoints
+    skip_stable_tests: false # Don't skip stable tests (set true to optimize)
+    stability_threshold: 5 # Number of consecutive successes to mark as stable
+    failure_focus_multiplier: 2.0 # Multiply test count for failing endpoints
+    risk_based_priority: true # Prioritize high-risk endpoints
 
 # Category 1: Payload Generation Enhancements
 payload_generation:
@@ -146,11 +146,12 @@ payload_generation:
     enable_xml_injection: true
     enable_ldap_injection: true
     enable_auth_bypass: true
-    owasp_categories: ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"]
+    owasp_categories:
+      ["A01", "A02", "A03", "A04", "A05", "A06", "A07", "A08", "A09", "A10"]
 
   # Feature 4: Performance Test Generation
   performance:
-    enabled: false  # Disabled by default (resource intensive)
+    enabled: false # Disabled by default (resource intensive)
     enable_concurrent_requests: true
     enable_load_ramp_up: true
     enable_spike_test: true
@@ -197,8 +198,8 @@ security:
 
 observability:
   logging:
-    level: info  # Options: debug, info, warn, error
-    format: json  # Options: json, text
+    level: info # Options: debug, info, warn, error
+    format: json # Options: json, text
     output: stdout
   metrics:
     enabled: true
@@ -236,7 +237,7 @@ multi_tenancy:
     max_tests_per_suite: 1000
     max_executions_per_day: 100
     max_storage_mb: 1024
-  isolation_level: strict  # Options: strict, relaxed
+  isolation_level: strict # Options: strict, relaxed
 
 features:
   ai_analysis: true
@@ -256,4 +257,3 @@ vector_db:
   ssl_mode: disable
   embedding_model: text-embedding-004
   embedding_dimensions: 768
-
