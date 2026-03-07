@@ -61,7 +61,7 @@ func (re *RuleEngine) EvaluateLevel(level *models.Level, metrics map[string]floa
 	for _, rule := range level.Rules {
 		result := re.EvaluateRule(&rule, metrics)
 		results = append(results, *result)
-		
+
 		if !result.Passed {
 			allPassed = false
 		}
@@ -76,10 +76,10 @@ func (re *RuleEngine) EvaluateScorecard(
 	metrics map[string]float64,
 	serviceName string,
 ) *models.ScorecardEvaluation {
-	
+
 	var achievedLevel *models.Level
 	var achievedLevelID *int64
-	allRuleResults := make([]models.RuleResult, 0)
+	var achievedLevelResults []models.RuleResult // Only store achieved level's results
 	totalRules := 0
 	passedRules := 0
 
@@ -87,22 +87,21 @@ func (re *RuleEngine) EvaluateScorecard(
 	for i := range scorecard.Levels {
 		level := &scorecard.Levels[i]
 		totalRules += len(level.Rules)
-		
+
 		levelPassed, results := re.EvaluateLevel(level, metrics)
-		allRuleResults = append(allRuleResults, results...)
-		
+
 		// Count passed rules
 		for _, result := range results {
 			if result.Passed {
 				passedRules++
 			}
 		}
-		
+
 		if levelPassed {
 			achievedLevel = level
 			achievedLevelID = &level.ID
+			achievedLevelResults = results // Replace with current level's results only
 		} else {
-			// Can't achieve higher levels if this one failed
 			break
 		}
 	}
@@ -126,7 +125,7 @@ func (re *RuleEngine) EvaluateScorecard(
 		RulesPassed:       passedRules,
 		RulesTotal:        totalRules,
 		PassPercentage:    passPercentage,
-		RuleResults:       allRuleResults,
+		RuleResults:       achievedLevelResults, // Only achieved level's rules
 		EvaluatedAt:       time.Now(),
 	}
 }
@@ -137,7 +136,7 @@ func (re *RuleEngine) EvaluateAllScorecards(
 	metrics map[string]float64,
 	serviceName string,
 ) *models.ServiceOverallScore {
-	
+
 	evaluations := make([]models.ScorecardEvaluation, 0, len(scorecards))
 	totalRules := 0
 	totalPassed := 0
@@ -183,4 +182,3 @@ func (re *RuleEngine) analyzeResults(evaluations []models.ScorecardEvaluation) (
 
 	return strengths, improvements
 }
-
