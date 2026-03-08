@@ -20,4 +20,7 @@ type SlackServiceInterface interface {
 	SendBlockMessage(channelID string, blocks []slack.Block, fallbackText string) (string, error)
 	UpdateMessage(channelID, timestamp string, blocks []slack.Block) error
 	SendApprovalFormButton(channelID string) (string, error)
+	OpenDMChannel(userID string) (string, error)
+	GetBotUserID() (string, error)
+	GetAllApps() ([]resources.AppInfo, error)
 }

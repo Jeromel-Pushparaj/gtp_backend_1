@@ -56,3 +56,42 @@ type ActionMessage struct {
 	Message     string                 `json:"message"`
 	Reason      string                 `json:"reason,omitempty"`
 }
+
+type DomainChangeApprovalRequest struct {
+	ApproverID     string `json:"approver_id"`
+	ApproverName   string `json:"approver_name"`
+	RequesterID    string `json:"requester_id"`
+	RequesterName  string `json:"requester_name"`
+	OldDomainName  string `json:"old_domain_name" binding:"required"`
+	NewDomainName  string `json:"new_domain_name" binding:"required"`
+	ChangeReason   string `json:"change_reason" binding:"required"`
+	AdditionalInfo string `json:"additional_info"`
+	ChannelID      string `json:"channel_id"`
+	ChannelName    string `json:"channel_name"`
+	UseAppDM       bool   `json:"use_app_dm"`
+	AppBotUserID   string `json:"app_bot_user_id"`
+}
+
+type GetAppsResponse struct {
+	Success bool      `json:"success"`
+	Message string    `json:"message"`
+	Apps    []AppInfo `json:"apps"`
+	Count   int       `json:"count"`
+}
+
+type AppInfo struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	IsBot    bool   `json:"is_bot"`
+	RealName string `json:"real_name"`
+}
+
+type GetDMChannelRequest struct {
+	UserID string `json:"user_id" binding:"required"`
+}
+
+type GetDMChannelResponse struct {
+	Success   bool   `json:"success"`
+	Message   string `json:"message"`
+	ChannelID string `json:"channel_id"`
+}

@@ -437,3 +437,53 @@ func (sc *SlackController) SendApprovalFormButton(c *gin.Context) {
 		Text:      "Click to create a new approval request",
 	})
 }
+
+func (sc *SlackController) GetDMChannel(c *gin.Context) {
+	var req resources.GetDMChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   constants.ErrorInvalidRequestBody,
+		})
+		return
+	}
+	if err := validator.ValidateUserID(req.UserID); err != nil {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+	channelID, err := sc.slackService.OpenDMChannel(req.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, resources.ErrorResponse{
+			Success: false,
+			Error:   "Failed to open DM channel: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, resources.GetDMChannelResponse{
+		Success:   true,
+		Message:   "DM channel fetched successfully",
+		ChannelID: channelID,
+	})
+}
+
+func (sc *SlackController) GetAllApps(c *gin.Context) {
+	apps, err := sc.slackService.GetAllApps()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, resources.ErrorResponse{
+			Success: false,
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, resources.GetAppsResponse{
+		Success: true,
+		Message: "Apps retrieved successfully",
+		Apps:    apps,
+		Count:   len(apps),
+	})
+}
