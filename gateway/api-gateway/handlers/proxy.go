@@ -38,7 +38,7 @@ func NewProxyHandler(cfg *config.Config) *ProxyHandler {
 		ExpectContinueTimeout: 1 * time.Second,
 
 		// Connection settings
-		DisableKeepAlives: false,
+		DisableKeepAlives:  false,
 		DisableCompression: false,
 
 		// Dial settings for connection establishment
@@ -185,6 +185,10 @@ func (h *ProxyHandler) SonarShellService() gin.HandlerFunc {
 
 func (h *ProxyHandler) PagerDutyService() gin.HandlerFunc {
 	return h.ProxyRequest(h.config.PagerDutyServiceURL, "/pd")
+}
+
+func (h *ProxyHandler) AutoRegressionService() gin.HandlerFunc {
+	return h.ProxyRequest(h.config.AutoRegressionServiceURL, "/regression")
 }
 
 // HealthCheck returns the gateway health status

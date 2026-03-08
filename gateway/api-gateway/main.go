@@ -92,6 +92,10 @@ func main() {
 	{
 		pagerDutyGroup.Any("/*path", proxyHandler.PagerDutyService())
 	}
+	autoRegressionGroup := router.Group("/regression")
+	{
+		autoRegressionGroup.Any("/*path", proxyHandler.AutoRegressionService())
+	}
 
 	// Print route information
 	printRoutes(cfg)
@@ -165,6 +169,7 @@ func printRoutes(cfg *config.Config) {
 	log.Printf("  ANY    /scorecard/*               -> %s", cfg.ScoreCardServiceURL)
 	log.Printf("  ANY    /sonar/*                   -> %s", cfg.SonarShellServiceURL)
 	log.Printf("  ANY    /pd/*                      -> %s", cfg.PagerDutyServiceURL)
+	log.Printf("  ANY    /regression/*              -> %s", cfg.AutoRegressionServiceURL)
 	log.Println("================================================================")
 	log.Println()
 }
