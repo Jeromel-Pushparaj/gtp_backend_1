@@ -341,3 +341,170 @@ func (ac *ApprovalController) CreateDomainChangeApprovalRequest(c *gin.Context) 
 		RequestID: requestID,
 	})
 }
+
+func (ac *ApprovalController) CreateGenericApprovalRequest(c *gin.Context) {
+	var req resources.GenericApprovalRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   constants.ErrorInvalidRequestBody + ": " + err.Error(),
+		})
+		return
+	}
+
+	var approver *resources.User
+	var requester *resources.User
+	var err error
+
+	// Resolve approver (by ID or name)
+	if req.ApproverID != "" {
+		approver, err = ac.slackService.GetUserByID(req.ApproverID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, resources.ErrorResponse{
+				Success: false,
+				Error:   "Approver not found: " + req.ApproverID,
+			})
+			return
+		}
+	} else if req.ApproverName != "" {
+		approver, err = ac.slackService.GetUserByName(req.ApproverName)
+		if err != nil {
+			c.JSON(http.StatusNotFound, resources.ErrorResponse{
+				Success: false,
+				Error:   "Approver not found: " + req.ApproverName,
+			})
+			return
+		}
+		req.ApproverID = approver.ID
+	} else {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   "Either approver_id or approver_name is required",
+		})
+		return
+	}
+
+	// Resolve requester (by ID or name)
+	if req.RequesterID != "" {
+		requester, err = ac.slackService.GetUserByID(req.RequesterID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, resources.ErrorResponse{
+				Success: false,
+				Error:   "Requester not found: " + req.RequesterID,
+			})
+			return
+		}
+	} else if req.RequesterName != "" {
+		requester, err = ac.slackService.GetUserByName(req.RequesterName)
+		if err != nil {
+			c.JSON(http.StatusNotFound, resources.ErrorResponse{
+				Success: false,
+				Error:   "Requester not found: " + req.RequesterName,
+			})
+			return
+		}
+		req.RequesterID = requester.ID
+	} else {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   "Either requester_id or requester_name is required",
+		})
+		return
+	}
+
+	log.Printf("Resolved approver: %s (ID: %s)", approver.RealName, req.ApproverID)
+	log.Printf("Resolved requester: %s (ID: %s)", requester.RealName, req.RequesterID)
+
+	requestID := uuid.New().String()
+
+	// Build detailed message with mentions
+	message := fmt.Sprintf("*%s*\n\n", req.RequestType)
+	message += fmt.Sprintf("*Requester:* <@%s>\n", requester.ID)
+	message += fmt.Sprintf("*Approver:* <@%s>\n\n", approver.ID)
+	message += fmt.Sprintf("%s", req.Message)
+
+	// Add request data details if provided
+	if req.RequestData != nil && len(req.RequestData) > 0 {
+		message += "\n\n*Request Details:*\n"
+		for key, value := range req.RequestData {
+			message += fmt.Sprintf("• *%s:* %v\n", key, value)
+		}
+	}
+
+	// Prepare request data for storage
+	requestData := req.RequestData
+	if requestData == nil {
+		requestData = make(map[string]interface{})
+	}
+	requestData["use_app_dm"] = req.UseAppDM
+	requestData["request_type"] = req.RequestType
+
+	// Determine channel ID
+	var channelID string
+	if req.UseAppDM {
+		if req.AppBotUserID == "" {
+			c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+				Success: false,
+				Error:   "app_bot_user_id is required when use_app_dm is true",
+			})
+			return
+		}
+
+		log.Printf("Attempting to open DM channel with approver: %s (ID: %s)", approver.RealName, req.ApproverID)
+		dmChannelID, err := ac.slackService.OpenDMChannel(req.ApproverID)
+		if err != nil {
+			log.Printf("ERROR: Failed to open DM channel with %s (%s): %v", approver.RealName, req.ApproverID, err)
+			c.JSON(http.StatusInternalServerError, resources.ErrorResponse{
+				Success: false,
+				Error:   "Failed to open DM channel: " + err.Error(),
+			})
+			return
+		}
+		channelID = dmChannelID
+		log.Printf("Successfully opened DM channel with approver %s (%s): %s", approver.RealName, req.ApproverID, dmChannelID)
+	} else {
+		c.JSON(http.StatusBadRequest, resources.ErrorResponse{
+			Success: false,
+			Error:   "use_app_dm must be true for generic approval requests",
+		})
+		return
+	}
+
+	// Create approval message
+	approvalMsg := resources.ApprovalRequestMessage{
+		RequestID:     requestID,
+		RequesterID:   requester.ID,
+		RequesterName: requester.RealName,
+		ApproverID:    approver.ID,
+		ApproverName:  approver.RealName,
+		ChannelID:     channelID,
+		RequestType:   req.RequestType,
+		RequestData:   requestData,
+		Message:       message,
+		Title:         req.RequestType,
+		Description:   req.Message,
+		Priority:      "medium",
+		Category:      "other",
+	}
+
+	// Publish to Kafka
+	err = ac.kafkaService.Publish(constants.KafkaTopicApprovalRequested, requestID, approvalMsg)
+	if err != nil {
+		log.Printf("Error publishing to Kafka: %v", err)
+		c.JSON(http.StatusInternalServerError, resources.ErrorResponse{
+			Success: false,
+			Error:   "Failed to publish approval request",
+		})
+		return
+	}
+
+	log.Printf("Published generic approval request to Kafka: %s (Type: %s, Approver: %s, Channel: %s)",
+		requestID, req.RequestType, approver.RealName, channelID)
+
+	c.JSON(http.StatusOK, resources.CreateApprovalResponse{
+		Success:   true,
+		Message:   "Generic approval request created and published to Kafka",
+		RequestID: requestID,
+	})
+}

@@ -222,26 +222,24 @@ func (sh *SocketHandler) handleModalSubmission(evt socketmode.Event, callback sl
 		return
 	}
 
-	err := sh.approvalService.HandleApproval(requestID, approved, userID, userName, reason, commentValue)
-	if err != nil {
-		log.Printf("Error handling approval: %v", err)
-		sh.client.Ack(*evt.Request, map[string]interface{}{
-			"response_action": "errors",
-			"errors": map[string]string{
-				constants.InputBlockComment: "Error processing approval: " + err.Error(),
-			},
-		})
-		return
-	}
-
+	// Acknowledge immediately to avoid Slack timeout
 	sh.client.Ack(*evt.Request)
 
-	statusText := "rejected"
-	if approved {
-		statusText = "approved"
-	}
+	// Process approval asynchronously
+	go func() {
+		err := sh.approvalService.HandleApproval(requestID, approved, userID, userName, reason, commentValue)
+		if err != nil {
+			log.Printf("Error handling approval: %v", err)
+			return
+		}
 
-	log.Printf("Approval %s: request_id=%s, user=%s, comment=%s", statusText, requestID, userName, commentValue)
+		statusText := "rejected"
+		if approved {
+			statusText = "approved"
+		}
+
+		log.Printf("Approval %s: request_id=%s, user=%s, comment=%s", statusText, requestID, userName, commentValue)
+	}()
 }
 
 func (sh *SocketHandler) handleSlashCommand(evt socketmode.Event) {

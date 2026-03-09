@@ -37,6 +37,7 @@ func SetupRoutes(slackController *controllerv1.SlackController, approvalControll
 		v1.POST(constants.RouteApprovalCreate, approvalController.CreateApprovalRequest)
 
 		v1.POST(constants.RouteApprovalDomainChange, approvalController.CreateDomainChangeApprovalRequest)
+		v1.POST(constants.RouteApprovalGeneric, approvalController.CreateGenericApprovalRequest)
 		v1.POST(constants.RouteSlackGetDMChannel, slackController.GetDMChannel)
 	}
 

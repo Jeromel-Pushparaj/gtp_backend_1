@@ -95,3 +95,16 @@ type GetDMChannelResponse struct {
 	Message   string `json:"message"`
 	ChannelID string `json:"channel_id"`
 }
+
+type GenericApprovalRequest struct {
+	BotID         string                 `json:"bot_id"`
+	ApproverID    string                 `json:"approver_id"`
+	ApproverName  string                 `json:"approver_name"`
+	RequesterID   string                 `json:"requester_id"`
+	RequesterName string                 `json:"requester_name"`
+	RequestType   string                 `json:"request_type" binding:"required"`
+	Message       string                 `json:"message" binding:"required"`
+	RequestData   map[string]interface{} `json:"request_data"`
+	UseAppDM      bool                   `json:"use_app_dm"`
+	AppBotUserID  string                 `json:"app_bot_user_id"`
+}

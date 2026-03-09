@@ -1,0 +1,165 @@
+# Generic Approval Endpoint
+
+## Endpoint
+POST /api/v1/approval/generic
+
+## Description
+A flexible approval endpoint that supports any type of approval request with:
+- User mentions for approver and requester
+- Slack interactive buttons (Approve/Reject)
+- Comment required for reject, optional for approve
+- Sends approval request to approver's DM
+
+## Request Body
+
+```json
+{
+  "bot_id": "U0AGPDSLH0V",
+  "approver_name": "Sarumathi S",
+  "requester_name": "Jeromel Pushparaj",
+  "request_type": "deployment",
+  "message": "Please approve production deployment",
+  "request_data": {
+    "service": "api-gateway",
+    "version": "v2.1.0",
+    "environment": "production"
+  },
+  "use_app_dm": true,
+  "app_bot_user_id": "U0AGPDSLH0V"
+}
+```
+
+## Fields
+
+- `bot_id` (optional): Bot ID for reference
+- `approver_id` (optional): Slack user ID of approver (use this OR approver_name)
+- `approver_name` (optional): Display name of approver (use this OR approver_id)
+- `requester_id` (optional): Slack user ID of requester (use this OR requester_name)
+- `requester_name` (optional): Display name of requester (use this OR requester_id)
+- `request_type` (required): Type of approval request (e.g., "deployment", "access", "code_review")
+- `message` (required): Detailed message about the approval request
+- `request_data` (optional): Additional structured data about the request
+- `use_app_dm` (required): Must be true - sends to approver's DM
+- `app_bot_user_id` (required when use_app_dm=true): Bot user ID for DM
+
+## Example Curl Commands
+
+### 1. Deployment Approval
+```bash
+curl -X POST http://localhost:8083/api/v1/approval/generic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bot_id": "U0AGPDSLH0V",
+    "approver_name": "Sarumathi S",
+    "requester_name": "Jeromel Pushparaj",
+    "request_type": "deployment",
+    "message": "Please approve production deployment",
+    "request_data": {
+      "service": "api-gateway",
+      "version": "v2.1.0",
+      "environment": "production"
+    },
+    "use_app_dm": true,
+    "app_bot_user_id": "U0AGPDSLH0V"
+  }' | jq .
+```
+
+### 2. Access Request Approval
+```bash
+curl -X POST http://localhost:8083/api/v1/approval/generic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "approver_name": "Sarumathi S",
+    "requester_name": "Jeromel Pushparaj",
+    "request_type": "access_request",
+    "message": "Requesting access to production database",
+    "request_data": {
+      "resource": "production-db",
+      "access_level": "read-only",
+      "duration": "24 hours"
+    },
+    "use_app_dm": true,
+    "app_bot_user_id": "U0AGPDSLH0V"
+  }' | jq .
+```
+
+### 3. Code Review Approval
+```bash
+curl -X POST http://localhost:8083/api/v1/approval/generic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "approver_name": "Jeromel Pushparaj",
+    "requester_name": "Sarumathi S",
+    "request_type": "code_review",
+    "message": "Please review PR #123 for the new feature",
+    "request_data": {
+      "pr_number": "123",
+      "repository": "backend-api",
+      "branch": "feature/new-approval-system",
+      "lines_changed": 450
+    },
+    "use_app_dm": true,
+    "app_bot_user_id": "U0AGPDSLH0V"
+  }' | jq .
+```
+
+### 4. Using User IDs instead of names
+```bash
+curl -X POST http://localhost:8083/api/v1/approval/generic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "approver_id": "U0AH3EX5VV2",
+    "requester_id": "U0AGQHFQ0MC",
+    "request_type": "deployment",
+    "message": "Please approve staging deployment",
+    "request_data": {
+      "service": "payment-service",
+      "version": "v1.5.0",
+      "environment": "staging"
+    },
+    "use_app_dm": true,
+    "app_bot_user_id": "U0AGPDSLH0V"
+  }' | jq .
+```
+
+## Response
+
+### Success Response
+```json
+{
+  "success": true,
+  "message": "Generic approval request created and published to Kafka",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "error": "Approver not found: John Doe"
+}
+```
+
+## Slack Message Format
+
+The approver will receive a DM with:
+- **Request Type** as header
+- **Requester** mention (@requester)
+- **Approver** mention (@approver)
+- **Message** content
+- **Request Details** (if request_data provided)
+- **Approve** button (green) - opens modal with optional comment
+- **Reject** button (red) - opens modal with required comment
+
+## Features
+
+1. **User Mentions**: Both approver and requester are mentioned using Slack's @mention format
+2. **Interactive Buttons**: Approve (green) and Reject (red) buttons
+3. **Comment Handling**:
+   - Approve: Comment is optional
+   - Reject: Comment is required
+4. **DM Delivery**: Approval request is sent directly to approver's DM
+5. **Flexible Data**: Can include any structured data in request_data field
+6. **Kafka Integration**: Publishes to approval.requested topic for async processing
+
