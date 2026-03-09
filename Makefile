@@ -53,9 +53,6 @@ approval: ## Run approval-service
 service-catelog: ## Run service-service
 	cd services/service-catelog && go run cmd/main.go
 
-score-card: ## Run score-card-service
-	cd services/score-card-service && go run cmd/main.go
-
 gateway: ## Run api-gateway
 	cd gateway/api-gateway && go run cmd/main.go
 
@@ -66,7 +63,6 @@ test: ## Run all tests
 	cd services/chat-agent-service && go test ./... || true
 	cd services/approval-service && go test ./... || true
 	cd services/onboarding-service && go test ./... || true
-	cd services/score-card-service && go test ./... || true
 	cd gateway/api-gateway && go test ./... || true
 
 # Dependency management
@@ -76,6 +72,5 @@ tidy: ## Run go mod tidy for all services
 	cd services/chat-agent-service && go mod tidy
 	cd services/approval-service && go mod tidy
 	cd services/onboarding-service && go mod tidy
-	cd services/score-card-service && go mod tidy
 	cd gateway/api-gateway && go mod tidy
 	@echo "Dependencies tidied!"

@@ -104,8 +104,8 @@ func (s *Server) setupRoutes() {
 
 // Start starts the HTTP server
 func (s *Server) Start() error {
-	addr := fmt.Sprintf("0.0.0.0:%s", s.port)
-	log.Printf("🚀 API Server starting on http://0.0.0.0:%s\n", s.port)
+	addr := fmt.Sprintf(":%s", s.port)
+	log.Printf("🚀 API Server starting on http://localhost%s\n", addr)
 	log.Printf("📚 API Documentation:\n")
 	log.Printf("\n")
 	log.Printf("   SonarCloud Endpoints:\n")
