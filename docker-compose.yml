@@ -1,9 +1,10 @@
+version: '3.8'
+
 services:
   # Zookeeper - Required for Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
     container_name: zookeeper
-    restart: always
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -11,20 +12,13 @@ services:
       - "2181:2181"
     networks:
       - gtp-network
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Kafka Broker
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
-    restart: always
     depends_on:
-      zookeeper:
-        condition: service_healthy
+      - zookeeper
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -38,24 +32,15 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms256M"
     networks:
       - gtp-network
-    healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
 
   # Kafka UI - For easier management and monitoring
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
-    restart: always
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     ports:
       - "8090:8080"
     environment:
@@ -69,7 +54,6 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres
-    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -80,28 +64,17 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - gtp-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   # Redis - For caching and session management
   redis:
     image: redis:7-alpine
     container_name: redis
-    restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
       - gtp-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 networks:
   gtp-network:
@@ -110,3 +83,4 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+

@@ -11,40 +11,6 @@ Think in terms of:
 
 ---
 
-# 🚀 Quick Start
-
-## Start the API Gateway (Recommended)
-
-The easiest way to run the entire platform is through the API Gateway:
-
-```bash
-# Option 1: Use the startup script
-./start-gateway.sh
-
-# Option 2: Manual start
-cd gateway/api-gateway
-go run main.go
-```
-
-The gateway will be available at:
-- **Local**: `http://localhost:8089`
-- **Network**: `http://<your-ip>:8089` (for friends on same WiFi)
-
-### Access All Services Through Gateway
-
-- 🎫 **Jira**: `http://localhost:8089/jira/*`
-- 🤖 **Chat**: `http://localhost:8089/chat/*`
-- ✅ **Approval**: `http://localhost:8089/approval/*`
-- 📦 **Onboarding**: `http://localhost:8089/onboarding/*`
-- 📊 **ScoreCard**: `http://localhost:8089/scorecard/*`
-- 🔍 **Sonar**: `http://localhost:8089/sonar/*`
-
-### Network Access for Friends
-
-See [NETWORK_ACCESS_GUIDE.md](./NETWORK_ACCESS_GUIDE.md) for detailed instructions on exposing the gateway to friends on your local network.
-
----
-
 # 🧱 1. High-Level Architecture Approach
 
 Use a **Modular Monorepo (Service-Oriented Structure)**
