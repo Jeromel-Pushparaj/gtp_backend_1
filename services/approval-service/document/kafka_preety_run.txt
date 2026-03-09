@@ -1,0 +1,42 @@
+cd /Users/sarumathis/Desktop/slack/gtp_backend_1
+
+terminal 1
+# Monitor approval.requested topic  
+
+./services/approval-service/scripts/kafka-pretty.sh approval.requested
+
+
+terminal 2
+# Monitor approval.completed topic  
+
+./services/approval-service/scripts/kafka-pretty.sh approval.completed
+
+
+terminal 3
+# Monitor action.executed topic  
+
+./services/approval-service/scripts/kafka-pretty.sh action.executed
+
+
+terminal 4
+# Monitor action.rejected topic  
+
+./services/approval-service/scripts/kafka-pretty.sh action.rejected
+
+
+curl -X POST http://localhost:8083/api/v1/approval/generic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bot_id": "U0AGPDSLH0V",
+    "approver_name": "Sarumathi S",
+    "requester_name": "Jeromel Pushparaj",
+    "request_type": "kafka-topic",
+    "message": "this is to check the approve and reject topic ",
+    "request_data": {
+      "service": "api-kafka",
+      "version": "v2.1.0",
+      "environment": "sack"
+    },
+    "use_app_dm": true,
+    "app_bot_user_id": "U0AGPDSLH0V"
+  }'

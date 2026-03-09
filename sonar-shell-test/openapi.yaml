@@ -1,0 +1,1191 @@
+openapi: 3.0.3
+info:
+  title: Sonar Shell Test API
+  description: |
+    API for managing SonarCloud integration, GitHub metrics, Jira metrics, and repository management.
+    This service provides comprehensive metrics collection and analysis for software development projects.
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.example.com
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: "Optional API key authentication. Use 'Authorization: Bearer <API_KEY>' header."
+
+  schemas:
+    Response:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful
+        message:
+          type: string
+          description: Human-readable message
+        error:
+          type: string
+          description: Error message if success is false
+        data:
+          type: object
+          description: Response data (varies by endpoint)
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        sonar_org_key:
+          type: string
+        jira_domain:
+          type: string
+        jira_email:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - name
+
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        org_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        github_url:
+          type: string
+        owner:
+          type: string
+        default_branch:
+          type: string
+        is_active:
+          type: boolean
+        jira_project_key:
+          type: string
+        environment_name:
+          type: string
+        last_commit_time:
+          type: string
+          format: date-time
+        last_commit_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    RepositoryMetrics:
+      type: object
+      properties:
+        repository:
+          type: string
+        has_readme:
+          type: boolean
+        default_branch:
+          type: string
+        open_prs:
+          type: integer
+        closed_prs:
+          type: integer
+        merged_prs:
+          type: integer
+        prs_with_conflicts:
+          type: integer
+        open_issues:
+          type: integer
+        closed_issues:
+          type: integer
+        total_commits:
+          type: integer
+        commits_last_90_days:
+          type: integer
+        is_active:
+          type: boolean
+        last_commit_date:
+          type: string
+          format: date-time
+        contributors:
+          type: integer
+        branches:
+          type: integer
+        score:
+          type: number
+          format: double
+
+    GitHubMetrics:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repo_id:
+          type: integer
+          format: int64
+        open_prs:
+          type: integer
+        closed_prs:
+          type: integer
+        merged_prs:
+          type: integer
+        total_prs:
+          type: integer
+        prs_with_conflicts:
+          type: integer
+        open_issues:
+          type: integer
+        closed_issues:
+          type: integer
+        total_commits:
+          type: integer
+        commits_last_90_days:
+          type: integer
+        is_active:
+          type: boolean
+        last_commit_date:
+          type: string
+          format: date-time
+        contributors:
+          type: integer
+        branches:
+          type: integer
+        collected_at:
+          type: string
+          format: date-time
+
+    SonarMetrics:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repo_id:
+          type: integer
+          format: int64
+        project_key:
+          type: string
+        quality_gate_status:
+          type: string
+          enum: [OK, WARN, ERROR]
+        bugs:
+          type: integer
+        vulnerabilities:
+          type: integer
+        code_smells:
+          type: integer
+        coverage:
+          type: number
+          format: double
+        duplicated_lines_density:
+          type: number
+          format: double
+        lines_of_code:
+          type: integer
+        security_rating:
+          type: string
+        reliability_rating:
+          type: string
+        maintainability_rating:
+          type: string
+        technical_debt:
+          type: string
+        collected_at:
+          type: string
+          format: date-time
+
+    JiraMetrics:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        repo_id:
+          type: integer
+          format: int64
+        project_key:
+          type: string
+        open_bugs:
+          type: integer
+        closed_bugs:
+          type: integer
+        open_tasks:
+          type: integer
+        closed_tasks:
+          type: integer
+        open_issues:
+          type: integer
+        closed_issues:
+          type: integer
+        avg_time_to_resolve:
+          type: number
+          format: double
+        avg_sprint_time:
+          type: number
+          format: double
+        active_sprints:
+          type: integer
+        completed_sprints:
+          type: integer
+        collected_at:
+          type: string
+          format: date-time
+
+    JiraIssue:
+      type: object
+      properties:
+        key:
+          type: string
+        id:
+          type: string
+        summary:
+          type: string
+        description:
+          type: string
+        issue_type:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        assignee:
+          type: string
+        reporter:
+          type: string
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        resolved:
+          type: string
+          format: date-time
+        story_points:
+          type: number
+          format: double
+        labels:
+          type: array
+          items:
+            type: string
+        components:
+          type: array
+          items:
+            type: string
+
+    PullRequestInfo:
+      type: object
+      properties:
+        number:
+          type: integer
+        title:
+          type: string
+        state:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        closed_at:
+          type: string
+          format: date-time
+        merged_at:
+          type: string
+          format: date-time
+        user:
+          type: string
+        mergeable:
+          type: boolean
+        additions:
+          type: integer
+        deletions:
+          type: integer
+        changed_files:
+          type: integer
+        comments:
+          type: integer
+        review_comments:
+          type: integer
+        head:
+          type: string
+        base:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check if the API server is running
+      security: []
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  message:
+                    type: string
+                    example: Server is running
+
+  # Organization Management
+  /api/v1/orgs:
+    get:
+      summary: List all organizations
+      description: Retrieve all organizations from the database
+      tags:
+        - Organizations
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Organization'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/orgs/create:
+    post:
+      summary: Create a new organization
+      description: Create a new organization in the database
+      tags:
+        - Organizations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      responses:
+        '201':
+          description: Organization created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Organization already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Repository Management
+  /api/v1/repos/fetch:
+    get:
+      summary: Fetch repositories by organization
+      description: Fetch all repositories from GitHub for a specific organization and sync with database
+      tags:
+        - Repositories
+      parameters:
+        - name: org_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Organization ID
+      responses:
+        '200':
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Repository'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/repos/update:
+    put:
+      summary: Update repository
+      description: Update repository details (Jira project key, environment name)
+      tags:
+        - Repositories
+      parameters:
+        - name: repo_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Repository ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                jira_project_key:
+                  type: string
+                environment_name:
+                  type: string
+      responses:
+        '200':
+          description: Repository updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Repository'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Repository not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # GitHub Metrics
+  /api/v1/github/metrics:
+    get:
+      summary: Get repository metrics
+      description: Get comprehensive GitHub metrics for a specific repository
+      tags:
+        - GitHub Metrics
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: Repository metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RepositoryMetrics'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/github/metrics/all:
+    get:
+      summary: Get all repositories metrics
+      description: Get comprehensive GitHub metrics for all repositories in the organization
+      tags:
+        - GitHub Metrics
+      responses:
+        '200':
+          description: All repositories metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RepositoryMetrics'
+
+  /api/v1/github/pulls:
+    get:
+      summary: List pull requests
+      description: List pull requests for a repository
+      tags:
+        - GitHub Metrics
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: all
+          description: Pull request state filter
+      responses:
+        '200':
+          description: List of pull requests
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PullRequestInfo'
+
+  /api/v1/github/pulls/get:
+    get:
+      summary: Get pull request details
+      description: Get detailed information about a specific pull request
+      tags:
+        - GitHub Metrics
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+        - name: number
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Pull request number
+      responses:
+        '200':
+          description: Pull request details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PullRequestInfo'
+
+  /api/v1/github/commits:
+    get:
+      summary: List commits
+      description: List commits for a repository
+      tags:
+        - GitHub Metrics
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Only commits after this date
+      responses:
+        '200':
+          description: List of commits
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+
+  /api/v1/github/issues:
+    get:
+      summary: List issues
+      description: List issues for a repository
+      tags:
+        - GitHub Metrics
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: all
+          description: Issue state filter
+      responses:
+        '200':
+          description: List of issues
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+
+  # SonarCloud Metrics
+  /api/v1/sonar/metrics:
+    get:
+      summary: Get SonarCloud metrics
+      description: Get SonarCloud metrics for a specific repository
+      tags:
+        - SonarCloud Metrics
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: SonarCloud metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SonarMetrics'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Jira Metrics
+  /api/v1/jira/issues/stats:
+    get:
+      summary: Get Jira issue statistics
+      description: Get statistics for Jira issues in a project
+      tags:
+        - Jira Metrics
+      parameters:
+        - name: project_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Jira project key
+      responses:
+        '200':
+          description: Jira issue statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+
+  /api/v1/jira/bugs/open:
+    get:
+      summary: Get open bugs
+      description: Get all open bugs for a Jira project
+      tags:
+        - Jira Metrics
+      parameters:
+        - name: project_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Jira project key
+      responses:
+        '200':
+          description: List of open bugs
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/JiraIssue'
+
+  /api/v1/jira/tasks/open:
+    get:
+      summary: Get open tasks
+      description: Get all open tasks for a Jira project
+      tags:
+        - Jira Metrics
+      parameters:
+        - name: project_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Jira project key
+      responses:
+        '200':
+          description: List of open tasks
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/JiraIssue'
+
+  /api/v1/jira/issues/search:
+    get:
+      summary: Search Jira issues
+      description: Search Jira issues using JQL
+      tags:
+        - Jira Metrics
+      parameters:
+        - name: jql
+          in: query
+          required: true
+          schema:
+            type: string
+          description: JQL query string
+        - name: max_results
+          in: query
+          schema:
+            type: integer
+            default: 50
+          description: Maximum number of results
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/JiraIssue'
+
+  /api/v1/jira/metrics:
+    get:
+      summary: Get Jira project metrics
+      description: Get comprehensive metrics for a Jira project
+      tags:
+        - Jira Metrics
+      parameters:
+        - name: project_key
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Jira project key
+      responses:
+        '200':
+          description: Jira project metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+
+  # Database-backed Metrics
+  /api/v1/metrics/github/collect:
+    post:
+      summary: Collect and store GitHub metrics
+      description: Collect GitHub metrics for a repository and store in database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: Metrics collected and stored successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GitHubMetrics'
+
+  /api/v1/metrics/github/stored:
+    get:
+      summary: Get stored GitHub metrics
+      description: Retrieve stored GitHub metrics from database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: Stored GitHub metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GitHubMetrics'
+
+  /api/v1/metrics/sonar/collect:
+    post:
+      summary: Collect and store SonarCloud metrics
+      description: Collect SonarCloud metrics for a repository and store in database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: Metrics collected and stored successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SonarMetrics'
+
+  /api/v1/metrics/sonar/stored:
+    get:
+      summary: Get stored SonarCloud metrics
+      description: Retrieve stored SonarCloud metrics from database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: Stored SonarCloud metrics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SonarMetrics'
+
+  # Repository Metrics Fetch
+  /api/v1/repos/metrics/github:
+    get:
+      summary: Fetch GitHub metrics by repository
+      description: Fetch and update GitHub metrics for a specific repository in database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Repository ID
+      responses:
+        '200':
+          description: GitHub metrics fetched and updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/GitHubMetrics'
+
+  /api/v1/repos/metrics/jira:
+    get:
+      summary: Fetch Jira metrics by repository
+      description: Fetch and update Jira metrics for a specific repository in database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Repository ID
+      responses:
+        '200':
+          description: Jira metrics fetched and updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/JiraMetrics'
+
+  /api/v1/repos/metrics/sonar:
+    get:
+      summary: Fetch SonarCloud metrics by repository
+      description: Fetch and update SonarCloud metrics for a specific repository in database
+      tags:
+        - Metrics Collection
+      parameters:
+        - name: repo_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Repository ID
+      responses:
+        '200':
+          description: SonarCloud metrics fetched and updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Response'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SonarMetrics'
+
+  # SonarCloud Setup & Automation
+  /api/v1/secrets/list:
+    get:
+      summary: List repository secrets
+      description: List all secrets configured in repositories
+      tags:
+        - SonarCloud Setup
+      responses:
+        '200':
+          description: List of repository secrets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /api/v1/secrets/add:
+    post:
+      summary: Add environment secrets
+      description: Add environment secrets to repositories
+      tags:
+        - SonarCloud Setup
+      responses:
+        '200':
+          description: Secrets added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /api/v1/workflows/update:
+    post:
+      summary: Update workflows
+      description: Update GitHub workflows to use environment
+      tags:
+        - SonarCloud Setup
+      responses:
+        '200':
+          description: Workflows updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /api/v1/setup/full:
+    post:
+      summary: Full SonarCloud setup
+      description: Complete SonarCloud setup including project creation, workflows, and secrets
+      tags:
+        - SonarCloud Setup
+      responses:
+        '200':
+          description: Full setup completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /api/v1/results/fetch:
+    get:
+      summary: Fetch SonarCloud results
+      description: Fetch analysis results from SonarCloud for all repositories
+      tags:
+        - SonarCloud Setup
+      responses:
+        '200':
+          description: Results fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /api/v1/repository/process:
+    post:
+      summary: Process repository
+      description: Process a single repository for SonarCloud integration
+      tags:
+        - SonarCloud Setup
+      parameters:
+        - name: repo
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Repository name
+      responses:
+        '200':
+          description: Repository processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Organizations
+    description: Organization management
+  - name: Repositories
+    description: Repository management
+  - name: GitHub Metrics
+    description: GitHub metrics and analytics
+  - name: SonarCloud Metrics
+    description: SonarCloud code quality metrics
+  - name: Jira Metrics
+    description: Jira project metrics
+  - name: Metrics Collection
+    description: Database-backed metrics collection and storage
+  - name: SonarCloud Setup
+    description: SonarCloud automation and setup
+

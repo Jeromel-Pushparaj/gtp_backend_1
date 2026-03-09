@@ -1,0 +1,192 @@
+1. send message
+
+request
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AHMR837FC",
+    "text": "Hello from approval service!"
+  }'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AHMR837FC",
+  "timestamp": "1772282886.741329",
+  "text": "Hello from approval service!"
+}
+
+
+2. Message with User Mention by ID
+
+request
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AHMR837FC",
+    "text": "Please review this",
+    "mentions": [{"type": "user", "id": "U0AH3EX5VV2"}]
+  }'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AHMR837FC",
+  "timestamp": "1772283014.626889",
+  "text": "Please review this"
+}
+
+
+3. Message with User Mention by Name
+
+request
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service",
+    "text": "Can you help?",
+    "mentions": [{"type": "user_by_name", "name": "Jeromel Pushparaj"}]
+  }'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772283119.576069",
+  "text": "Can you help?"
+}
+
+
+4. . Message with @here
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA",
+    "text": "Quick update",
+    "mentions": [{"type": "here"}]
+  }'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772283167.802579",
+  "text": "Quick update"
+}
+
+
+5. Message with @channel with channel name
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_name": "channel_approval_service",
+    "text": "Important announcement",
+    "mentions": [{"type": "channel"}]
+  }'
+
+response
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772283257.780529",
+  "text": "Important announcement"
+}
+
+
+6. Message with @everyone
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA",
+    "text": "Critical update",
+    "mentions": [{"type": "everyone"}]
+  }'
+
+response
+
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772283516.519839",
+  "text": "Critical update"
+}
+
+
+7. Message with Channel Mention
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA",
+    "text": "Check this channel",
+    "mentions": [{"type": "channel_by_name", "name": "approval_service_channel"}]
+  }'
+
+response
+
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772283572.868819",
+  "text": "Check this channel"
+}
+
+
+8. Message with Multiple Mentions
+
+request 
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA",
+    "text": "Team meeting in 5 minutes!",
+    "mentions": [
+      {"type": "user_by_name", "name": "Sarumathi S"},
+      {"type": "user_by_name", "name": "Jeromel Pushparaj"},
+      {"type": "here"}
+    ]
+  }'
+
+response
+
+{
+  "success": true,
+  "message": "Message sent successfully",
+  "channel_id": "C0AJGKD48BA",
+  "timestamp": "1772283652.426069",
+  "text": "Team meeting in 5 minutes!"
+}
+
+
+9. Message with User Group
+
+request
+
+curl -X POST http://localhost:8083/api/v1/slack/message/send \
+  -H "Content-Type: application/json" \
+  -d '{
+    "channel_id": "C0AJGKD48BA",
+    "text": "Attention team",
+    "mentions": [{"type": "usergroup", "id": "S1234ABCD"}]
+  }'
+
+response
