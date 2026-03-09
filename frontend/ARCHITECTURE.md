@@ -1,0 +1,318 @@
+# Frontend Architecture
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Slack Approval Workflow                      │
+│                         Frontend App                             │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                │ HTTP POST
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Backend API (localhost:8083)                        │
+│         POST /api/v1/approval/generic                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Component Architecture
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                           App.tsx                                 │
+│  ┌────────────────────────────────────────────────────────────┐  │
+│  │  State Management                                          │  │
+│  │  - Form data                                               │  │
+│  │  - Workflow stages                                         │  │
+│  │  - Loading states                                          │  │
+│  │  - Response messages                                       │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                   │
+│  ┌─────────────────────┐    ┌──────────────────────────────┐    │
+│  │  ApprovalForm       │    │  WorkflowVisualization       │    │
+│  │  ┌───────────────┐  │    │  ┌────────────────────────┐  │    │
+│  │  │ Form Fields   │  │    │  │  StatusIndicator       │  │    │
+│  │  │ - Validation  │  │    │  │  - Stage 1: Created    │  │    │
+│  │  │ - Templates   │  │    │  │  - Stage 2: Kafka Req  │  │    │
+│  │  │ - JSON Editor │  │    │  │  - Stage 3: Slack DM   │  │    │
+│  │  └───────────────┘  │    │  │  - Stage 4: Pending    │  │    │
+│  └─────────────────────┘    │  │  - Stage 5: Approved   │  │    │
+│                             │  │  - Stage 6: Kafka Comp │  │    │
+│                             │  └────────────────────────┘  │    │
+│                             └──────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+## Data Flow
+
+```
+┌─────────────┐
+│    User     │
+└──────┬──────┘
+       │ 1. Fill Form
+       ▼
+┌─────────────────┐
+│ ApprovalForm    │
+│ - Validate      │
+│ - Format JSON   │
+└──────┬──────────┘
+       │ 2. Submit
+       ▼
+┌─────────────────┐
+│   App.tsx       │
+│ - Update stages │
+│ - Call API      │
+└──────┬──────────┘
+       │ 3. HTTP POST
+       ▼
+┌─────────────────┐
+│  api.ts         │
+│ - Axios request │
+│ - Error handle  │
+└──────┬──────────┘
+       │ 4. Request
+       ▼
+┌─────────────────────┐
+│  Backend API        │
+│  /api/v1/approval/  │
+│  generic            │
+└──────┬──────────────┘
+       │ 5. Response
+       ▼
+┌─────────────────┐
+│   App.tsx       │
+│ - Update stages │
+│ - Show message  │
+└──────┬──────────┘
+       │ 6. Render
+       ▼
+┌──────────────────────┐
+│ WorkflowVisualization│
+│ - Show progress      │
+│ - Update indicators  │
+└──────────────────────┘
+```
+
+## Workflow Stage Progression
+
+```
+Initial State:
+┌─────────────┐
+│  Created    │ ○ Inactive
+├─────────────┤
+│ Kafka Req   │ ○ Inactive
+├─────────────┤
+│ Slack DM    │ ○ Inactive
+├─────────────┤
+│ Pending     │ ○ Inactive
+├─────────────┤
+│ Approved    │ ○ Inactive
+├─────────────┤
+│ Kafka Comp  │ ○ Inactive
+└─────────────┘
+
+After Submission:
+┌─────────────┐
+│  Created    │ ✓ Completed (Green)
+├─────────────┤
+│ Kafka Req   │ ✓ Completed (Green)
+├─────────────┤
+│ Slack DM    │ ✓ Completed (Green)
+├─────────────┤
+│ Pending     │ ◉ In Progress (Blue)
+├─────────────┤
+│ Approved    │ ○ Inactive
+├─────────────┤
+│ Kafka Comp  │ ○ Inactive
+└─────────────┘
+
+After Approval (Manual in Slack):
+┌─────────────┐
+│  Created    │ ✓ Completed (Green)
+├─────────────┤
+│ Kafka Req   │ ✓ Completed (Green)
+├─────────────┤
+│ Slack DM    │ ✓ Completed (Green)
+├─────────────┤
+│ Pending     │ ✓ Completed (Green)
+├─────────────┤
+│ Approved    │ ✓ Completed (Green)
+├─────────────┤
+│ Kafka Comp  │ ✓ Completed (Green)
+└─────────────┘
+```
+
+## Type System
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    types/approval.ts                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  GenericApprovalRequest                                     │
+│  ├─ bot_id?: string                                         │
+│  ├─ approver_name?: string                                  │
+│  ├─ requester_name?: string                                 │
+│  ├─ request_type: RequestType                               │
+│  ├─ message: string                                         │
+│  ├─ request_data?: Record<string, any>                      │
+│  ├─ use_app_dm: boolean                                     │
+│  └─ app_bot_user_id?: string                                │
+│                                                              │
+│  ApprovalResponse                                           │
+│  ├─ success: boolean                                        │
+│  ├─ message: string                                         │
+│  ├─ request_id?: string                                     │
+│  └─ error?: string                                          │
+│                                                              │
+│  WorkflowStageInfo                                          │
+│  ├─ stage: WorkflowStage                                    │
+│  ├─ label: string                                           │
+│  ├─ description: string                                     │
+│  ├─ completed: boolean                                      │
+│  ├─ active: boolean                                         │
+│  └─ error?: boolean                                         │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## API Service Layer
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   services/api.ts                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  apiClient (Axios Instance)                                 │
+│  ├─ baseURL: VITE_API_BASE_URL                             │
+│  ├─ headers: Content-Type: application/json                │
+│  └─ timeout: 10000ms                                        │
+│                                                              │
+│  approvalApi                                                │
+│  ├─ createApprovalRequest()                                │
+│  │   ├─ POST /api/v1/approval/generic                      │
+│  │   ├─ Error handling                                     │
+│  │   └─ Returns: ApprovalResponse                          │
+│  │                                                          │
+│  └─ healthCheck()                                           │
+│      ├─ GET /health                                         │
+│      └─ Returns: boolean                                    │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Styling Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Tailwind CSS                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Custom Theme (tailwind.config.js)                          │
+│  └─ colors.slack                                            │
+│      ├─ purple: #4A154B  (Primary)                         │
+│      ├─ green:  #2EB67D  (Success)                         │
+│      ├─ blue:   #36C5F0  (Info)                            │
+│      ├─ yellow: #ECB22E  (Warning)                         │
+│      └─ red:    #E01E5A  (Error)                           │
+│                                                              │
+│  Global Styles (index.css)                                  │
+│  ├─ @tailwind base                                          │
+│  ├─ @tailwind components                                    │
+│  └─ @tailwind utilities                                     │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Build Pipeline
+
+```
+┌──────────────┐
+│ Source Files │
+│  .tsx, .ts   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│  TypeScript  │
+│   Compiler   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│     Vite     │
+│   Bundler    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   PostCSS    │
+│  Tailwind    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ Optimized    │
+│   Bundle     │
+│   (dist/)    │
+└──────────────┘
+```
+
+## Environment Configuration
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  Environment Variables                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  .env (Development)                                         │
+│  └─ VITE_API_BASE_URL=http://localhost:8083                │
+│                                                              │
+│  .env.production (Production)                               │
+│  └─ VITE_API_BASE_URL=https://api.production.com           │
+│                                                              │
+│  vite-env.d.ts (TypeScript Definitions)                     │
+│  └─ ImportMetaEnv interface                                 │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Error Handling Flow
+
+```
+User Action
+    │
+    ▼
+Form Validation ──────► Validation Error ──► Show Inline Error
+    │ ✓
+    ▼
+API Call
+    │
+    ├──► Network Error ──────► Show Error Message
+    │
+    ├──► Backend Error ──────► Show Error Message
+    │                          Display error field
+    │
+    └──► Success ─────────────► Show Success Message
+                                Update Workflow
+                                Display Request ID
+```
+
+## Performance Optimizations
+
+- **Code Splitting**: Vite automatic code splitting
+- **Tree Shaking**: Remove unused code
+- **Lazy Loading**: Components loaded on demand
+- **Minification**: Production builds minified
+- **CSS Purging**: Tailwind removes unused styles
+- **Fast Refresh**: Vite HMR for instant updates
+
+## Security Considerations
+
+- **Input Validation**: Client-side validation
+- **XSS Prevention**: React auto-escaping
+- **CORS**: Backend must enable CORS
+- **Environment Variables**: Sensitive data in .env
+- **Type Safety**: TypeScript prevents type errors
+
