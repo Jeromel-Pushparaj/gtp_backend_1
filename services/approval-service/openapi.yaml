@@ -302,6 +302,53 @@ components:
         count:
           type: integer
 
+    GenericApprovalRequest:
+      type: object
+      required:
+        - request_type
+        - message
+        - use_app_dm
+      properties:
+        bot_id:
+          type: string
+          description: Bot ID for reference (optional)
+        approver_id:
+          type: string
+          description: Approver's Slack user ID (use either approver_id or approver_name)
+        approver_name:
+          type: string
+          description: Approver's name (use either approver_id or approver_name)
+        requester_id:
+          type: string
+          description: Requester's Slack user ID (use either requester_id or requester_name)
+        requester_name:
+          type: string
+          description: Requester's name (use either requester_id or requester_name)
+        request_type:
+          type: string
+          description: Type of approval request (e.g., deployment, access_request, code_review)
+          example: deployment
+        message:
+          type: string
+          description: Detailed message about the approval request
+          example: Please approve production deployment
+        request_data:
+          type: object
+          additionalProperties: true
+          description: Additional structured data about the request (flexible JSON object)
+          example:
+            service: api-gateway
+            version: v2.1.0
+            environment: production
+        use_app_dm:
+          type: boolean
+          description: Must be true - sends approval request to approver's DM
+          default: true
+        app_bot_user_id:
+          type: string
+          description: App bot user ID (required when use_app_dm is true)
+          example: U0AGPDSLH0V
+
     DomainChangeApprovalRequest:
       type: object
       required:
@@ -957,6 +1004,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/approval/generic:
+    post:
+      summary: Create generic approval request (Kafka Event-Driven)
+      description: |
+        Create a flexible generic approval request and publish to Kafka.
+
+        This endpoint supports any type of approval request with:
+        - User mentions for approver and requester
+        - Slack interactive buttons (Approve/Reject)
+        - Comment required for reject, optional for approve
+        - Sends approval request to approver's DM
+        - Flexible request_data field for any structured data
+
+        This endpoint follows the complete Kafka event-driven flow:
+        1. Publishes to approval.requested topic
+        2. Kafka consumer processes and sends Slack message with interactive buttons
+        3. Human approves/rejects via Slack modal (with optional/required comments)
+        4. Publishes to approval.completed topic
+        5. Business consumer publishes to action.executed/rejected topic
+      tags:
+        - Approval Requests (Event-Driven)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenericApprovalRequest"
+            examples:
+              deployment_approval:
+                summary: Deployment approval request
+                value:
+                  bot_id: "U0AGPDSLH0V"
+                  approver_name: "Sarumathi S"
+                  requester_name: "Jeromel Pushparaj"
+                  request_type: "deployment"
+                  message: "Please approve production deployment"
+                  request_data:
+                    service: "api-gateway"
+                    version: "v2.1.0"
+                    environment: "production"
+                  use_app_dm: true
+                  app_bot_user_id: "U0AGPDSLH0V"
+              code_review:
+                summary: Code review approval request
+                value:
+                  approver_name: "Jeromel Pushparaj"
+                  requester_name: "Sarumathi S"
+                  request_type: "code_review"
+                  message: "Please review PR #123 for the new feature"
+                  request_data:
+                    pr_number: "123"
+                    repository: "backend-api"
+                    branch: "feature/new-approval-system"
+                    lines_changed: 450
+                  use_app_dm: true
+                  app_bot_user_id: "U0AGPDSLH0V"
+              access_request:
+                summary: Access request approval
+                value:
+                  approver_id: "U0AH3EX5VV2"
+                  requester_id: "U0AGQHFQ0MC"
+                  request_type: "access_request"
+                  message: "Requesting access to production database"
+                  request_data:
+                    resource: "production-db"
+                    access_level: "read-only"
+                    duration: "24 hours"
+                  use_app_dm: true
+                  app_bot_user_id: "U0AGPDSLH0V"
+      responses:
+        "200":
+          description: Generic approval request created and published to Kafka
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateApprovalResponse"
+              example:
+                success: true
+                message: "Generic approval request created and published to Kafka"
+                request_id: "550e8400-e29b-41d4-a716-446655440000"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                success: false
+                error: "Approver not found: John Doe"
 
 tags:
   - name: Health

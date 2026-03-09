@@ -172,6 +172,7 @@ const (
 	ErrorCategoryRequired    = "Category is required"
 
 	RouteApprovalDomainChange = "/approval/domain-change"
+	RouteApprovalGeneric      = "/approval/generic"
 	RouteSlackGetDMChannel    = "/slack/dm-channel/get"
 	RouteSlackGetAllApps      = "/slack/apps/all"
 
