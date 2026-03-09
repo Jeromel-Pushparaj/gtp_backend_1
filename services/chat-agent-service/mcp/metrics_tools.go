@@ -1,8 +1,8 @@
 package mcp
 
-import (
-	mcp_golang "github.com/metoro-io/mcp-golang"
-)
+// Metrics tool argument types for documentation purposes.
+// The HTTP-based MCP server uses dynamic tool mapping via mapMetricsToolToEndpoint()
+// instead of explicit tool registration.
 
 type CollectGitHubMetricsArgs struct {
 	Repo string `json:"repo" jsonschema:"required,description=Repository name"`
@@ -20,51 +20,36 @@ type GetStoredSonarMetricsArgs struct {
 	Repo string `json:"repo" jsonschema:"required,description=Repository name"`
 }
 
-func (s *Server) registerMetricsTools() error {
-	if err := s.mcpServer.RegisterTool("collect_github_metrics", "Collect and store GitHub metrics for a repository", func(args CollectGitHubMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("POST", "/api/v1/metrics/github/collect", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+// mapMetricsToolToEndpoint maps Metrics tool names to API endpoints
+func mapMetricsToolToEndpoint(toolName string, args map[string]interface{}) (endpoint, method string, params map[string]string, body interface{}, found bool) {
+	params = make(map[string]string)
 
-	if err := s.mcpServer.RegisterTool("get_stored_github_metrics", "Get stored GitHub metrics for a repository", func(args GetStoredGitHubMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("GET", "/api/v1/metrics/github/stored", params, nil)
-		if err != nil {
-			return nil, err
+	switch toolName {
+	case "collect_github_metrics":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/metrics/github/collect", "POST", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("collect_sonar_metrics", "Collect and store SonarCloud metrics for a repository", func(args CollectSonarMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("POST", "/api/v1/metrics/sonar/collect", params, nil)
-		if err != nil {
-			return nil, err
+	case "get_stored_github_metrics":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/metrics/github/stored", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_stored_sonar_metrics", "Get stored SonarCloud metrics for a repository", func(args GetStoredSonarMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("GET", "/api/v1/metrics/sonar/stored", params, nil)
-		if err != nil {
-			return nil, err
+	case "collect_sonar_metrics":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/metrics/sonar/collect", "POST", params, nil, true
 
-	return nil
+	case "get_stored_sonar_metrics":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
+		}
+		return "/api/v1/metrics/sonar/stored", "GET", params, nil, true
+
+	default:
+		return "", "", nil, nil, false
+	}
 }
-

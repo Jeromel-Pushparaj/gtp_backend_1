@@ -12,16 +12,20 @@ import (
 
 const groqAPIURL = "https://api.groq.com/openai/v1/chat/completions"
 
+// Default model - can be overridden via GROQ_MODEL environment variable
+const defaultModel = "meta-llama/llama-4-maverick-17b-128e-instruct"
+
 type GroqClient struct {
 	apiKey     string
+	model      string
 	httpClient *http.Client
 }
 
 type ChatMessage struct {
-	Role      string     `json:"role"`
-	Content   string     `json:"content,omitempty"`
-	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string    `json:"tool_call_id,omitempty"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content,omitempty"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
 type Tool struct {
@@ -59,9 +63,9 @@ type ChatResponse struct {
 	Created int64  `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index   int         `json:"index"`
-		Message ChatMessage `json:"message"`
-		FinishReason string `json:"finish_reason"`
+		Index        int         `json:"index"`
+		Message      ChatMessage `json:"message"`
+		FinishReason string      `json:"finish_reason"`
 	} `json:"choices"`
 	Usage struct {
 		PromptTokens     int `json:"prompt_tokens"`
@@ -74,8 +78,18 @@ func NewGroqClient(apiKey string) *GroqClient {
 	if apiKey == "" {
 		apiKey = os.Getenv("GROQ_API_KEY")
 	}
+
+	// Get model from environment variable, or use default
+	model := os.Getenv("GROQ_MODEL")
+	if model == "" {
+		model = defaultModel
+	}
+
+	log.Printf("Initializing Groq client with model: %s", model)
+
 	return &GroqClient{
 		apiKey:     apiKey,
+		model:      model,
 		httpClient: &http.Client{},
 	}
 }
@@ -83,7 +97,7 @@ func NewGroqClient(apiKey string) *GroqClient {
 func (c *GroqClient) CreateChatCompletion(req ChatRequest) (*ChatResponse, error) {
 	// Set default model if not specified
 	if req.Model == "" {
-		req.Model = "llama-3.3-70b-versatile"
+		req.Model = c.model
 	}
 
 	jsonData, err := json.Marshal(req)
@@ -133,7 +147,7 @@ func (c *GroqClient) CreateChatCompletion(req ChatRequest) (*ChatResponse, error
 
 func (c *GroqClient) Chat(messages []ChatMessage, tools []Tool) (*ChatResponse, error) {
 	req := ChatRequest{
-		Model:       "llama-3.3-70b-versatile",
+		Model:       c.model,
 		Messages:    messages,
 		Tools:       tools,
 		Temperature: 0.7,
@@ -146,4 +160,3 @@ func (c *GroqClient) Chat(messages []ChatMessage, tools []Tool) (*ChatResponse, 
 
 	return c.CreateChatCompletion(req)
 }
-

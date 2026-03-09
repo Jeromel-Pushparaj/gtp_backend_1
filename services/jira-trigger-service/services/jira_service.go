@@ -8,11 +8,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/keerthanau/go/client"
 	"github.com/keerthanau/go/models"
 )
 
 // ProcessCreateIssue handles the main logic for creating issue and adding to sprint
-func ProcessCreateIssue(jira *models.JiraAPIClient, projectKey string, req *models.CreateIssueRequest) models.CreateIssueResponse {
+func ProcessCreateIssue(jira *client.JiraAPIClient, projectKey string, req *models.CreateIssueRequest) models.CreateIssueResponse {
 	// Step 0: Check if project exists, create if not
 	if !ProjectExists(jira, projectKey) {
 		log.Printf("Project %s does not exist, creating it...", projectKey)
@@ -121,7 +122,7 @@ func ProcessCreateIssue(jira *models.JiraAPIClient, projectKey string, req *mode
 }
 
 // CreateJiraIssue creates a new Jira issue
-func CreateJiraIssue(jira *models.JiraAPIClient, projectKey string, req *models.CreateIssueRequest) (string, string, error) {
+func CreateJiraIssue(jira *client.JiraAPIClient, projectKey string, req *models.CreateIssueRequest) (string, string, error) {
 	// Build base fields
 	fields := map[string]any{
 		"project":   map[string]any{"key": projectKey},
@@ -194,7 +195,7 @@ func CreateJiraIssue(jira *models.JiraAPIClient, projectKey string, req *models.
 }
 
 // GetBoardID gets the board ID for a project
-func GetBoardID(jira *models.JiraAPIClient, projectKey string) (int, error) {
+func GetBoardID(jira *client.JiraAPIClient, projectKey string) (int, error) {
 	path := "/rest/agile/1.0/board?projectKeyOrId=" + url.QueryEscape(projectKey)
 	respBytes, err := jira.Do("GET", path, nil)
 	if err != nil {
@@ -215,7 +216,7 @@ func GetBoardID(jira *models.JiraAPIClient, projectKey string) (int, error) {
 }
 
 // CreateSprint creates a new sprint
-func CreateSprint(jira *models.JiraAPIClient, boardID int, sprintName string) (int, error) {
+func CreateSprint(jira *client.JiraAPIClient, boardID int, sprintName string) (int, error) {
 	startDate := time.Now().Format("2006-01-02T15:04:05.000Z")
 	endDate := time.Now().AddDate(0, 0, 14).Format("2006-01-02T15:04:05.000Z")
 
@@ -240,7 +241,7 @@ func CreateSprint(jira *models.JiraAPIClient, boardID int, sprintName string) (i
 }
 
 // StartSprint starts a sprint
-func StartSprint(jira *models.JiraAPIClient, sprintID int) error {
+func StartSprint(jira *client.JiraAPIClient, sprintID int) error {
 	path := fmt.Sprintf("/rest/agile/1.0/sprint/%d", sprintID)
 	body := map[string]any{"state": "active"}
 	_, err := jira.Do("POST", path, body)
@@ -251,7 +252,7 @@ func StartSprint(jira *models.JiraAPIClient, sprintID int) error {
 }
 
 // AddIssueToSprint adds an issue to a sprint
-func AddIssueToSprint(jira *models.JiraAPIClient, sprintID int, issueKey string) error {
+func AddIssueToSprint(jira *client.JiraAPIClient, sprintID int, issueKey string) error {
 	path := fmt.Sprintf("/rest/agile/1.0/sprint/%d/issue", sprintID)
 	body := map[string]any{"issues": []string{issueKey}}
 	_, err := jira.Do("POST", path, body)
@@ -262,7 +263,7 @@ func AddIssueToSprint(jira *models.JiraAPIClient, sprintID int, issueKey string)
 }
 
 // FindSprintByName finds a sprint by name (searches active and future sprints)
-func FindSprintByName(jira *models.JiraAPIClient, boardID int, sprintName string) (int, error) {
+func FindSprintByName(jira *client.JiraAPIClient, boardID int, sprintName string) (int, error) {
 	// Get all sprints for the board (active and future)
 	path := fmt.Sprintf("/rest/agile/1.0/board/%d/sprint?state=active,future", boardID)
 	respBytes, err := jira.Do("GET", path, nil)
@@ -290,7 +291,7 @@ func FindSprintByName(jira *models.JiraAPIClient, boardID int, sprintName string
 }
 
 // FindUserByName finds a user by display name and returns their account ID
-func FindUserByName(jira *models.JiraAPIClient, displayName string) (string, error) {
+func FindUserByName(jira *client.JiraAPIClient, displayName string) (string, error) {
 	// Search for user by query (searches display name and email)
 	path := fmt.Sprintf("/rest/api/3/user/search?query=%s", url.QueryEscape(displayName))
 	respBytes, err := jira.Do("GET", path, nil)
@@ -323,14 +324,14 @@ func FindUserByName(jira *models.JiraAPIClient, displayName string) (string, err
 }
 
 // ProjectExists checks if a project exists
-func ProjectExists(jira *models.JiraAPIClient, projectKey string) bool {
+func ProjectExists(jira *client.JiraAPIClient, projectKey string) bool {
 	path := fmt.Sprintf("/rest/api/3/project/%s", projectKey)
 	_, err := jira.Do("GET", path, nil)
 	return err == nil
 }
 
 // CreateProject creates a new Jira project with Scrum or Kanban template
-func CreateProject(jira *models.JiraAPIClient, projectKey, projectName, projectType string) error {
+func CreateProject(jira *client.JiraAPIClient, projectKey, projectName, projectType string) error {
 	// Get current user to set as project lead
 	respBytes, err := jira.Do("GET", "/rest/api/3/myself", nil)
 	if err != nil {
@@ -382,7 +383,7 @@ func CreateProject(jira *models.JiraAPIClient, projectKey, projectName, projectT
 }
 
 // CreateBoard creates a Scrum or Kanban board for a project
-func CreateBoard(jira *models.JiraAPIClient, projectKey, boardName, boardType string) (int, error) {
+func CreateBoard(jira *client.JiraAPIClient, projectKey, boardName, boardType string) (int, error) {
 	// First, create a filter for the board
 	filterBody := map[string]any{
 		"name":        fmt.Sprintf("%s Filter", boardName),

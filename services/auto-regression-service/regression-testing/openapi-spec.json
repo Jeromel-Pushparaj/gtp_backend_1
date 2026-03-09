@@ -1,0 +1,288 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Regression Testing Middleman API",
+    "description": "A middleman service that aggregates test results from the regression testing API. It accepts GitHub repository details, triggers tests, and returns aggregated statistics including unique test cases, pass/fail counts, and detailed test results.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8081",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/api/v1/test/aggregate": {
+      "post": {
+        "summary": "Trigger tests and get aggregated results",
+        "description": "Accepts GitHub repository details, calls the test API, and returns aggregated test results with statistics",
+        "operationId": "aggregateTests",
+        "tags": ["Testing"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestRequest"
+              },
+              "examples": {
+                "basic": {
+                  "summary": "Basic test request",
+                  "value": {
+                    "github_url": "https://github.com/username/repo",
+                    "pat_token": "ghp_xxxxxxxxxxxx",
+                    "branch": "main"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful test execution with aggregated results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AggregatedResponse"
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Successful test results",
+                    "value": {
+                      "unique_test_cases": [
+                        {
+                          "name": "Get all employees",
+                          "status_code": 200,
+                          "passed": true,
+                          "skipped": false,
+                          "category": "positive",
+                          "method": "GET",
+                          "path": "/employees"
+                        }
+                      ],
+                      "total_tests": 16,
+                      "tests_passed": 7,
+                      "tests_failed": 9,
+                      "tests_skipped": 0,
+                      "pass_rate": 43.75,
+                      "executed_at": "2026-03-03T14:51:28.297752+05:30",
+                      "duration_ns": 2372609042
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input or test API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Returns the health status of the service",
+        "operationId": "healthCheck",
+        "tags": ["Health"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "examples": {
+                  "healthy": {
+                    "summary": "Healthy service",
+                    "value": {
+                      "status": "healthy",
+                      "time": "2026-03-03T14:23:32Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TestRequest": {
+        "type": "object",
+        "required": ["github_url", "pat_token"],
+        "properties": {
+          "github_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "GitHub repository URL",
+            "example": "https://github.com/username/repo"
+          },
+          "pat_token": {
+            "type": "string",
+            "description": "GitHub Personal Access Token",
+            "example": "ghp_xxxxxxxxxxxx"
+          },
+          "branch": {
+            "type": "string",
+            "description": "Git branch to test (optional, defaults to main)",
+            "example": "main",
+            "default": "main"
+          }
+        }
+      },
+      "AggregatedResponse": {
+        "type": "object",
+        "properties": {
+          "unique_test_cases": {
+            "type": "array",
+            "description": "List of all test cases with their results",
+            "items": {
+              "$ref": "#/components/schemas/TestCaseResult"
+            }
+          },
+          "total_tests": {
+            "type": "integer",
+            "description": "Total number of tests executed",
+            "example": 16
+          },
+          "tests_passed": {
+            "type": "integer",
+            "description": "Number of tests that passed",
+            "example": 7
+          },
+          "tests_failed": {
+            "type": "integer",
+            "description": "Number of tests that failed",
+            "example": 9
+          },
+          "tests_skipped": {
+            "type": "integer",
+            "description": "Number of tests that were skipped",
+            "example": 0
+          },
+          "pass_rate": {
+            "type": "number",
+            "format": "float",
+            "description": "Percentage of tests that passed",
+            "example": 43.75
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when tests were executed",
+            "example": "2026-03-03T14:51:28.297752+05:30"
+          },
+          "duration_ns": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Total execution time in nanoseconds",
+            "example": 2372609042
+          }
+        }
+      },
+      "TestCaseResult": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the test case",
+            "example": "Get all employees"
+          },
+          "status_code": {
+            "type": "integer",
+            "description": "HTTP status code returned (0 if skipped)",
+            "example": 200
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the test passed (status code matched expected)",
+            "example": true
+          },
+          "skipped": {
+            "type": "boolean",
+            "description": "Whether the test was skipped",
+            "example": false
+          },
+          "category": {
+            "type": "string",
+            "enum": ["positive", "negative", "boundary"],
+            "description": "Test category",
+            "example": "positive"
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method used",
+            "example": "GET"
+          },
+          "path": {
+            "type": "string",
+            "description": "Resolved API path that was tested",
+            "example": "/employees"
+          }
+        }
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Health status of the service",
+            "example": "healthy"
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Current server time",
+            "example": "2026-03-03T14:23:32Z"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message",
+            "example": "github_url and pat_token are required"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Testing",
+      "description": "Test execution and aggregation endpoints"
+    },
+    {
+      "name": "Health",
+      "description": "Service health check endpoints"
+    }
+  ]
+}
+

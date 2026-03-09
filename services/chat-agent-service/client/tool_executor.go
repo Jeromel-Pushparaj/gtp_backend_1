@@ -161,8 +161,35 @@ func (t *ToolExecutor) mapToolToEndpoint(toolName string, args map[string]interf
 		}
 		return "/api/v1/repos/fetch", "GET", params, nil
 
+	// Jira Tools
+	case "get_jira_issue_stats":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
+		}
+		return "/api/v1/jira/issues/stats", "GET", params, nil
+
+	case "get_jira_open_bugs":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
+		}
+		return "/api/v1/jira/bugs/open", "GET", params, nil
+
+	case "get_jira_open_tasks":
+		if project, ok := args["project"].(string); ok {
+			params["project"] = project
+		}
+		return "/api/v1/jira/tasks/open", "GET", params, nil
+
+	case "search_jira_issues":
+		if jql, ok := args["jql"].(string); ok {
+			params["jql"] = jql
+		}
+		if maxResults, ok := args["max_results"].(string); ok {
+			params["max_results"] = maxResults
+		}
+		return "/api/v1/jira/issues/search", "GET", params, nil
+
 	default:
 		return "", "", nil, nil
 	}
 }
-

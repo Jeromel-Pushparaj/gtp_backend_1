@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"hash/fnv"
 	"log"
 	"net/http"
 	"strings"
@@ -10,6 +11,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jeromelp/gtp_backend_1/gateway/api-gateway/config"
+)
+
+const (
+	// Number of shards for distributed locking
+	numShards = 256
 )
 
 // Logger middleware - logs all incoming requests
@@ -80,57 +86,151 @@ func CORS(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
-// RateLimiter - simple in-memory rate limiting
-type RateLimiter struct {
+// rateLimiterShard represents a single shard with its own lock
+type rateLimiterShard struct {
 	requests map[string][]time.Time
-	mu       sync.Mutex
-	limit    int
-	duration time.Duration
+	mu       sync.RWMutex
 }
 
-// NewRateLimiter creates a new rate limiter
+// RateLimiter - optimized in-memory rate limiting with sharded locks
+type RateLimiter struct {
+	shards   [numShards]*rateLimiterShard
+	limit    int
+	duration time.Duration
+	stopChan chan struct{}
+}
+
+// NewRateLimiter creates a new rate limiter with sharded locks
 func NewRateLimiter(limit int, duration time.Duration) *RateLimiter {
-	return &RateLimiter{
-		requests: make(map[string][]time.Time),
+	rl := &RateLimiter{
 		limit:    limit,
 		duration: duration,
+		stopChan: make(chan struct{}),
+	}
+
+	// Initialize all shards
+	for i := 0; i < numShards; i++ {
+		rl.shards[i] = &rateLimiterShard{
+			requests: make(map[string][]time.Time),
+		}
+	}
+
+	// Start background cleanup goroutine
+	go rl.cleanupRoutine()
+
+	log.Printf("INFO: Rate limiter initialized with %d shards", numShards)
+
+	return rl
+}
+
+// getShard returns the shard for a given IP address using FNV hash
+func (rl *RateLimiter) getShard(ip string) *rateLimiterShard {
+	h := fnv.New32a()
+	h.Write([]byte(ip))
+	return rl.shards[h.Sum32()%numShards]
+}
+
+// cleanupRoutine runs periodically to clean up old entries
+func (rl *RateLimiter) cleanupRoutine() {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			rl.cleanup()
+		case <-rl.stopChan:
+			return
+		}
 	}
 }
 
-// RateLimit middleware - limits requests per IP
-func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// Get client IP
-		clientIP := c.ClientIP()
+// cleanup removes expired entries from all shards
+func (rl *RateLimiter) cleanup() {
+	now := time.Now()
+	cleaned := 0
 
-		rl.mu.Lock()
-		defer rl.mu.Unlock()
-
-		// Clean up old requests
-		now := time.Now()
-		if requests, exists := rl.requests[clientIP]; exists {
+	for _, shard := range rl.shards {
+		shard.mu.Lock()
+		for ip, requests := range shard.requests {
 			validRequests := []time.Time{}
 			for _, reqTime := range requests {
 				if now.Sub(reqTime) < rl.duration {
 					validRequests = append(validRequests, reqTime)
 				}
 			}
-			rl.requests[clientIP] = validRequests
-		}
 
-		// Check rate limit
-		if len(rl.requests[clientIP]) >= rl.limit {
-			log.Printf("RATE_LIMIT: Rate limit exceeded for IP: %s", clientIP)
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":   "Rate limit exceeded",
-				"message": fmt.Sprintf("Maximum %d requests per %v allowed", rl.limit, rl.duration),
-			})
-			c.Abort()
-			return
+			if len(validRequests) == 0 {
+				delete(shard.requests, ip)
+				cleaned++
+			} else {
+				shard.requests[ip] = validRequests
+			}
 		}
+		shard.mu.Unlock()
+	}
 
-		// Add current request
-		rl.requests[clientIP] = append(rl.requests[clientIP], now)
+	if cleaned > 0 {
+		log.Printf("DEBUG: Rate limiter cleanup removed %d expired IP entries", cleaned)
+	}
+}
+
+// Stop stops the background cleanup routine
+func (rl *RateLimiter) Stop() {
+	close(rl.stopChan)
+}
+
+// RateLimit middleware - limits requests per IP using sharded locks
+func (rl *RateLimiter) RateLimit() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clientIP := c.ClientIP()
+		shard := rl.getShard(clientIP)
+		now := time.Now()
+
+		// Use read lock first to check if rate limit is exceeded
+		shard.mu.RLock()
+		requests, exists := shard.requests[clientIP]
+
+		if exists {
+			// Count valid requests within the time window
+			validCount := 0
+			for _, reqTime := range requests {
+				if now.Sub(reqTime) < rl.duration {
+					validCount++
+				}
+			}
+
+			// Check if rate limit exceeded
+			if validCount >= rl.limit {
+				shard.mu.RUnlock()
+				log.Printf("RATE_LIMIT: Rate limit exceeded for IP: %s", clientIP)
+				c.JSON(http.StatusTooManyRequests, gin.H{
+					"error":   "Rate limit exceeded",
+					"message": fmt.Sprintf("Maximum %d requests per %v allowed", rl.limit, rl.duration),
+				})
+				c.Abort()
+				return
+			}
+		}
+		shard.mu.RUnlock()
+
+		// Acquire write lock to update requests
+		shard.mu.Lock()
+
+		// Clean up old requests and add new one
+		validRequests := []time.Time{}
+		if requests, exists := shard.requests[clientIP]; exists {
+			for _, reqTime := range requests {
+				if now.Sub(reqTime) < rl.duration {
+					validRequests = append(validRequests, reqTime)
+				}
+			}
+		}
+		validRequests = append(validRequests, now)
+		shard.requests[clientIP] = validRequests
+
+		shard.mu.Unlock()
+
 		c.Next()
 	}
 }

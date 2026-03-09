@@ -1,0 +1,389 @@
+openapi: 3.0.3
+info:
+  title: Jira Trigger Service API
+  description: |
+    API for automated Jira project, board, sprint, and issue creation.
+    
+    This service provides comprehensive automation for Jira workflows including:
+    - Automatic project creation (Scrum/Kanban templates)
+    - Automatic board creation with JQL filters
+    - Automatic sprint creation and management
+    - Issue creation with automatic assignment to sprints
+    
+    The service handles the complete workflow from project setup to issue tracking,
+    eliminating manual Jira configuration steps.
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8086
+    description: Local development server
+  - url: https://jira-trigger.example.com
+    description: Production server
+
+security: []
+
+components:
+  schemas:
+    CreateIssueRequest:
+      type: object
+      required:
+        - summary
+        - projectKey
+      properties:
+        summary:
+          type: string
+          description: Issue title (REQUIRED)
+          example: "Implement user authentication"
+          minLength: 1
+        projectKey:
+          type: string
+          description: |
+            Project key (REQUIRED). Must start with uppercase letter, 
+            followed by uppercase letters or numbers. Maximum 10 characters.
+          pattern: '^[A-Z][A-Z0-9]{0,9}$'
+          example: "JIRATEST"
+          maxLength: 10
+        projectName:
+          type: string
+          description: |
+            Project display name (optional). Used when creating a new project.
+            If not provided, defaults to "{projectKey} Project".
+          example: "Jira Integration Test"
+        projectType:
+          type: string
+          enum: [scrum, kanban]
+          default: scrum
+          description: |
+            Project type (optional). Determines the template used for project creation.
+            - scrum: Creates project with Scrum board and sprint support
+            - kanban: Creates project with Kanban board (continuous flow)
+          example: "scrum"
+        issueType:
+          type: string
+          enum: [Task, Story, Bug, Epic]
+          default: Task
+          description: Type of issue to create
+          example: "Task"
+        sprintName:
+          type: string
+          description: |
+            Sprint name (optional). If provided, the issue will be added to this sprint.
+            If the sprint doesn't exist, a new sprint with this name will be created.
+            If not provided, a new sprint with auto-generated name will be created.
+          example: "Sprint March 2026"
+        description:
+          type: string
+          description: Detailed description of the issue
+          default: "Created via API"
+          example: "Implement JWT-based authentication system with refresh tokens"
+        assigneeId:
+          type: string
+          description: |
+            Jira account ID of the assignee (optional). Takes priority over assigneeName.
+            Example: "5b10a2844c20165700ede21g"
+          example: "5b10a2844c20165700ede21g"
+        assigneeName:
+          type: string
+          description: |
+            Jira display name of the assignee (optional). Used to search for user by name.
+            Only used if assigneeId is not provided.
+          example: "Ganesh Sriramulu"
+        priority:
+          type: string
+          enum: [Highest, High, Medium, Low, Lowest]
+          description: Issue priority level
+          example: "High"
+        labels:
+          type: array
+          items:
+            type: string
+          description: Array of labels to attach to the issue
+          example: ["backend", "security", "authentication"]
+
+    CreateIssueResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates whether the request was successful
+          example: true
+        issueKey:
+          type: string
+          description: The key of the created Jira issue
+          example: "JIRATEST-1"
+        issueUrl:
+          type: string
+          description: Direct URL to view the created issue in Jira
+          example: "https://intern-poc-proj.atlassian.net/browse/JIRATEST-1"
+        sprintId:
+          type: integer
+          description: ID of the sprint where the issue was added
+          example: 42
+        message:
+          type: string
+          description: Human-readable success message
+          example: "Issue created successfully and added to sprint"
+        error:
+          type: string
+          description: Error message (only present when success is false)
+          example: "Project key is required"
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Detailed error message
+          example: "Project keys must start with an uppercase letter, followed by uppercase letters or numbers (max 10 characters)"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Check if the Jira Trigger Service is running and responsive
+      security: []
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy and running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "ok"
+
+  /api/create-issue:
+    post:
+      summary: Create Jira issue with automatic project/board/sprint setup
+      description: |
+        Creates a Jira issue and automatically handles the complete workflow:
+
+        **Automatic Project Creation:**
+        - If the project doesn't exist, creates it with Scrum or Kanban template
+        - Sets the current user as project lead
+        - Configures default workflows and issue types
+
+        **Automatic Board Creation:**
+        - Creates a JQL filter for the project
+        - Creates a Scrum or Kanban board linked to the filter
+        - Configures board settings based on project type
+
+        **Automatic Sprint Management:**
+        - If sprintName is provided and exists, uses that sprint
+        - If sprintName is provided but doesn't exist, creates new sprint with that name
+        - If sprintName is not provided, creates new sprint with auto-generated name
+        - Automatically starts the sprint
+
+        **Issue Creation:**
+        - Creates issue with specified type, priority, and labels
+        - Assigns to user (by ID or name)
+        - Adds issue to the active sprint
+
+        **Supported Workflows:**
+        1. New Scrum Project: Full project setup with sprint-based workflow
+        2. New Kanban Project: Full project setup with continuous flow
+        3. Existing Project + New Sprint: Add issue to new sprint
+        4. Existing Project + Existing Sprint: Add issue to existing sprint
+
+      security: []
+      tags:
+        - Jira Issues
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIssueRequest'
+            examples:
+              newScrumProject:
+                summary: Create new Scrum project with issue
+                description: |
+                  Creates a new Scrum project from scratch, sets up board and sprint,
+                  then creates and assigns the issue.
+                value:
+                  summary: "Implement user authentication"
+                  projectKey: "JIRATEST"
+                  projectName: "Jira Integration Test"
+                  projectType: "scrum"
+                  issueType: "Task"
+                  priority: "High"
+                  description: "Implement JWT-based authentication with refresh tokens"
+                  assigneeName: "Ganesh Sriramulu"
+                  labels: ["backend", "security", "authentication"]
+
+              newKanbanProject:
+                summary: Create new Kanban project with issue
+                description: |
+                  Creates a new Kanban project with continuous flow board.
+                value:
+                  summary: "Fix login bug"
+                  projectKey: "KANBAN1"
+                  projectName: "Kanban Project"
+                  projectType: "kanban"
+                  issueType: "Bug"
+                  priority: "Highest"
+                  description: "Users unable to login with special characters in password"
+                  labels: ["bug", "urgent"]
+
+              existingProjectNewSprint:
+                summary: Add issue to existing project (new sprint)
+                description: |
+                  Adds issue to an existing project and creates a new sprint.
+                value:
+                  summary: "Update API documentation"
+                  projectKey: "JIRATEST"
+                  issueType: "Task"
+                  priority: "Medium"
+                  description: "Update OpenAPI spec with new endpoints"
+
+              existingProjectExistingSprint:
+                summary: Add issue to existing sprint
+                description: |
+                  Adds issue to an existing project and existing sprint by name.
+                value:
+                  summary: "Code review for PR #123"
+                  projectKey: "JIRATEST"
+                  sprintName: "Sprint March 2026"
+                  issueType: "Task"
+                  assigneeName: "Ganesh Sriramulu"
+                  priority: "High"
+
+              minimalRequest:
+                summary: Minimal request (only required fields)
+                description: |
+                  Creates issue with only required fields. Uses defaults for everything else.
+                value:
+                  summary: "Quick task"
+                  projectKey: "JIRATEST"
+
+      responses:
+        '200':
+          description: Issue created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateIssueResponse'
+              examples:
+                success:
+                  summary: Successful issue creation
+                  value:
+                    success: true
+                    issueKey: "JIRATEST-1"
+                    issueUrl: "https://intern-poc-proj.atlassian.net/browse/JIRATEST-1"
+                    sprintId: 42
+                    message: "Issue created successfully and added to sprint"
+
+                successNewProject:
+                  summary: Success with new project creation
+                  value:
+                    success: true
+                    issueKey: "NEWPROJ-1"
+                    issueUrl: "https://intern-poc-proj.atlassian.net/browse/NEWPROJ-1"
+                    sprintId: 15
+                    message: "Project created, board created, sprint created, issue created successfully"
+
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingSummary:
+                  summary: Missing required field - summary
+                  value:
+                    success: false
+                    error: "summary is required"
+
+                missingProjectKey:
+                  summary: Missing required field - projectKey
+                  value:
+                    success: false
+                    error: "projectKey is required"
+
+                invalidProjectKey:
+                  summary: Invalid project key format
+                  value:
+                    success: false
+                    error: "Project keys must start with an uppercase letter, followed by uppercase letters or numbers (max 10 characters)"
+
+                projectKeyTooLong:
+                  summary: Project key exceeds maximum length
+                  value:
+                    success: false
+                    error: "Project key must be maximum 10 characters"
+
+                invalidJSON:
+                  summary: Invalid JSON in request body
+                  value:
+                    success: false
+                    error: "Invalid JSON format"
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                jiraAPIError:
+                  summary: Jira API error
+                  value:
+                    success: false
+                    error: "Failed to create project: Jira API returned 403 Forbidden"
+
+                projectCreationFailed:
+                  summary: Project creation failed
+                  value:
+                    success: false
+                    error: "Failed to create project: A project with that name already exists"
+
+                boardCreationFailed:
+                  summary: Board creation failed
+                  value:
+                    success: false
+                    error: "Failed to create board: Invalid filter configuration"
+
+                sprintCreationFailed:
+                  summary: Sprint creation failed
+                  value:
+                    success: false
+                    error: "Failed to create sprint: Board does not support sprints"
+
+                issueCreationFailed:
+                  summary: Issue creation failed
+                  value:
+                    success: false
+                    error: "Failed to create issue: Invalid issue type for this project"
+
+                userNotFound:
+                  summary: Assignee user not found
+                  value:
+                    success: false
+                    error: "User 'John Doe' not found in Jira"
+
+tags:
+  - name: Health
+    description: Health check endpoints for service monitoring
+  - name: Jira Issues
+    description: |
+      Jira issue creation with comprehensive automation.
+
+      Handles complete workflow from project creation to issue tracking,
+      including automatic setup of projects, boards, and sprints.
+

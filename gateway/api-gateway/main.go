@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jeromelp/gtp_backend_1/gateway/api-gateway/config"
@@ -63,7 +69,7 @@ func main() {
 
 	// Onboarding Service Routes - Port 8084
 	// Handles service catalog and onboarding
-	onboardingGroup := router.Group("/onboarding")
+	onboardingGroup := router.Group("/service")
 	{
 		onboardingGroup.Any("/*path", proxyHandler.OnboardingService())
 	}
@@ -82,18 +88,58 @@ func main() {
 		sonarGroup.Any("/*path", proxyHandler.SonarShellService())
 	}
 
+	pagerDutyGroup := router.Group("/pd")
+	{
+		pagerDutyGroup.Any("/*path", proxyHandler.PagerDutyService())
+	}
+	autoRegressionGroup := router.Group("/regression")
+	{
+		autoRegressionGroup.Any("/*path", proxyHandler.AutoRegressionService())
+	}
+
 	// Print route information
 	printRoutes(cfg)
 
-	// Start server
+	// Configure HTTP server with timeouts
 	address := fmt.Sprintf("%s:%s", cfg.GatewayHost, cfg.GatewayPort)
+	server := &http.Server{
+		Addr:           address,
+		Handler:        router,
+		ReadTimeout:    cfg.ServerReadTimeout,
+		WriteTimeout:   cfg.ServerWriteTimeout,
+		IdleTimeout:    cfg.ServerIdleTimeout,
+		MaxHeaderBytes: 1 << 20, // 1 MB
+	}
+
 	log.Printf("INFO: API Gateway starting on %s (Environment: %s)", address, cfg.Environment)
 	log.Printf("INFO: Rate Limit: %d requests per %v", cfg.RateLimitRequests, cfg.RateLimitDuration)
+	log.Printf("INFO: Server Timeouts - Read: %v, Write: %v, Idle: %v",
+		cfg.ServerReadTimeout, cfg.ServerWriteTimeout, cfg.ServerIdleTimeout)
 	log.Println("INFO: All systems operational")
 
-	if err := router.Run(address); err != nil {
-		log.Fatalf("ERROR: Failed to start server: %v", err)
+	// Start server in a goroutine
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("ERROR: Failed to start server: %v", err)
+		}
+	}()
+
+	// Setup graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("INFO: Shutting down server...")
+
+	// Give outstanding requests 30 seconds to complete
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("ERROR: Server forced to shutdown: %v", err)
 	}
+
+	log.Println("INFO: Server exited gracefully")
 }
 
 // printBanner prints the application banner
@@ -122,7 +168,8 @@ func printRoutes(cfg *config.Config) {
 	log.Printf("  ANY    /onboarding/*              -> %s", cfg.OnboardingServiceURL)
 	log.Printf("  ANY    /scorecard/*               -> %s", cfg.ScoreCardServiceURL)
 	log.Printf("  ANY    /sonar/*                   -> %s", cfg.SonarShellServiceURL)
+	log.Printf("  ANY    /pd/*                      -> %s", cfg.PagerDutyServiceURL)
+	log.Printf("  ANY    /regression/*              -> %s", cfg.AutoRegressionServiceURL)
 	log.Println("================================================================")
 	log.Println()
 }
-

@@ -26,13 +26,27 @@ type Config struct {
 	RateLimitRequests int
 	RateLimitDuration time.Duration
 
+	// HTTP Client Configuration (for proxy connections)
+	HTTPTimeout         time.Duration
+	HTTPMaxIdleConns    int
+	HTTPMaxConnsPerHost int
+	HTTPIdleConnTimeout time.Duration
+	HTTPTLSTimeout      time.Duration
+
+	// Server Timeout Configuration
+	ServerReadTimeout  time.Duration
+	ServerWriteTimeout time.Duration
+	ServerIdleTimeout  time.Duration
+
 	// Service URLs - All microservices in the ecosystem
-	JiraTriggerServiceURL string // Port 8086 - Jira issue creation service
-	ChatAgentServiceURL   string // Port 8082 - AI chat agent service
-	ApprovalServiceURL    string // Port 8083 - Slack approval workflow service
-	OnboardingServiceURL  string // Port 8084 - Service catalog/onboarding service
-	ScoreCardServiceURL   string // Port 8085 - Service scorecard evaluation service
-	SonarShellServiceURL  string // Port 8080 - SonarCloud automation service
+	JiraTriggerServiceURL    string // Port 8086 - Jira issue creation service
+	ChatAgentServiceURL      string // Port 8082 - AI chat agent service
+	ApprovalServiceURL       string // Port 8083 - Slack approval workflow service
+	OnboardingServiceURL     string // Port 8084 - Service catalog/onboarding service
+	ScoreCardServiceURL      string // Port 8085 - Service scorecard evaluation service
+	SonarShellServiceURL     string // Port 8080 - SonarCloud automation service
+	PagerDutyServiceURL      string // Port 8091 - PagerDuty service
+	AutoRegressionServiceURL string // Port 8091 - PagerDuty service
 
 	// Kafka Configuration (optional - for event publishing)
 	KafkaBrokers string
@@ -59,6 +73,44 @@ func LoadConfig() *Config {
 		rateLimitDuration = 1 * time.Minute
 	}
 
+	// Parse HTTP client timeouts
+	httpTimeout, err := time.ParseDuration(getEnv("HTTP_TIMEOUT", "30s"))
+	if err != nil {
+		log.Printf("WARNING: Invalid HTTP_TIMEOUT, using default 30s: %v", err)
+		httpTimeout = 30 * time.Second
+	}
+
+	httpIdleConnTimeout, err := time.ParseDuration(getEnv("HTTP_IDLE_CONN_TIMEOUT", "90s"))
+	if err != nil {
+		log.Printf("WARNING: Invalid HTTP_IDLE_CONN_TIMEOUT, using default 90s: %v", err)
+		httpIdleConnTimeout = 90 * time.Second
+	}
+
+	httpTLSTimeout, err := time.ParseDuration(getEnv("HTTP_TLS_TIMEOUT", "10s"))
+	if err != nil {
+		log.Printf("WARNING: Invalid HTTP_TLS_TIMEOUT, using default 10s: %v", err)
+		httpTLSTimeout = 10 * time.Second
+	}
+
+	// Parse server timeouts
+	serverReadTimeout, err := time.ParseDuration(getEnv("SERVER_READ_TIMEOUT", "15s"))
+	if err != nil {
+		log.Printf("WARNING: Invalid SERVER_READ_TIMEOUT, using default 15s: %v", err)
+		serverReadTimeout = 15 * time.Second
+	}
+
+	serverWriteTimeout, err := time.ParseDuration(getEnv("SERVER_WRITE_TIMEOUT", "30s"))
+	if err != nil {
+		log.Printf("WARNING: Invalid SERVER_WRITE_TIMEOUT, using default 30s: %v", err)
+		serverWriteTimeout = 30 * time.Second
+	}
+
+	serverIdleTimeout, err := time.ParseDuration(getEnv("SERVER_IDLE_TIMEOUT", "120s"))
+	if err != nil {
+		log.Printf("WARNING: Invalid SERVER_IDLE_TIMEOUT, using default 120s: %v", err)
+		serverIdleTimeout = 120 * time.Second
+	}
+
 	config := &Config{
 		// Gateway settings
 		GatewayPort: getEnv("GATEWAY_PORT", "8089"),
@@ -75,13 +127,27 @@ func LoadConfig() *Config {
 		RateLimitRequests: getEnvAsInt("RATE_LIMIT_REQUESTS", 100),
 		RateLimitDuration: rateLimitDuration,
 
+		// HTTP Client Configuration
+		HTTPTimeout:         httpTimeout,
+		HTTPMaxIdleConns:    getEnvAsInt("HTTP_MAX_IDLE_CONNS", 100),
+		HTTPMaxConnsPerHost: getEnvAsInt("HTTP_MAX_CONNS_PER_HOST", 100),
+		HTTPIdleConnTimeout: httpIdleConnTimeout,
+		HTTPTLSTimeout:      httpTLSTimeout,
+
+		// Server Timeout Configuration
+		ServerReadTimeout:  serverReadTimeout,
+		ServerWriteTimeout: serverWriteTimeout,
+		ServerIdleTimeout:  serverIdleTimeout,
+
 		// Service URLs
-		JiraTriggerServiceURL: getEnv("JIRA_TRIGGER_SERVICE_URL", "http://localhost:8086"),
-		ChatAgentServiceURL:   getEnv("CHAT_AGENT_SERVICE_URL", "http://localhost:8082"),
-		ApprovalServiceURL:    getEnv("APPROVAL_SERVICE_URL", "http://localhost:8083"),
-		OnboardingServiceURL:  getEnv("ONBOARDING_SERVICE_URL", "http://localhost:8084"),
-		ScoreCardServiceURL:   getEnv("SCORECARD_SERVICE_URL", "http://localhost:8085"),
-		SonarShellServiceURL:  getEnv("SONAR_SHELL_SERVICE_URL", "http://localhost:8080"),
+		JiraTriggerServiceURL:    getEnv("JIRA_TRIGGER_SERVICE_URL", "http://localhost:8086"),
+		ChatAgentServiceURL:      getEnv("CHAT_AGENT_SERVICE_URL", "http://localhost:8082"),
+		ApprovalServiceURL:       getEnv("APPROVAL_SERVICE_URL", "http://localhost:8083"),
+		OnboardingServiceURL:     getEnv("ONBOARDING_SERVICE_URL", "http://localhost:8084"),
+		ScoreCardServiceURL:      getEnv("SCORECARD_SERVICE_URL", "http://localhost:8085"),
+		SonarShellServiceURL:     getEnv("SONAR_SHELL_SERVICE_URL", "http://localhost:8080"),
+		PagerDutyServiceURL:      getEnv("PAGER_Duty_SERVICE_URL", "http://localhost:8091"),
+		AutoRegressionServiceURL: getEnv("AUTO_REGRESSION_SERVICE_URL", "http://localhost:8081"),
 
 		// Kafka
 		KafkaBrokers: getEnv("KAFKA_BROKERS", "localhost:9092"),

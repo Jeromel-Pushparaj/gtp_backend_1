@@ -1,8 +1,8 @@
 package mcp
 
-import (
-	mcp_golang "github.com/metoro-io/mcp-golang"
-)
+// GitHub tool argument types for documentation purposes.
+// The HTTP-based MCP server uses dynamic tool mapping via mapGitHubToolToEndpoint()
+// instead of explicit tool registration.
 
 type ListPullRequestsArgs struct {
 	Repo  string `json:"repo" jsonschema:"required,description=Repository name"`
@@ -29,8 +29,8 @@ type ListIssuesArgs struct {
 }
 
 type ListIssueCommentsArgs struct {
-	Repo  string `json:"repo" jsonschema:"required,description=Repository name"`
-	Issue string `json:"issue" jsonschema:"required,description=Issue number"`
+	Repo   string `json:"repo" jsonschema:"required,description=Repository name"`
+	Number string `json:"number" jsonschema:"required,description=Issue number"`
 }
 
 type CheckReadmeArgs struct {
@@ -51,145 +51,90 @@ type GetRepositoryMetricsArgs struct {
 
 type GetAllRepositoriesMetricsArgs struct{}
 
-func (s *Server) registerGitHubTools() error {
-	if err := s.mcpServer.RegisterTool("list_pull_requests", "List pull requests for a repository", func(args ListPullRequestsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		if args.State != "" {
-			params["state"] = args.State
-		}
-		result, err := s.makeRequest("GET", "/api/v1/github/pulls", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+// mapGitHubToolToEndpoint maps GitHub tool names to API endpoints
+func mapGitHubToolToEndpoint(toolName string, args map[string]interface{}) (endpoint, method string, params map[string]string, body interface{}, found bool) {
+	params = make(map[string]string)
 
-	if err := s.mcpServer.RegisterTool("get_pull_request", "Get details of a specific pull request", func(args GetPullRequestArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo, "number": args.Number}
-		result, err := s.makeRequest("GET", "/api/v1/github/pulls/get", params, nil)
-		if err != nil {
-			return nil, err
+	switch toolName {
+	case "list_pull_requests":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		if state, ok := args["state"].(string); ok {
+			params["state"] = state
+		}
+		return "/api/v1/github/pulls", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("list_commits", "List commits for a repository", func(args ListCommitsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		if args.Since != "" {
-			params["since"] = args.Since
+	case "get_pull_request":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		result, err := s.makeRequest("GET", "/api/v1/github/commits", params, nil)
-		if err != nil {
-			return nil, err
+		if number, ok := args["number"].(string); ok {
+			params["number"] = number
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/pulls/get", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_commit_activity", "Get commit activity analysis for a repository", func(args GetCommitActivityArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("GET", "/api/v1/github/commits/activity", params, nil)
-		if err != nil {
-			return nil, err
+	case "list_commits":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		if since, ok := args["since"].(string); ok {
+			params["since"] = since
+		}
+		return "/api/v1/github/commits", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("list_issues", "List issues for a repository", func(args ListIssuesArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		if args.State != "" {
-			params["state"] = args.State
+	case "get_commit_activity":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		result, err := s.makeRequest("GET", "/api/v1/github/issues", params, nil)
-		if err != nil {
-			return nil, err
-		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/commits/activity", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("list_issue_comments", "List comments for a specific issue", func(args ListIssueCommentsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo, "issue": args.Issue}
-		result, err := s.makeRequest("GET", "/api/v1/github/issues/comments", params, nil)
-		if err != nil {
-			return nil, err
+	case "list_issues":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
-
-	if err := s.mcpServer.RegisterTool("check_readme", "Check if a repository has a README file", func(args CheckReadmeArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("GET", "/api/v1/github/readme", params, nil)
-		if err != nil {
-			return nil, err
+		if state, ok := args["state"].(string); ok {
+			params["state"] = state
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/issues", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("list_branches", "List branches for a repository", func(args ListBranchesArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("GET", "/api/v1/github/branches", params, nil)
-		if err != nil {
-			return nil, err
+	case "list_issue_comments":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
-
-	if err := s.mcpServer.RegisterTool("list_org_members", "List organization members", func(args ListOrgMembersArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("GET", "/api/v1/github/org/members", nil, nil)
-		if err != nil {
-			return nil, err
+		if number, ok := args["number"].(string); ok {
+			params["number"] = number
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/issues/comments", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("list_org_teams", "List organization teams", func(args ListOrgTeamsArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("GET", "/api/v1/github/org/teams", nil, nil)
-		if err != nil {
-			return nil, err
+	case "check_readme":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/readme", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_repository_metrics", "Get comprehensive metrics for a specific repository", func(args GetRepositoryMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		params := map[string]string{"repo": args.Repo}
-		result, err := s.makeRequest("GET", "/api/v1/github/metrics", params, nil)
-		if err != nil {
-			return nil, err
+	case "list_branches":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/branches", "GET", params, nil, true
 
-	if err := s.mcpServer.RegisterTool("get_all_repositories_metrics", "Get metrics for all repositories in the organization", func(args GetAllRepositoriesMetricsArgs) (*mcp_golang.ToolResponse, error) {
-		result, err := s.makeRequest("GET", "/api/v1/github/metrics/all", nil, nil)
-		if err != nil {
-			return nil, err
+	case "list_org_members":
+		return "/api/v1/github/org/members", "GET", nil, nil, true
+
+	case "list_org_teams":
+		return "/api/v1/github/org/teams", "GET", nil, nil, true
+
+	case "get_repository_metrics":
+		if repo, ok := args["repo"].(string); ok {
+			params["repo"] = repo
 		}
-		return mcp_golang.NewToolResponse(mcp_golang.NewTextContent(result)), nil
-	}); err != nil {
-		return err
-	}
+		return "/api/v1/github/metrics", "GET", params, nil, true
 
-	return nil
+	case "get_all_repositories_metrics":
+		return "/api/v1/github/metrics/all", "GET", nil, nil, true
+
+	default:
+		return "", "", nil, nil, false
+	}
 }
-

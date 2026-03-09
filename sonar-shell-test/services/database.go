@@ -6,8 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	_ "github.com/mattn/go-sqlite3"
 	"sonar-automation/models"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // DatabaseService handles all database operations
@@ -78,6 +79,7 @@ func (ds *DatabaseService) initSchema() error {
 		default_branch TEXT DEFAULT 'main',
 		env_name TEXT DEFAULT 'production',
 		jira_space_key TEXT,
+		primary_language TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE CASCADE,
@@ -278,11 +280,11 @@ func (ds *DatabaseService) UpdateOrganization(org *models.Organization) error {
 // CreateRepository creates a new repository
 func (ds *DatabaseService) CreateRepository(repo *models.Repository) error {
 	query := `INSERT INTO repositories (org_id, name, github_url, owner, last_commit_time, last_commit_by,
-			  is_active, default_branch, env_name, jira_space_key)
-			  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			  is_active, default_branch, env_name, jira_space_key, primary_language)
+			  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	result, err := ds.db.Exec(query, repo.OrgID, repo.Name, repo.GitHubURL, repo.Owner,
-		repo.LastCommitTime, repo.LastCommitBy, repo.IsActive, repo.DefaultBranch, repo.EnvName, repo.JiraSpaceKey)
+		repo.LastCommitTime, repo.LastCommitBy, repo.IsActive, repo.DefaultBranch, repo.EnvName, repo.JiraSpaceKey, repo.PrimaryLanguage)
 	if err != nil {
 		return fmt.Errorf("failed to create repository: %w", err)
 	}
@@ -298,13 +300,13 @@ func (ds *DatabaseService) CreateRepository(repo *models.Repository) error {
 // GetRepository gets a repository by ID
 func (ds *DatabaseService) GetRepository(id int64) (*models.Repository, error) {
 	query := `SELECT id, org_id, name, github_url, owner, last_commit_time, last_commit_by,
-			  is_active, default_branch, env_name, jira_space_key, created_at, updated_at
+			  is_active, default_branch, env_name, jira_space_key, primary_language, created_at, updated_at
 			  FROM repositories WHERE id = ?`
 
 	repo := &models.Repository{}
 	err := ds.db.QueryRow(query, id).Scan(&repo.ID, &repo.OrgID, &repo.Name, &repo.GitHubURL,
 		&repo.Owner, &repo.LastCommitTime, &repo.LastCommitBy, &repo.IsActive, &repo.DefaultBranch,
-		&repo.EnvName, &repo.JiraSpaceKey, &repo.CreatedAt, &repo.UpdatedAt)
+		&repo.EnvName, &repo.JiraSpaceKey, &repo.PrimaryLanguage, &repo.CreatedAt, &repo.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository: %w", err)
 	}
@@ -322,13 +324,13 @@ func (ds *DatabaseService) GetRepositoryByID(id int64) (*models.Repository, erro
 // GetRepositoryByName gets a repository by org ID and name
 func (ds *DatabaseService) GetRepositoryByName(orgID int64, name string) (*models.Repository, error) {
 	query := `SELECT id, org_id, name, github_url, owner, last_commit_time, last_commit_by,
-			  is_active, default_branch, env_name, jira_space_key, created_at, updated_at
+			  is_active, default_branch, env_name, jira_space_key, primary_language, created_at, updated_at
 			  FROM repositories WHERE org_id = ? AND name = ?`
 
 	repo := &models.Repository{}
 	err := ds.db.QueryRow(query, orgID, name).Scan(&repo.ID, &repo.OrgID, &repo.Name, &repo.GitHubURL,
 		&repo.Owner, &repo.LastCommitTime, &repo.LastCommitBy, &repo.IsActive, &repo.DefaultBranch,
-		&repo.EnvName, &repo.JiraSpaceKey, &repo.CreatedAt, &repo.UpdatedAt)
+		&repo.EnvName, &repo.JiraSpaceKey, &repo.PrimaryLanguage, &repo.CreatedAt, &repo.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get repository: %w", err)
 	}
@@ -341,7 +343,7 @@ func (ds *DatabaseService) GetRepositoryByName(orgID int64, name string) (*model
 // ListRepositories lists all repositories for an organization
 func (ds *DatabaseService) ListRepositories(orgID int64) ([]*models.Repository, error) {
 	query := `SELECT id, org_id, name, github_url, owner, last_commit_time, last_commit_by,
-			  is_active, default_branch, env_name, jira_space_key, created_at, updated_at
+			  is_active, default_branch, env_name, jira_space_key, primary_language, created_at, updated_at
 			  FROM repositories WHERE org_id = ? ORDER BY name`
 
 	rows, err := ds.db.Query(query, orgID)
@@ -355,7 +357,7 @@ func (ds *DatabaseService) ListRepositories(orgID int64) ([]*models.Repository, 
 		repo := &models.Repository{}
 		err := rows.Scan(&repo.ID, &repo.OrgID, &repo.Name, &repo.GitHubURL, &repo.Owner,
 			&repo.LastCommitTime, &repo.LastCommitBy, &repo.IsActive, &repo.DefaultBranch,
-			&repo.EnvName, &repo.JiraSpaceKey, &repo.CreatedAt, &repo.UpdatedAt)
+			&repo.EnvName, &repo.JiraSpaceKey, &repo.PrimaryLanguage, &repo.CreatedAt, &repo.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -370,11 +372,11 @@ func (ds *DatabaseService) ListRepositories(orgID int64) ([]*models.Repository, 
 // UpdateRepository updates a repository
 func (ds *DatabaseService) UpdateRepository(repo *models.Repository) error {
 	query := `UPDATE repositories SET github_url = ?, owner = ?, last_commit_time = ?, last_commit_by = ?,
-			  is_active = ?, default_branch = ?, env_name = ?, jira_space_key = ?, updated_at = CURRENT_TIMESTAMP
+			  is_active = ?, default_branch = ?, env_name = ?, jira_space_key = ?, primary_language = ?, updated_at = CURRENT_TIMESTAMP
 			  WHERE id = ?`
 
 	_, err := ds.db.Exec(query, repo.GitHubURL, repo.Owner, repo.LastCommitTime, repo.LastCommitBy,
-		repo.IsActive, repo.DefaultBranch, repo.EnvName, repo.JiraSpaceKey, repo.ID)
+		repo.IsActive, repo.DefaultBranch, repo.EnvName, repo.JiraSpaceKey, repo.PrimaryLanguage, repo.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update repository: %w", err)
 	}
@@ -537,4 +539,3 @@ func (ds *DatabaseService) SaveJiraIssueAssignee(assignee *models.JiraIssueAssig
 	assignee.ID = id
 	return nil
 }
-

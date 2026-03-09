@@ -5,6 +5,7 @@
 *.so
 *.dylib
 
+./services/auto-regression-service/regression-testing/example-request.sh
 # Test binary, built with `go test -c`
 *.test
 
