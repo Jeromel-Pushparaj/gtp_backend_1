@@ -43,8 +43,8 @@ func main() {
 		port = "8085"
 	}
 
-	log.Printf("🚀 %s starting on 0.0.0.0:%s\n", cfg.ServiceName, port)
-	if err := router.Run("0.0.0.0:" + port); err != nil {
+	log.Printf("🚀 %s starting on port %s\n", cfg.ServiceName, port)
+	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("❌ Failed to start server: %v\n", err)
 	}
 }
